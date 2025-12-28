@@ -13,7 +13,28 @@
       "Bash(pip3 install:*)",
       "Bash(python3 -m pip install:*)",
       "Bash(python3:*)",
-      "Bash(~/.local/bin/pre-commit-wrapper install:*)"
+      "Bash(~/.local/bin/pre-commit-wrapper install:*)",
+      "Bash(git checkout:*)",
+      "Bash(git push:*)",
+      "Bash(~/.local/bin/gh auth setup-git)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(source $HOME/.cargo/env)",
+      "Bash(cargo:*)",
+      "Bash(cargo build:*)",
+      "Bash(/mnt/c/Users/choza/.cargo/bin/cargo.exe build --release)",
+      "Bash(export PATH=\"$HOME/.cargo/bin:$PATH\")",
+      "Bash(rustup target add:*)",
+      "Bash(/tmp/cargo-target/release/sc-interdiction:*)",
+      "Bash(bash)",
+      "Bash(export PATH=\"$HOME/.local/bin:$PATH\")",
+      "Bash(direnv version:*)",
+      "Bash(~/.local/bin/direnv allow .)",
+      "Bash(export CARGO_TARGET_DIR=\"/tmp/cargo-target\")",
+      "Bash(make build:*)",
+      "Bash(\"a:/Code Projects/sc-interdiction/make.cmd\" build)",
+      "Bash(~/.local/bin/direnv allow \"a:/Code Projects/sc-interdiction\")",
+      "Bash(wsl -e bash -c:*)"
     ]
   }
 }

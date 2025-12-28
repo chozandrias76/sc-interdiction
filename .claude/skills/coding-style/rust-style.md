@@ -1,5 +1,19 @@
 # Rust Style Guide
 
+## Building & Running
+
+### WSL with Windows Filesystem
+When building on WSL with a Windows filesystem (paths like `/mnt/a/` or `a:\`), use `CARGO_TARGET_DIR` to avoid cross-filesystem linking errors:
+
+```bash
+export CARGO_TARGET_DIR="/tmp/cargo-target"
+cargo run -p sc-interdiction -- dashboard --location Crusader
+```
+
+This redirects build artifacts to a native Linux path, avoiding "Operation not permitted" errors when Cargo tries to link files across filesystems.
+
+---
+
 ## Project Structure
 
 ### Workspace Organization

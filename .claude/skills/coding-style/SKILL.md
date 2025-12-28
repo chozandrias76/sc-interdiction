@@ -41,6 +41,11 @@ Detailed patterns for each language are in the reference files:
 - [Python Style Guide](python-style.md)
 - [TypeScript Style Guide](typescript-style.md)
 
+## Project-Specific Notes
+
+For SC Interdiction project context, limitations, and planned improvements:
+- [Project Notes & Scratchpad](project-notes.md)
+
 ---
 
 ## Quick Reference
