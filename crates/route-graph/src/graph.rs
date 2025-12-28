@@ -102,25 +102,25 @@ impl RouteGraph {
 
     /// Add a node from a Terminal.
     pub fn add_terminal(&mut self, terminal: &Terminal) -> NodeIndex {
-        if let Some(&idx) = self.node_indices.get(&terminal.code) {
+        let code = terminal.code.clone().unwrap_or_default();
+        if let Some(&idx) = self.node_indices.get(&code) {
             return idx;
         }
 
         let node = Node {
             id: terminal.id.to_string(),
-            name: terminal.name.clone(),
-            node_type: NodeType::from_str(&terminal.terminal_type),
-            system: terminal.star_system_name.clone(),
-            parent_body: if !terminal.moon_name.is_empty() {
-                terminal.moon_name.clone()
-            } else {
-                terminal.planet_name.clone()
-            },
+            name: terminal.name.clone().unwrap_or_default(),
+            node_type: NodeType::from_str(&terminal.terminal_type.clone().unwrap_or_default()),
+            system: terminal.star_system_name.clone().unwrap_or_default(),
+            parent_body: terminal.moon_name.clone()
+                .filter(|m| !m.is_empty())
+                .or_else(|| terminal.planet_name.clone())
+                .unwrap_or_default(),
             coords: None,
         };
 
         let idx = self.graph.add_node(node);
-        self.node_indices.insert(terminal.code.clone(), idx);
+        self.node_indices.insert(code, idx);
         idx
     }
 
