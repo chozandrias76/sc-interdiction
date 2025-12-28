@@ -1,0 +1,27 @@
+[package]
+name = "sc-interdiction"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "sc-interdiction"
+path = "src/main.rs"
+
+[dependencies]
+thiserror.workspace = true
+eyre.workspace = true
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+clap.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+api-client.workspace = true
+route-graph.workspace = true
+intel.workspace = true
+server = { path = "../server" }
+
+[lints]
+workspace = true
