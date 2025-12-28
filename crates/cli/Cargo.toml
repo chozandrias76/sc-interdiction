@@ -17,6 +17,9 @@ serde_json.workspace = true
 clap.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
+ratatui.workspace = true
+crossterm.workspace = true
+dirs = "5"
 
 api-client.workspace = true
 route-graph.workspace = true
