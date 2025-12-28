@@ -3,10 +3,8 @@
 //! Provides access to starmap data including systems, objects, and routes.
 
 use crate::{ApiError, Result};
-use dashmap::DashMap;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 use tracing::instrument;
 
 const BASE_URL: &str = "https://api.starcitizen-api.com";
@@ -16,7 +14,6 @@ const BASE_URL: &str = "https://api.starcitizen-api.com";
 pub struct ScApiClient {
     client: Client,
     api_key: String,
-    cache: Arc<DashMap<String, serde_json::Value>>,
 }
 
 impl ScApiClient {
@@ -25,7 +22,6 @@ impl ScApiClient {
         Self {
             client: Client::new(),
             api_key: api_key.into(),
-            cache: Arc::new(DashMap::new()),
         }
     }
 

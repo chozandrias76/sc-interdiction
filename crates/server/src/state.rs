@@ -44,7 +44,7 @@ impl AppState {
         // Connect terminals within each system
         let systems: std::collections::HashSet<_> = terminals
             .iter()
-            .map(|t| t.star_system_name.clone())
+            .filter_map(|t| t.star_system_name.clone())
             .collect();
 
         for system in systems {
