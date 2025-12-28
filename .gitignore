@@ -1,7 +1,9 @@
 # Rust
 /target/
 **/*.rs.bk
-Cargo.lock
+
+# Cargo local config (use .cargo/config.toml.template instead)
+/.cargo/config.toml
 
 # IDE
 .idea/
@@ -20,4 +22,6 @@ Thumbs.db
 # Environment
 .env
 .env.local
-.envrc
+
+# Build artifacts in /tmp (if symlinked or referenced)
+/tmp/
