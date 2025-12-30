@@ -1,6 +1,7 @@
 //! UI rendering for the TUI.
 
 use super::app::{App, MapLocationType, RouteSort, TargetSort, View};
+use super::text::{scroll_text, truncate};
 use intel::TrafficDirection;
 use ratatui::{
     prelude::*,
@@ -57,6 +58,9 @@ fn render_header(frame: &mut Frame, app: &App, area: Rect) {
 }
 
 fn render_targets(frame: &mut Frame, app: &mut App, area: Rect) {
+    // Set hovered line to selected row for scroll_text (must be before borrowing targets)
+    app.scroll.set_hovered(Some(app.selected));
+
     let filtered: Vec<_> = app.filtered_targets().collect();
 
     // Header row
@@ -94,12 +98,8 @@ fn render_targets(frame: &mut Frame, app: &mut App, area: Rect) {
             let threat_bar = "█".repeat(target.likely_ship.threat_level as usize)
                 + &"░".repeat(10 - target.likely_ship.threat_level as usize);
 
-            // Truncate destination to fit
-            let dest = if target.destination.len() > 35 {
-                format!("{}...", &target.destination[..32])
-            } else {
-                target.destination.clone()
-            };
+            // Use scroll_text for destination - scrolls when selected
+            let dest = scroll_text(&target.destination, 35, i, "", &app.scroll);
 
             let cells = vec![
                 Cell::from(dir).style(Style::default().fg(dir_color)),
@@ -173,6 +173,10 @@ fn render_targets(frame: &mut Frame, app: &mut App, area: Rect) {
 }
 
 fn render_routes(frame: &mut Frame, app: &mut App, area: Rect) {
+    // Set hovered line to selected row for scroll_text
+    // Use offset 1000 to separate from targets view line indices
+    app.scroll.set_hovered(Some(1000 + app.selected));
+
     let header_cells = [
         Cell::from("Commodity").style(Style::default().fg(Color::Yellow)),
         Cell::from("Origin").style(Style::default().fg(Color::Yellow)),
@@ -188,17 +192,10 @@ fn render_routes(frame: &mut Frame, app: &mut App, area: Rect) {
         .iter()
         .enumerate()
         .map(|(i, route)| {
-            // Truncate locations
-            let origin = if route.origin.len() > 25 {
-                format!("{}...", &route.origin[..22])
-            } else {
-                route.origin.clone()
-            };
-            let dest = if route.destination.len() > 25 {
-                format!("{}...", &route.destination[..22])
-            } else {
-                route.destination.clone()
-            };
+            // Use scroll_text for locations - scrolls when selected
+            let line_idx = 1000 + i;
+            let origin = scroll_text(&route.origin, 25, line_idx, "", &app.scroll);
+            let dest = scroll_text(&route.destination, 25, line_idx, "", &app.scroll);
 
             let cells = vec![
                 Cell::from(route.commodity.clone()),
@@ -588,14 +585,6 @@ fn render_hotspot_details(frame: &mut Frame, app: &App, area: Rect) {
     }
 }
 
-fn truncate(s: &str, max_len: usize) -> String {
-    if s.len() > max_len {
-        format!("{}...", &s[..max_len - 3])
-    } else {
-        s.to_string()
-    }
-}
-
 fn render_help(frame: &mut Frame, area: Rect) {
     let help_text = r#"
   NAVIGATION
@@ -704,4 +693,160 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
             Constraint::Percentage((100 - percent_x) / 2),
         ])
         .split(popup_layout[1])[1]
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use super::super::text::ScrollState;
+    use insta::assert_snapshot;
+    use ratatui::{backend::TestBackend, Terminal};
+
+    /// Create a test app with sample data for snapshot testing.
+    fn test_app() -> App {
+        use intel::{CargoShip, HotRoute, TargetPrediction, TrafficDirection};
+
+        let ship = CargoShip {
+            name: "Caterpillar",
+            manufacturer: "Drake",
+            cargo_scu: 576,
+            crew_size: 4,
+            threat_level: 3,
+            ship_value_uec: 600_000,
+            requires_freight_elevator: false,
+        };
+
+        let targets = vec![
+            TargetPrediction {
+                commodity: "Quantanium".to_string(),
+                destination: "Area18 TDD".to_string(),
+                likely_ship: ship.clone(),
+                direction: TrafficDirection::Departing,
+                estimated_cargo_value: 1_250_000.0,
+            },
+            TargetPrediction {
+                commodity: "Laranite".to_string(),
+                destination: "Port Olisar".to_string(),
+                likely_ship: CargoShip {
+                    name: "C2 Hercules",
+                    manufacturer: "Crusader",
+                    cargo_scu: 696,
+                    crew_size: 3,
+                    threat_level: 8,
+                    ship_value_uec: 4_800_000,
+                    requires_freight_elevator: true,
+                },
+                direction: TrafficDirection::Arriving,
+                estimated_cargo_value: 980_000.0,
+            },
+        ];
+
+        let routes = vec![
+            HotRoute {
+                origin: "HDMS-Bezdek".to_string(),
+                origin_system: "Stanton".to_string(),
+                destination: "Area18 TDD".to_string(),
+                destination_system: "Stanton".to_string(),
+                commodity: "Quantanium".to_string(),
+                commodity_code: "QUAN".to_string(),
+                profit_per_scu: 88.5,
+                available_scu: 576.0,
+                estimated_haul_value: 51_000.0,
+                likely_ship: ship.clone(),
+                risk_score: 75.0,
+            },
+        ];
+
+        App {
+            view: View::Targets,
+            location: "Crusader".to_string(),
+            targets,
+            routes,
+            hotspots: Vec::new(),
+            map_locations: Vec::new(),
+            map_system: "Stanton".to_string(),
+            map_selected: 0,
+            map_zoom: 1.0,
+            hotspot_limit: 5,
+            selected: 0,
+            filter_inbound: false,
+            filter_outbound: false,
+            min_threat: 0,
+            target_sort: TargetSort::Value,
+            route_sort: RouteSort::Profit,
+            sort_asc: false,
+            loading: false,
+            error: None,
+            status: "Ready".to_string(),
+            scroll: ScrollState::new(),
+        }
+    }
+
+    #[test]
+    fn test_render_targets_view() {
+        let mut app = test_app();
+        app.view = View::Targets;
+
+        let mut terminal = Terminal::new(TestBackend::new(100, 25)).unwrap();
+        terminal.draw(|frame| render(frame, &mut app)).unwrap();
+
+        assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_render_routes_view() {
+        let mut app = test_app();
+        app.view = View::Routes;
+
+        let mut terminal = Terminal::new(TestBackend::new(100, 25)).unwrap();
+        terminal.draw(|frame| render(frame, &mut app)).unwrap();
+
+        assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_render_help_view() {
+        let mut app = test_app();
+        app.view = View::Help;
+
+        let mut terminal = Terminal::new(TestBackend::new(100, 25)).unwrap();
+        terminal.draw(|frame| render(frame, &mut app)).unwrap();
+
+        assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_render_with_selection() {
+        let mut app = test_app();
+        app.view = View::Targets;
+        app.selected = 1; // Select second row
+
+        let mut terminal = Terminal::new(TestBackend::new(100, 25)).unwrap();
+        terminal.draw(|frame| render(frame, &mut app)).unwrap();
+
+        assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_render_with_error() {
+        let mut app = test_app();
+        app.error = Some("Connection failed: timeout".to_string());
+
+        let mut terminal = Terminal::new(TestBackend::new(100, 25)).unwrap();
+        terminal.draw(|frame| render(frame, &mut app)).unwrap();
+
+        assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_render_loading_state() {
+        let mut app = test_app();
+        app.loading = true;
+        app.status = "Loading data...".to_string();
+
+        let mut terminal = Terminal::new(TestBackend::new(100, 25)).unwrap();
+        terminal.draw(|frame| render(frame, &mut app)).unwrap();
+
+        assert_snapshot!(terminal.backend());
+    }
 }
