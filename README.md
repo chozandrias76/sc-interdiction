@@ -50,6 +50,11 @@ The analysis is based on live commodity pricing from the UEX (Universal Exchange
 ```bash
 git clone https://github.com/chozandrias76/sc-interdiction.git
 cd sc-interdiction
+
+# Set up development environment (installs git hooks, creates config)
+./scripts/setup-dev.sh
+
+# Build the project
 cargo build --release
 ```
 
@@ -190,6 +195,44 @@ make clean          # Remove build artifacts
 make help           # Show all available commands
 ```
 
+## Development
+
+### Setup
+
+Run the setup script to install git hooks and configure your development environment:
+
+```bash
+./scripts/setup-dev.sh
+```
+
+This will:
+- Install pre-commit hooks that run quality checks automatically
+- Create `.cargo/config.toml` from the template
+- Run initial quality checks
+
+### Code Quality Standards
+
+This project enforces strict code quality rules:
+
+- **Maximum file size**: 500 lines
+- **Maximum function length**: 100 lines
+- **Cognitive complexity**: ≤ 15
+- **Cyclomatic complexity**: ≤ 10
+- **Type complexity**: ≤ 250
+
+Quality checks run automatically on commit. To run them manually:
+
+```bash
+# Quick quality check
+cargo quality
+
+# Full pre-commit checks
+cargo pre-commit
+
+# Or use the script directly
+./scripts/check-code-quality.sh
+```
+
 ### Running Tests
 ```bash
 cargo test
@@ -199,7 +242,11 @@ make test
 
 ### Linting
 ```bash
+# Run clippy with warnings
 cargo clippy
+
+# Run clippy with strict quality checks (as in pre-commit)
+cargo lint
 ```
 
 ### Format Code
