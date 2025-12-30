@@ -30,11 +30,7 @@
   - Added `validate_route(distance)` method to `CargoShip`
   - Integrated into `HotRoute` and `TradeRun` structs with distance calculation
   - Routes now automatically include fuel feasibility assessment
-
-- [ ] **Display fuel warnings in output**
-  - Update CLI route display to show fuel status
-  - Add `⚠️ REFUEL REQUIRED` indicator for routes exceeding tank capacity
-  - Show estimated fuel cost
+  - ✅ Added `distance_mkm`, `fuel_sufficient`, `fuel_required` fields to route structs
 
 #### Find Refueling Waypoints
 - [x] **Index fuel terminals**
@@ -47,6 +43,7 @@
   - Extend `RouteGraph` to support multi-hop routing with refuel stops
   - Implement `find_route_with_refueling(origin, dest, ship_fuel_capacity) -> Vec<Waypoint>`
   - Each waypoint includes: location, refuel (yes/no), fuel cost
+  - Use existing `fuel_sufficient` field to determine when refueling needed
   
 - [ ] **Refueling cost calculation**
   - Add hydrogen fuel pricing to commodity data
@@ -54,7 +51,7 @@
   - Subtract from route profitability
   
 - [ ] **CLI display for multi-hop routes**
-  - Show waypoints in route output
+  - Show waypoints in route output when refueling required
   - Format: `Origin -> [REFUEL: Station Name] -> Destination`
   - Display total route time including refuel stops
 
