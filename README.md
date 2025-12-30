@@ -269,10 +269,46 @@ This tool is for educational and entertainment purposes. Star Citizen is a trade
 
 ## Contributing
 
-Contributions are welcome. Please follow the Conventional Commits specification for commit messages. Pre-commit hooks are installed automatically to enforce this.
+Contributions are welcome! Please follow our development workflow:
+
+### Development Workflow
 
 1. Fork the repository
-2. Create a feature branch from `develop`
-3. Make your changes
-4. Ensure tests pass and code is formatted
-5. Submit a pull request to `develop`
+2. Create a feature branch from `develop`:
+   ```bash
+   git checkout develop
+   git checkout -b feature/your-feature-name
+   ```
+3. Make your changes following our [code quality standards](#code-quality-standards)
+4. Ensure all tests pass and code is formatted
+5. Commit using [Conventional Commits](https://www.conventionalcommits.org/)
+6. Submit a pull request to `develop`
+
+### Pull Request Requirements
+
+All PRs must:
+- ✅ Follow conventional commit format in title
+- ✅ Include detailed description (min 100 characters)
+- ✅ Have required sections: Summary, Changes, Test Results
+- ✅ Pass all CI checks (format, lint, tests, security)
+- ✅ Meet code coverage requirements
+
+See [PR Validation](.github/workflows/pr-validation.yml) for complete requirements.
+
+### Release Process
+
+Releases follow semantic versioning and are automated through GitHub Actions:
+
+1. **Trigger Release**: Go to Actions → Create Release → Select version bump (patch/minor/major)
+2. **Automation**: Creates `release/X.Y.Z` branch and PRs automatically
+3. **Review**: Wait for CI checks, then merge PRs
+4. **Publish**: Release is automatically published to GitHub with changelog
+
+See [docs/RELEASE_PROCESS.md](docs/RELEASE_PROCESS.md) for detailed documentation.
+
+### Branch Strategy
+
+- **`main`**: Production releases only (PRs from `release/*` branches only)
+- **`develop`**: Integration branch (PRs from feature/fix/chore branches)
+- **`release/*`**: Release preparation (auto-created by release workflow)
+- **`feature/*`**, **`fix/*`**, **`chore/*`**: Development branches
