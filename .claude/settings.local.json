@@ -40,7 +40,9 @@
       "Bash(wsl -e bash:*)",
       "Bash(cat:*)",
       "Bash(cd:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(ls:*)",
+      "Bash(grep:*)"
     ]
   }
 }
