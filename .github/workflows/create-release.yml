@@ -26,6 +26,7 @@ jobs:
   create-release-branch:
     name: Create Release Branch and PR
     runs-on: ubuntu-latest
+    environment: Actions and Workflows
     steps:
       - name: Checkout develop
         uses: actions/checkout@v4
@@ -131,7 +132,7 @@ jobs:
       
       - name: Create PR to main
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
         run: |
           PR_BODY=$(cat /tmp/pr-body.md)
           
@@ -143,7 +144,7 @@ jobs:
       
       - name: Create PR from develop to release branch
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
         run: |
           gh pr create \
             --base "${{ steps.branch.outputs.name }}" \
