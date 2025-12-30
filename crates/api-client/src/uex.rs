@@ -13,6 +13,7 @@ const BASE_URL: &str = "https://uexcorp.space/api/2.0";
 #[derive(Clone)]
 pub struct UexClient {
     client: Client,
+    base_url: String,
 }
 
 impl UexClient {
@@ -20,6 +21,16 @@ impl UexClient {
     pub fn new() -> Self {
         Self {
             client: Client::new(),
+            base_url: BASE_URL.to_string(),
+        }
+    }
+
+    /// Create a new UEX client with a custom base URL (for testing).
+    #[cfg(test)]
+    pub fn new_with_base_url(base_url: &str) -> Self {
+        Self {
+            client: Client::new(),
+            base_url: base_url.to_string(),
         }
     }
 
@@ -28,7 +39,7 @@ impl UexClient {
     /// See: <https://uexcorp.space/api/documentation/id/get_commodities/>
     #[instrument(skip(self))]
     pub async fn get_commodities(&self) -> Result<Vec<Commodity>> {
-        let url = format!("{}/commodities", BASE_URL);
+        let url = format!("{}/commodities", self.base_url);
         let response: UexResponse<Vec<Commodity>> = self.get_json(&url).await?;
         Ok(response.data)
     }
@@ -38,7 +49,10 @@ impl UexClient {
     /// See: <https://uexcorp.space/api/documentation/id/get_commodities_prices/>
     #[instrument(skip(self))]
     pub async fn get_commodity_prices(&self, commodity_code: &str) -> Result<Vec<CommodityPrice>> {
-        let url = format!("{}/commodities_prices?code={}", BASE_URL, commodity_code);
+        let url = format!(
+            "{}/commodities_prices?code={}",
+            self.base_url, commodity_code
+        );
         let response: UexResponse<Vec<CommodityPrice>> = self.get_json(&url).await?;
         Ok(response.data)
     }
@@ -48,7 +62,7 @@ impl UexClient {
     /// See: <https://uexcorp.space/api/documentation/id/get_terminals/>
     #[instrument(skip(self))]
     pub async fn get_terminals(&self) -> Result<Vec<Terminal>> {
-        let url = format!("{}/terminals", BASE_URL);
+        let url = format!("{}/terminals", self.base_url);
         let response: UexResponse<Vec<Terminal>> = self.get_json(&url).await?;
         Ok(response.data)
     }
@@ -60,7 +74,7 @@ impl UexClient {
     pub async fn get_terminals_in_system(&self, system: &str) -> Result<Vec<Terminal>> {
         let url = format!(
             "{}/terminals?star_system_name={}",
-            BASE_URL,
+            self.base_url,
             urlencoding::encode(system)
         );
         let response: UexResponse<Vec<Terminal>> = self.get_json(&url).await?;
@@ -72,7 +86,7 @@ impl UexClient {
     /// See: <https://uexcorp.space/api/documentation/id/get_commodities_prices_all/>
     #[instrument(skip(self))]
     pub async fn get_all_commodity_prices(&self) -> Result<Vec<CommodityPriceAll>> {
-        let url = format!("{}/commodities_prices_all", BASE_URL);
+        let url = format!("{}/commodities_prices_all", self.base_url);
         let response: UexResponse<Vec<CommodityPriceAll>> = self.get_json(&url).await?;
         Ok(response.data)
     }

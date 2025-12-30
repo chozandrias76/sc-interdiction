@@ -10,6 +10,9 @@ mod fleetyards;
 mod sc_api;
 mod uex;
 
+#[cfg(test)]
+mod uex_tests;
+
 pub use error::{ApiError, Result};
 pub use fleetyards::{FleetYardsClient, Manufacturer, ShipCache, ShipMetrics, ShipModel};
 pub use sc_api::{ScApiClient, StarSystem, StarmapObject, Station};

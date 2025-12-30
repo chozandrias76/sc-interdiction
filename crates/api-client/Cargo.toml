@@ -14,5 +14,8 @@ tracing.workspace = true
 dashmap.workspace = true
 urlencoding = "2.1"
 
+[dev-dependencies]
+mockito = "1.2"
+
 [lints]
 workspace = true
