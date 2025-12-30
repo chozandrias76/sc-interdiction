@@ -30,6 +30,8 @@ pub struct Node {
     pub parent_body: String,
     /// Coordinates if available (x, y, z).
     pub coords: Option<(f64, f64, f64)>,
+    /// Whether this location offers refueling services.
+    pub is_fuel_station: bool,
 }
 
 /// Type of location node.
@@ -94,6 +96,7 @@ impl RouteGraph {
             system: station.system_code.clone(),
             parent_body: station.parent_name.clone(),
             coords: None,
+            is_fuel_station: false, // Station data doesn't include refuel info
         };
 
         let idx = self.graph.add_node(node);
@@ -120,6 +123,7 @@ impl RouteGraph {
                 .or_else(|| terminal.planet_name.clone())
                 .unwrap_or_default(),
             coords: None,
+            is_fuel_station: terminal.is_refuel,
         };
 
         let idx = self.graph.add_node(node);
