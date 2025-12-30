@@ -15,5 +15,8 @@ tokio.workspace = true
 api-client.workspace = true
 route-graph.workspace = true
 
+[dev-dependencies]
+mockito = "1.2"
+
 [lints]
 workspace = true

@@ -328,3 +328,7 @@ pub struct ShipMetrics {
     #[serde(default)]
     pub quantum_fuel_tank_size: Option<f64>,
 }
+
+#[cfg(test)]
+#[path = "fleetyards_tests.rs"]
+mod tests;

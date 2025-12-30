@@ -26,7 +26,8 @@ impl UexClient {
     }
 
     /// Create a new UEX client with a custom base URL (for testing).
-    #[cfg(test)]
+    ///
+    /// This is available in all test builds to allow other crates to mock the API.
     pub fn new_with_base_url(base_url: &str) -> Self {
         Self {
             client: Client::new(),

@@ -635,3 +635,7 @@ fn calculate_risk_score(route: &TradeRoute) -> f64 {
     // Cap at 100
     score.min(100.0)
 }
+
+#[cfg(test)]
+#[path = "targets_tests.rs"]
+mod tests;
