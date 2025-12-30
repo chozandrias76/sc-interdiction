@@ -72,9 +72,6 @@
   - CLI: Add `[⛽]` icon next to fuel stations in output
   - API: Include `is_fuel_station` in node JSON responses
 
-#### Account for cost of goods when purchasing and selling for both locations
-
-- [ ] **Profit is properly calculated**
 ---
 
 ### Mining & Refinery Route Support
