@@ -116,17 +116,24 @@ jobs:
         run: |
           CHANGELOG="${{ steps.changelog.outputs.changelog }}"
           
-          # Add release header
-          PR_BODY="## Release v${{ steps.new_version.outputs.version }}\n\n"
-          PR_BODY="$PR_BODY$CHANGELOG"
+          # Build PR body with required sections
+          PR_BODY="## Summary\n"
+          PR_BODY="${PR_BODY}Release v${{ steps.new_version.outputs.version }} - ${{ inputs.version_bump }} version bump.\n\n"
           
-          # Add version info
-          PR_BODY="$PR_BODY\n## 📋 Version Info\n"
-          PR_BODY="$PR_BODY- **Previous**: \`${{ steps.current_version.outputs.version }}\`\n"
-          PR_BODY="$PR_BODY- **Current**: \`${{ steps.new_version.outputs.version }}\`\n"
-          PR_BODY="$PR_BODY- **Type**: ${{ inputs.version_bump }}\n"
+          PR_BODY="${PR_BODY}## Changes\n"
+          PR_BODY="${PR_BODY}$CHANGELOG"
+          
+          PR_BODY="${PR_BODY}\n## Test Results\n"
+          PR_BODY="${PR_BODY}- ✅ All CI checks will run on this PR\n"
+          PR_BODY="${PR_BODY}- ✅ Release branch created from develop\n"
+          PR_BODY="${PR_BODY}- ✅ Version bumped from ${{ steps.current_version.outputs.version }} to ${{ steps.new_version.outputs.version }}\n\n"
+          
+          PR_BODY="${PR_BODY}## 📋 Version Info\n"
+          PR_BODY="${PR_BODY}- **Previous**: \`${{ steps.current_version.outputs.version }}\`\n"
+          PR_BODY="${PR_BODY}- **Current**: \`${{ steps.new_version.outputs.version }}\`\n"
+          PR_BODY="${PR_BODY}- **Type**: ${{ inputs.version_bump }}\n"
           if [ "${{ inputs.prerelease }}" = "true" ]; then
-            PR_BODY="$PR_BODY- **Pre-release**: Yes\n"
+            PR_BODY="${PR_BODY}- **Pre-release**: Yes\n"
           fi
           
           # Save to file
@@ -141,7 +148,7 @@ jobs:
           gh pr create \
             --base main \
             --head "${{ steps.branch.outputs.name }}" \
-            --title "release: version ${{ steps.new_version.outputs.version }}" \
+            --title "chore(release): v${{ steps.new_version.outputs.version }}" \
             --body "$PR_BODY"
       
       - name: Output summary
