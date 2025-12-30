@@ -1,0 +1,93 @@
+name: Release Branch CI
+
+on:
+  pull_request:
+    branches:
+      - 'release/**'
+  push:
+    branches:
+      - 'release/**'
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  validate-version:
+    name: Validate Version Bump
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout release branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Get version from release branch
+        id: release_version
+        run: |
+          VERSION=$(grep -m1 '^version = ' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+      
+      - name: Get version from main
+        id: main_version
+        run: |
+          git fetch origin main
+          MAIN_VERSION=$(git show origin/main:Cargo.toml | grep -m1 '^version = ' | sed 's/version = "\(.*\)"/\1/')
+          echo "version=$MAIN_VERSION" >> $GITHUB_OUTPUT
+      
+      - name: Validate semantic versioning
+        run: |
+          RELEASE_VERSION="${{ steps.release_version.outputs.version }}"
+          MAIN_VERSION="${{ steps.main_version.outputs.version }}"
+          
+          echo "Main version: $MAIN_VERSION"
+          echo "Release version: $RELEASE_VERSION"
+          
+          # Check semantic versioning format
+          if [[ ! "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+|-beta\.[0-9]+|-alpha\.[0-9]+)?$ ]]; then
+            echo "❌ Invalid semantic version format: $RELEASE_VERSION"
+            exit 1
+          fi
+          
+          # Verify version is greater than main
+          # Remove pre-release suffix for comparison
+          RELEASE_BASE=$(echo "$RELEASE_VERSION" | sed 's/-.*$//')
+          MAIN_BASE=$(echo "$MAIN_VERSION" | sed 's/-.*$//')
+          
+          IFS='.' read -r r_major r_minor r_patch <<< "$RELEASE_BASE"
+          IFS='.' read -r m_major m_minor m_patch <<< "$MAIN_BASE"
+          
+          VERSION_VALID=false
+          if [ "$r_major" -gt "$m_major" ]; then
+            VERSION_VALID=true
+          elif [ "$r_major" -eq "$m_major" ] && [ "$r_minor" -gt "$m_minor" ]; then
+            VERSION_VALID=true
+          elif [ "$r_major" -eq "$m_major" ] && [ "$r_minor" -eq "$m_minor" ] && [ "$r_patch" -gt "$m_patch" ]; then
+            VERSION_VALID=true
+          fi
+          
+          if [ "$VERSION_VALID" = "false" ]; then
+            echo "❌ Release version ($RELEASE_VERSION) must be greater than main version ($MAIN_VERSION)"
+            exit 1
+          fi
+          
+          echo "✅ Version bump is valid: $MAIN_VERSION → $RELEASE_VERSION"
+
+  full-ci:
+    name: Full CI Suite
+    needs: validate-version
+    uses: ./.github/workflows/ci.yml
+
+  release-readiness:
+    name: Release Readiness Check
+    runs-on: ubuntu-latest
+    needs: full-ci
+    steps:
+      - name: All checks passed
+        run: |
+          echo "✅ All CI checks passed" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Version validation passed" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Tests passed on all platforms" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Security audit passed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🚀 This release branch is ready to merge to main" >> $GITHUB_STEP_SUMMARY
