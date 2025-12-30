@@ -122,6 +122,10 @@ enum Commands {
         #[arg(short, long)]
         system: Option<String>,
 
+        /// Filter by terminal type (fuel, refinery, commodity, etc.)
+        #[arg(short = 't', long)]
+        filter_type: Option<String>,
+
         /// Output as JSON
         #[arg(long)]
         json: bool,
@@ -198,7 +202,11 @@ async fn main() -> Result<()> {
             refresh,
             json,
         } => handle_fleet_ships(name, manufacturer, cargo_only, refresh, json).await?,
-        Commands::Terminals { system, json } => handle_terminals(system, json).await?,
+        Commands::Terminals {
+            system,
+            filter_type,
+            json,
+        } => handle_terminals(system, filter_type, json).await?,
         Commands::Nearby {
             location,
             top,
@@ -314,12 +322,32 @@ async fn handle_fleet_ships(
     Ok(())
 }
 
-async fn handle_terminals(system: Option<String>, json: bool) -> Result<()> {
+async fn handle_terminals(
+    system: Option<String>,
+    filter_type: Option<String>,
+    json: bool,
+) -> Result<()> {
     let uex = UexClient::new();
-    let terminals = match &system {
+    let mut terminals = match &system {
         Some(s) => uex.get_terminals_in_system(s).await?,
         None => uex.get_terminals().await?,
     };
+
+    // Apply type filter if specified
+    if let Some(filter) = &filter_type {
+        let filter_lower = filter.to_lowercase();
+        terminals.retain(|t| match filter_lower.as_str() {
+            "fuel" => t.is_refuel,
+            "refinery" => t.is_refinery,
+            _ => {
+                // Match against terminal_type field
+                t.terminal_type
+                    .as_ref()
+                    .map(|tt| tt.to_lowercase().contains(&filter_lower))
+                    .unwrap_or(false)
+            }
+        });
+    }
 
     if json {
         println!("{}", serde_json::to_string_pretty(&terminals)?);
