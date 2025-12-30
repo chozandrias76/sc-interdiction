@@ -28,7 +28,7 @@ impl App {
             }
             TargetSort::Ship => {
                 self.targets.sort_by(|a, b| {
-                    let cmp = a.likely_ship.name.cmp(&b.likely_ship.name);
+                    let cmp = a.likely_ship.name.cmp(b.likely_ship.name);
                     if asc {
                         cmp
                     } else {

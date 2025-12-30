@@ -34,7 +34,7 @@ impl ScrollState {
         }
 
         // Advance scroll offset every 2 ticks for smooth scrolling
-        if self.tick_count % 2 == 0 {
+        if self.tick_count.is_multiple_of(2) {
             self.scroll_offset = self.scroll_offset.wrapping_add(1);
         }
     }

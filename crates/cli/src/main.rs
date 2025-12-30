@@ -93,7 +93,7 @@ enum Commands {
         json: bool,
     },
 
-    /// Fetch ship specs from FleetYards API
+    /// Fetch ship specs from `FleetYards` API
     FleetShips {
         /// Filter by ship name (partial match)
         #[arg(short, long)]

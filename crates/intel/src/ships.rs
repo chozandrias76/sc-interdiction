@@ -30,7 +30,7 @@ pub struct CargoShip {
 impl CargoShip {
     /// Calculate interdiction value score for this ship carrying given cargo value.
     /// Higher = more attractive target (better value-to-risk ratio).
-    /// Formula: cargo_value / (threat_level * crew_factor)
+    /// Formula: `cargo_value` / (`threat_level` * `crew_factor`)
     pub fn interdiction_value(&self, cargo_value: f64) -> f64 {
         let threat_factor = self.threat_level.max(1) as f64;
         let crew_factor = 1.0 + (self.crew_size.saturating_sub(1) as f64 * 0.2); // Each extra crew adds 20% difficulty
@@ -44,7 +44,7 @@ impl CargoShip {
 
     /// Check if this ship can complete a route of given distance (Mkm).
     ///
-    /// Returns (can_complete, fuel_required, fuel_remaining).
+    /// Returns (`can_complete`, `fuel_required`, `fuel_remaining`).
     pub fn can_complete_route(&self, distance_mkm: f64) -> (bool, f64, f64) {
         if let Some(efficiency) = self.qt_drive_efficiency() {
             route_graph::can_complete_route(distance_mkm, self.quantum_fuel_capacity, efficiency)
@@ -286,13 +286,13 @@ pub fn estimate_ship_for_route(route: &TradeRoute) -> CargoShip {
 
     // Find smallest ship that can carry the full cargo
     if let Some(ship) = dockable.iter().find(|s| s.cargo_scu as f64 >= scu_needed) {
-        return (*ship).clone();
+        return *(*ship);
     }
 
     // If no ship can carry the full cargo, use the largest available ship
     // (traders will still use the best ship they have)
     if let Some(largest) = dockable.last() {
-        return (*largest).clone();
+        return *(*largest);
     }
 
     // Fallback only if no ships at all (shouldn't happen)
@@ -352,12 +352,12 @@ pub fn estimate_ship_for_routes(routes: &[&TradeRoute]) -> CargoShip {
         .iter()
         .find(|s| s.cargo_scu as f64 >= max_scu_needed)
     {
-        return (*ship).clone();
+        return *(*ship);
     }
 
     // If no ship can carry the full cargo, use the largest available ship
     if let Some(largest) = dockable.last() {
-        return (*largest).clone();
+        return *(*largest);
     }
 
     CargoShip {
@@ -399,7 +399,7 @@ impl LootEstimate {
     /// A loot estimate with cargo recovery and salvage value calculations.
     ///
     /// # Assumptions
-    /// - Cargo recovery rate: 70% for disable (destruction_level = 0.0), decreases with destruction
+    /// - Cargo recovery rate: 70% for disable (`destruction_level` = 0.0), decreases with destruction
     /// - Salvage value: ~5-15% of ship price based on ship size and destruction level
     /// - Larger ships have more salvageable components but are harder to fully recover
     pub fn calculate(cargo_value: f64, ship: &CargoShip, destruction_level: f64) -> Self {

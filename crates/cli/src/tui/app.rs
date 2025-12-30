@@ -130,12 +130,12 @@ impl App {
 
     /// Handle key events. Returns true if the app should exit.
 
-    /// Get the number of visible hotspots (limited by hotspot_limit).
+    /// Get the number of visible hotspots (limited by `hotspot_limit`).
     pub fn visible_hotspot_count(&self) -> usize {
         self.hotspot_limit.min(self.hotspots.len())
     }
 
-    /// Get visible hotspots iterator (limited by hotspot_limit).
+    /// Get visible hotspots iterator (limited by `hotspot_limit`).
     pub fn visible_hotspots(&self) -> impl Iterator<Item = &RouteIntersection> {
         self.hotspots.iter().take(self.hotspot_limit)
     }

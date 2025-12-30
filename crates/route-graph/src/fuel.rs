@@ -295,7 +295,7 @@ impl FuelStationIndex {
 
     /// Find the nearest fuel station to a given position.
     ///
-    /// Returns (station, distance_mkm) or None if no stations have positions.
+    /// Returns (station, `distance_mkm`) or None if no stations have positions.
     pub fn find_nearest(&self, position: &crate::Point3D) -> Option<(&FuelStation, f64)> {
         self.stations
             .iter()
@@ -313,7 +313,7 @@ impl FuelStationIndex {
 
     /// Find the nearest fuel station along a route (within a given deviation threshold).
     ///
-    /// Returns (station, distance_from_route_mkm) if one is found.
+    /// Returns (station, `distance_from_route_mkm`) if one is found.
     pub fn find_nearest_on_route(
         &self,
         start: &crate::Point3D,
