@@ -1,5 +1,10 @@
 //! Tests for UEX API client.
 
+#![allow(clippy::unwrap_used)]
+#![allow(clippy::expect_used)]
+#![allow(clippy::panic)]
+#![allow(clippy::indexing_slicing)]
+
 use super::*;
 use mockito::Server;
 
