@@ -6,8 +6,8 @@
 #![allow(unused_imports)]
 #![allow(dead_code)]
 
-use intel::TargetAnalyzer;
 use api_client::{TradeRoute, UexClient};
+use intel::TargetAnalyzer;
 use mockito::Server;
 
 /// Helper to create a mock trade route for testing

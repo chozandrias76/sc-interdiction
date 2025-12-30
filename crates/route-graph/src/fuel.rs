@@ -126,12 +126,9 @@ mod tests {
 
     #[test]
     fn test_calculate_qt_fuel_consumption() {
-        let s2_efficiency = match efficiency_for_size(2) {
-            Some(eff) => eff,
-            None => {
-                assert!(false, "S2 efficiency should be available");
-                return;
-            }
+        let Some(s2_efficiency) = efficiency_for_size(2) else {
+            assert!(false, "S2 efficiency should be available");
+            return;
         };
 
         // 25 Mkm trip (cross-system) with S2 drive
@@ -148,26 +145,17 @@ mod tests {
     #[test]
     fn test_efficiency_by_size() {
         // S1 is most efficient (lowest fuel/Mkm)
-        let s1 = match efficiency_for_size(1) {
-            Some(eff) => eff,
-            None => {
-                assert!(false, "S1 efficiency should be available");
-                return;
-            }
+        let Some(s1) = efficiency_for_size(1) else {
+            assert!(false, "S1 efficiency should be available");
+            return;
         };
-        let s2 = match efficiency_for_size(2) {
-            Some(eff) => eff,
-            None => {
-                assert!(false, "S2 efficiency should be available");
-                return;
-            }
+        let Some(s2) = efficiency_for_size(2) else {
+            assert!(false, "S2 efficiency should be available");
+            return;
         };
-        let s3 = match efficiency_for_size(3) {
-            Some(eff) => eff,
-            None => {
-                assert!(false, "S3 efficiency should be available");
-                return;
-            }
+        let Some(s3) = efficiency_for_size(3) else {
+            assert!(false, "S3 efficiency should be available");
+            return;
         };
 
         assert!(s1.fuel_per_mkm < s2.fuel_per_mkm);
@@ -180,12 +168,9 @@ mod tests {
 
     #[test]
     fn test_can_complete_route() {
-        let s2_efficiency = match efficiency_for_size(2) {
-            Some(eff) => eff,
-            None => {
-                assert!(false, "S2 efficiency should be available");
-                return;
-            }
+        let Some(s2_efficiency) = efficiency_for_size(2) else {
+            assert!(false, "S2 efficiency should be available");
+            return;
         };
         let fuel_capacity = 3000.0;
 
@@ -206,12 +191,9 @@ mod tests {
 
     #[test]
     fn test_max_range() {
-        let s2_efficiency = match efficiency_for_size(2) {
-            Some(eff) => eff,
-            None => {
-                assert!(false, "S2 efficiency should be available");
-                return;
-            }
+        let Some(s2_efficiency) = efficiency_for_size(2) else {
+            assert!(false, "S2 efficiency should be available");
+            return;
         };
 
         // 3000 fuel / 80 per Mkm = 37.5 Mkm range

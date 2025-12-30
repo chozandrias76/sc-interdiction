@@ -42,7 +42,8 @@
       "Bash(cd:*)",
       "Bash(git reset:*)",
       "Bash(ls:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(git pull:*)"
     ]
   }
 }

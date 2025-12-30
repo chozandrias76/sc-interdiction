@@ -194,10 +194,7 @@ async fn test_get_ships_by_manufacturer() {
     assert!(ships.iter().all(|s| s.manufacturer_name() == Some("MISC")));
 
     // Test partial match (case-insensitive)
-    let ships = client
-        .get_ships_by_manufacturer("roberts")
-        .await
-        .unwrap();
+    let ships = client.get_ships_by_manufacturer("roberts").await.unwrap();
     assert_eq!(ships.len(), 1);
     assert_eq!(ships[0].name, "Constellation");
 
@@ -274,12 +271,8 @@ async fn test_cache_save_and_load() {
     let temp_dir = TempDir::new().unwrap();
     let cache_dir = temp_dir.path().to_path_buf();
 
-    let ship: ShipModel = serde_json::from_str(&mock_ship_json(
-        "ship-1",
-        "Freelancer",
-        Some("MISC"),
-    ))
-    .unwrap();
+    let ship: ShipModel =
+        serde_json::from_str(&mock_ship_json("ship-1", "Freelancer", Some("MISC"))).unwrap();
 
     let client = FleetYardsClient::with_cache(cache_dir.clone());
 
@@ -319,12 +312,9 @@ async fn test_cache_expiration() {
             .unwrap()
             .as_secs()
             - (25 * 3600), // 25 hours ago
-        ships: vec![serde_json::from_str(&mock_ship_json(
-            "ship-1",
-            "Freelancer",
-            Some("MISC"),
-        ))
-        .unwrap()],
+        ships: vec![
+            serde_json::from_str(&mock_ship_json("ship-1", "Freelancer", Some("MISC"))).unwrap(),
+        ],
     };
 
     // Save expired cache
@@ -348,12 +338,8 @@ async fn test_get_ships_uses_cache() {
     let client = create_test_client_with_cache(&server.url(), cache_dir.clone());
 
     // Pre-populate the cache with valid data
-    let ship: ShipModel = serde_json::from_str(&mock_ship_json(
-        "ship-1",
-        "Cached Ship",
-        Some("MISC"),
-    ))
-    .unwrap();
+    let ship: ShipModel =
+        serde_json::from_str(&mock_ship_json("ship-1", "Cached Ship", Some("MISC"))).unwrap();
     client.save_to_cache(&[ship]).unwrap();
 
     // Call get_ships - should use cache and NOT call API
@@ -391,12 +377,8 @@ async fn test_refresh_cache() {
     let client = create_test_client_with_cache(&server.url(), cache_dir.clone());
 
     // Pre-populate cache with old data
-    let old_ship: ShipModel = serde_json::from_str(&mock_ship_json(
-        "ship-old",
-        "Old Ship",
-        Some("MISC"),
-    ))
-    .unwrap();
+    let old_ship: ShipModel =
+        serde_json::from_str(&mock_ship_json("ship-old", "Old Ship", Some("MISC"))).unwrap();
     client.save_to_cache(&[old_ship]).unwrap();
 
     // Refresh cache - should fetch from API and update cache
