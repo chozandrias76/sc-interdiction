@@ -100,7 +100,9 @@ jobs:
           git commit -m "chore: bump version to ${{ steps.new_version.outputs.version }}"
       
       - name: Push release branch
-        run: git push origin "${{ steps.branch.outputs.name }}"
+        run: |
+          # Force push in case branch exists from failed previous run
+          git push -f origin "${{ steps.branch.outputs.name }}"
       
       - name: Generate changelog
         id: changelog
