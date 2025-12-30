@@ -17,11 +17,12 @@
   - Created `crates/route-graph/src/fuel.rs` module
   - Implemented `calculate_qt_fuel_consumption()`, `can_complete_route()`, `max_range_mkm()`
   - Added `QtDriveEfficiency` struct with S1/S2/S3 drive efficiency ratings
-  
-- [ ] **Extend ship data with fuel capacity**
-  - Update `CargoShip` struct in `crates/intel/src/ships.rs`
-  - Add fields: `quantum_fuel_capacity: f64`, `hydrogen_fuel_capacity: f64`
-  - Port data from FleetYards API (already available in `FleetShip`)
+
+- [x] **Extend ship data with fuel capacity**
+  - Updated `CargoShip` struct in `crates/intel/src/ships.rs`
+  - Added fields: `quantum_fuel_capacity`, `hydrogen_fuel_capacity`, `qt_drive_size`
+  - Added helper methods: `qt_drive_efficiency()`, `can_complete_route()`, `max_range_mkm()`
+  - Populated all ships with realistic fuel capacity data based on size class
   
 - [ ] **Route validation logic**
   - Add `validate_route_fuel(route: &TradeRoute, ship: &CargoShip) -> FuelValidation`
