@@ -2,7 +2,7 @@
 
 use api_client::{Station, Terminal};
 use ordered_float::OrderedFloat;
-use petgraph::algo::dijkstra;
+use petgraph::algo::astar;
 use petgraph::graph::{DiGraph, NodeIndex};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -182,9 +182,23 @@ impl RouteGraph {
                 let (_, idx_a) = &system_nodes[i];
                 let (_, idx_b) = &system_nodes[j];
 
-                // Estimate distance based on typical intra-system distances
-                // TODO: Use actual coordinates when available
-                let distance = 500_000.0; // ~500k km default
+                let node_a = &self.graph[*idx_a];
+                let node_b = &self.graph[*idx_b];
+
+                // Calculate distance using actual coordinates when available
+                let distance = match (node_a.coords, node_b.coords) {
+                    (Some((x1, y1, z1)), Some((x2, y2, z2))) => {
+                        // Calculate Euclidean distance in 3D space
+                        let dx = x2 - x1;
+                        let dy = y2 - y1;
+                        let dz = z2 - z1;
+                        (dx * dx + dy * dy + dz * dz).sqrt()
+                    }
+                    _ => {
+                        // Fall back to default estimate when coordinates not available
+                        500_000.0 // ~500k km default
+                    }
+                };
 
                 let edge = Edge {
                     distance,
@@ -212,20 +226,30 @@ impl RouteGraph {
             .copied()
             .ok_or_else(|| GraphError::NodeNotFound(to_code.to_string()))?;
 
-        let distances = dijkstra(&self.graph, from_idx, Some(to_idx), |e| {
-            OrderedFloat(e.weight().travel_time)
-        });
+        // Use A* algorithm to find the shortest path
+        // The heuristic is 0 (making it equivalent to Dijkstra but with path reconstruction)
+        let result = astar(
+            &self.graph,
+            from_idx,
+            |idx| idx == to_idx,
+            |e| OrderedFloat(e.weight().travel_time),
+            |_| OrderedFloat(0.0), // Zero heuristic = Dijkstra with path
+        );
 
-        if !distances.contains_key(&to_idx) {
-            return Err(GraphError::NoPath {
+        match result {
+            Some((_cost, path)) => {
+                // Convert node indices to node codes
+                let codes: Vec<String> = path
+                    .into_iter()
+                    .map(|idx| self.graph[idx].id.clone())
+                    .collect();
+                Ok(codes)
+            }
+            None => Err(GraphError::NoPath {
                 from: from_code.to_string(),
                 to: to_code.to_string(),
-            });
+            }),
         }
-
-        // Reconstruct path (simplified - just returns node codes for now)
-        // TODO: Implement proper path reconstruction
-        Ok(vec![from_code.to_string(), to_code.to_string()])
     }
 
     /// Get all nodes in the graph.

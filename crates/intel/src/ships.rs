@@ -375,12 +375,110 @@ pub fn estimate_ship_for_routes(routes: &[&TradeRoute]) -> CargoShip {
 }
 
 /// Estimated loot from a successful interdiction.
-/// TODO: Implement loot estimation based on cargo value and ship destruction
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LootEstimate {
+    /// Total value of cargo carried by target
     pub cargo_value: f64,
+    /// Estimated value of recoverable cargo after interdiction
     pub recoverable_cargo: f64,
+    /// Estimated value of salvageable ship components
     pub salvage_value: f64,
+    /// Total estimated loot value
     pub total: f64,
+}
+
+impl LootEstimate {
+    /// Calculate loot estimation for a target ship carrying cargo.
+    ///
+    /// # Arguments
+    /// * `cargo_value` - Total value of cargo on board
+    /// * `ship` - The target ship
+    /// * `destruction_level` - How destructive the interdiction method (0.0 = disable, 1.0 = destroy)
+    ///
+    /// # Returns
+    /// A loot estimate with cargo recovery and salvage value calculations.
+    ///
+    /// # Assumptions
+    /// - Cargo recovery rate: 70% for disable (destruction_level = 0.0), decreases with destruction
+    /// - Salvage value: ~5-15% of ship price based on ship size and destruction level
+    /// - Larger ships have more salvageable components but are harder to fully recover
+    pub fn calculate(cargo_value: f64, ship: &CargoShip, destruction_level: f64) -> Self {
+        // Clamp destruction level to [0.0, 1.0]
+        let destruction = destruction_level.clamp(0.0, 1.0);
+
+        // Cargo recovery rate decreases with destruction
+        // At 0% destruction (disable): 70% recovery
+        // At 50% destruction: 40% recovery
+        // At 100% destruction (fully destroyed): 10% recovery
+        let base_recovery_rate = 0.70;
+        let cargo_recovery_rate = base_recovery_rate * (1.0 - (destruction * 0.857)); // ~10% at full destruction
+        let recoverable_cargo = cargo_value * cargo_recovery_rate;
+
+        // Salvage value based on ship size and destruction
+        // Base salvage rate: 5% for small ships, 10% for medium, 15% for large
+        // Increases slightly with destruction (more exposed components)
+        let base_salvage_rate = match ship.cargo_scu {
+            scu if scu < 100 => 0.05, // Small ships (Aurora, Avenger)
+            scu if scu < 300 => 0.10, // Medium ships (Freelancer, Cutlass, Constellation)
+            _ => 0.15,                // Large ships (Caterpillar, C2, Hull series)
+        };
+
+        // Salvage rate increases slightly with destruction (up to 1.5x at full destruction)
+        let destruction_multiplier = 1.0 + (destruction * 0.5);
+        let salvage_rate = base_salvage_rate * destruction_multiplier;
+
+        // Estimate ship value based on size and role (rough approximation)
+        let estimated_ship_value = estimate_ship_value(ship);
+        let salvage_value = estimated_ship_value * salvage_rate;
+
+        let total = recoverable_cargo + salvage_value;
+
+        Self {
+            cargo_value,
+            recoverable_cargo,
+            salvage_value,
+            total,
+        }
+    }
+
+    /// Calculate loot estimation assuming non-destructive interdiction (disable).
+    pub fn calculate_disable(cargo_value: f64, ship: &CargoShip) -> Self {
+        Self::calculate(cargo_value, ship, 0.0)
+    }
+
+    /// Calculate loot estimation assuming moderate destruction.
+    pub fn calculate_moderate(cargo_value: f64, ship: &CargoShip) -> Self {
+        Self::calculate(cargo_value, ship, 0.5)
+    }
+
+    /// Calculate loot estimation assuming complete destruction.
+    pub fn calculate_destroy(cargo_value: f64, ship: &CargoShip) -> Self {
+        Self::calculate(cargo_value, ship, 1.0)
+    }
+}
+
+/// Estimate the value of a cargo ship based on its characteristics.
+///
+/// This is a rough approximation based on cargo capacity, role, and typical ship prices.
+#[allow(dead_code)]
+fn estimate_ship_value(ship: &CargoShip) -> f64 {
+    // Base value on cargo capacity (aUEC per SCU)
+    let base_value_per_scu = match ship.cargo_scu {
+        scu if scu < 50 => 15_000.0,  // Small ships: ~750k-1M
+        scu if scu < 100 => 12_000.0, // Small-medium: ~1-1.2M
+        scu if scu < 200 => 10_000.0, // Medium: ~1.5-2M
+        scu if scu < 400 => 8_000.0,  // Large: ~2.5-3.2M
+        _ => 6_000.0,                 // Very large: ~3.6M+
+    };
+
+    let base_value = ship.cargo_scu as f64 * base_value_per_scu;
+
+    // Adjust for ship role and capabilities
+    let role_multiplier = if ship.requires_freight_elevator {
+        1.3 // Ships with freight elevators tend to be more expensive (C2, M2, etc.)
+    } else {
+        1.0
+    };
+
+    base_value * role_multiplier
 }

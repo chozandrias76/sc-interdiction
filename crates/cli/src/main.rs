@@ -612,7 +612,25 @@ fn print_terminals_table(terminals: &[api_client::Terminal], system: Option<Stri
     println!("{:=<80}\n", "");
 
     for terminal in terminals {
-        println!("{}", terminal.name.as_deref().unwrap_or("Unknown"));
+        let mut icons = Vec::new();
+        if terminal.is_refuel {
+            icons.push("⛽");
+        }
+        if terminal.is_refinery {
+            icons.push("🏭");
+        }
+
+        let icon_str = if icons.is_empty() {
+            String::new()
+        } else {
+            format!("[{}] ", icons.join(" "))
+        };
+
+        println!(
+            "{}{}",
+            icon_str,
+            terminal.name.as_deref().unwrap_or("Unknown")
+        );
         println!("   {}", terminal.location_string());
         println!();
     }
