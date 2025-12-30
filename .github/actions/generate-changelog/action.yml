@@ -52,8 +52,8 @@ runs:
         REFACTOR_CHANGES=$(echo "$MERGED_PRS" | grep -E "^- #[0-9]+: refactor" || echo "")
         OTHER_CHANGES=$(echo "$MERGED_PRS" | grep -vE "^- #[0-9]+: (ci|build|feat|fix|test|tests|docs|chore|refactor)" || echo "")
         
-        # Build changelog
-        CHANGELOG="## What's Changed\n\n"
+        # Build changelog (without top-level header since it goes in Changes section)
+        CHANGELOG=""
         
         if [ -n "$FEAT_CHANGES" ]; then
           CHANGELOG="$CHANGELOG### ✨ Features\n$FEAT_CHANGES\n\n"
