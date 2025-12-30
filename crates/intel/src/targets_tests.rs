@@ -51,7 +51,10 @@ fn test_extract_system_with_arrow() {
 #[test]
 fn test_extract_system_complex() {
     // Nested parens - should use the last paren group with arrow
-    assert_eq!(extract_system("Stanton Gateway (Pyro) (Pyro > Stanton Gateway)"), "Pyro");
+    assert_eq!(
+        extract_system("Stanton Gateway (Pyro) (Pyro > Stanton Gateway)"),
+        "Pyro"
+    );
 
     // Full terminal name format
     assert_eq!(
@@ -70,7 +73,9 @@ fn test_extract_system_no_system() {
 
 #[test]
 fn test_calculate_risk_score() {
-    let route = mock_trade_route("Gold", "GOLD", "Origin", "Dest", "Stanton", "Stanton", 100.0, 1000.0, 50.0);
+    let route = mock_trade_route(
+        "Gold", "GOLD", "Origin", "Dest", "Stanton", "Stanton", 100.0, 1000.0, 50.0,
+    );
     let score = calculate_risk_score(&route);
 
     // Profit score: (100 / 10).min(30) = 10
@@ -82,7 +87,9 @@ fn test_calculate_risk_score() {
 
 #[test]
 fn test_calculate_risk_score_low_values() {
-    let route = mock_trade_route("Copper", "COPP", "Origin", "Dest", "Stanton", "Stanton", 5.0, 50.0, 10.0);
+    let route = mock_trade_route(
+        "Copper", "COPP", "Origin", "Dest", "Stanton", "Stanton", 5.0, 50.0, 10.0,
+    );
     let score = calculate_risk_score(&route);
 
     // Low profit (5 / 10 = 0.5) + low SCU (50 / 100 = 0.5) + no large cargo bonus
@@ -92,7 +99,17 @@ fn test_calculate_risk_score_low_values() {
 
 #[test]
 fn test_calculate_risk_score_capped_at_100() {
-    let route = mock_trade_route("Unobtanium", "UNO", "Origin", "Dest", "Stanton", "Stanton", 1000.0, 10000.0, 500.0);
+    let route = mock_trade_route(
+        "Unobtanium",
+        "UNO",
+        "Origin",
+        "Dest",
+        "Stanton",
+        "Stanton",
+        1000.0,
+        10000.0,
+        500.0,
+    );
     let score = calculate_risk_score(&route);
 
     // Profit: (1000 / 10).min(30) = 30
@@ -105,17 +122,25 @@ fn test_calculate_risk_score_capped_at_100() {
 #[test]
 fn test_calculate_risk_score_large_cargo_threshold() {
     // Test the exact threshold (500 SCU)
-    let route_at_threshold = mock_trade_route("Test", "TEST", "Origin", "Dest", "Stanton", "Stanton", 10.0, 500.0, 10.0);
+    let route_at_threshold = mock_trade_route(
+        "Test", "TEST", "Origin", "Dest", "Stanton", "Stanton", 10.0, 500.0, 10.0,
+    );
     let score_at = calculate_risk_score(&route_at_threshold);
 
-    let route_above_threshold = mock_trade_route("Test", "TEST", "Origin", "Dest", "Stanton", "Stanton", 10.0, 501.0, 10.0);
+    let route_above_threshold = mock_trade_route(
+        "Test", "TEST", "Origin", "Dest", "Stanton", "Stanton", 10.0, 501.0, 10.0,
+    );
     let score_above = calculate_risk_score(&route_above_threshold);
 
     // At threshold should not get bonus, above threshold should
     assert!(score_above > score_at);
     // Bonus should be approximately 20 (allow for floating point precision)
     let diff = (score_above - score_at - 20.0).abs();
-    assert!(diff < 0.01, "Expected difference of ~20.0, got {}", score_above - score_at);
+    assert!(
+        diff < 0.01,
+        "Expected difference of ~20.0, got {}",
+        score_above - score_at
+    );
 }
 
 // ===== Traffic Direction Tests =====
@@ -151,7 +176,9 @@ fn test_traffic_direction_serialization() {
 
 #[test]
 fn test_trade_route_profit_calculation() {
-    let route = mock_trade_route("Gold", "GOLD", "Origin", "Dest", "Stanton", "Stanton", 10.0, 100.0, 50.0);
+    let route = mock_trade_route(
+        "Gold", "GOLD", "Origin", "Dest", "Stanton", "Stanton", 10.0, 100.0, 50.0,
+    );
 
     // Profit should be profit_per_unit * scu
     let profit_for_100 = route.profit_for_scu(100.0);
@@ -163,7 +190,9 @@ fn test_trade_route_profit_calculation() {
 
 #[test]
 fn test_trade_route_max_profitable_scu() {
-    let route = mock_trade_route("Gold", "GOLD", "Origin", "Dest", "Stanton", "Stanton", 10.0, 100.0, 50.0);
+    let route = mock_trade_route(
+        "Gold", "GOLD", "Origin", "Dest", "Stanton", "Stanton", 10.0, 100.0, 50.0,
+    );
 
     // Max profitable SCU should be min of origin and destination available
     let max_scu = route.max_profitable_scu();

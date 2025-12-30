@@ -38,8 +38,7 @@ impl App {
         self.view = match self.view {
             View::Targets => View::Routes,
             View::Routes => View::Map,
-            View::Map => View::Targets,
-            View::Help => View::Targets,
+            View::Map | View::Help => View::Targets,
         };
         self.selected = 0;
     }

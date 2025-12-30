@@ -55,8 +55,7 @@ pub async fn run(location: Option<String>) -> Result<()> {
                     break;
                 }
             }
-            Event::Mouse => {}
-            Event::Resize => {}
+            Event::Mouse | Event::Resize => {}
         }
     }
 

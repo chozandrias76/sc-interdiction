@@ -12,10 +12,9 @@ pub fn render_header(frame: &mut Frame, app: &App, area: Rect) {
 
     let titles = vec!["[1] Targets", "[2] Routes", "[3] Map"];
     let selected = match app.view {
-        View::Targets => 0,
+        View::Targets | View::Help => 0,
         View::Routes => 1,
         View::Map => 2,
-        View::Help => 0,
     };
 
     let tabs = Tabs::new(titles)
