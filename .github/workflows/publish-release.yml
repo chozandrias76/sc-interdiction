@@ -58,88 +58,9 @@ jobs:
       - name: Generate changelog
         if: steps.check_tag.outputs.exists == 'false'
         id: changelog
-        run: |
-          # Get the previous tag
-          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-          
-          echo "Generating changelog from ${PREV_TAG:-initial commit} to HEAD"
-          
-          # Get merged PRs since last tag
-          if [ -z "$PREV_TAG" ]; then
-            SINCE_DATE="1970-01-01"
-          else
-            SINCE_DATE=$(git log -1 --format=%aI $PREV_TAG)
-          fi
-          
-          MERGED_PRS=$(gh pr list \
-            --state merged \
-            --limit 100 \
-            --json number,title,mergedAt,url \
-            --jq 'sort_by(.mergedAt) | reverse | map(select(.mergedAt > "'$SINCE_DATE'")) | .[] | "- #\(.number): \(.title)"' \
-            2>/dev/null || echo "")
-          
-          # Categorize changes by conventional commit type
-          CI_CHANGES=$(echo "$MERGED_PRS" | grep -E "^- #[0-9]+: (ci|build)" || echo "")
-          FEAT_CHANGES=$(echo "$MERGED_PRS" | grep -E "^- #[0-9]+: feat" || echo "")
-          FIX_CHANGES=$(echo "$MERGED_PRS" | grep -E "^- #[0-9]+: fix" || echo "")
-          TEST_CHANGES=$(echo "$MERGED_PRS" | grep -E "^- #[0-9]+: (test|tests)" || echo "")
-          DOCS_CHANGES=$(echo "$MERGED_PRS" | grep -E "^- #[0-9]+: docs" || echo "")
-          CHORE_CHANGES=$(echo "$MERGED_PRS" | grep -E "^- #[0-9]+: chore" || echo "")
-          REFACTOR_CHANGES=$(echo "$MERGED_PRS" | grep -E "^- #[0-9]+: refactor" || echo "")
-          OTHER_CHANGES=$(echo "$MERGED_PRS" | grep -vE "^- #[0-9]+: (ci|build|feat|fix|test|tests|docs|chore|refactor)" || echo "")
-          
-          # Build changelog
-          CHANGELOG="## What's Changed\n\n"
-          
-          if [ -n "$FEAT_CHANGES" ]; then
-            CHANGELOG="$CHANGELOG### ✨ Features\n$FEAT_CHANGES\n\n"
-          fi
-          
-          if [ -n "$FIX_CHANGES" ]; then
-            CHANGELOG="$CHANGELOG### 🐛 Bug Fixes\n$FIX_CHANGES\n\n"
-          fi
-          
-          if [ -n "$CI_CHANGES" ]; then
-            CHANGELOG="$CHANGELOG### 🔧 CI/CD & Build\n$CI_CHANGES\n\n"
-          fi
-          
-          if [ -n "$TEST_CHANGES" ]; then
-            CHANGELOG="$CHANGELOG### ✅ Testing\n$TEST_CHANGES\n\n"
-          fi
-          
-          if [ -n "$DOCS_CHANGES" ]; then
-            CHANGELOG="$CHANGELOG### 📚 Documentation\n$DOCS_CHANGES\n\n"
-          fi
-          
-          if [ -n "$REFACTOR_CHANGES" ]; then
-            CHANGELOG="$CHANGELOG### ♻️ Refactoring\n$REFACTOR_CHANGES\n\n"
-          fi
-          
-          if [ -n "$CHORE_CHANGES" ]; then
-            CHANGELOG="$CHANGELOG### 🔨 Chores\n$CHORE_CHANGES\n\n"
-          fi
-          
-          if [ -n "$OTHER_CHANGES" ]; then
-            CHANGELOG="$CHANGELOG### 📦 Other Changes\n$OTHER_CHANGES\n\n"
-          fi
-          
-          # If no PRs found, fall back to commit messages
-          if [ -z "$MERGED_PRS" ]; then
-            CHANGELOG="$CHANGELOG### Commits\n"
-            if [ -z "$PREV_TAG" ]; then
-              CHANGELOG="$CHANGELOG$(git log --pretty=format:'- %s (%h)' --no-merges)\n"
-            else
-              CHANGELOG="$CHANGELOG$(git log ${PREV_TAG}..HEAD --pretty=format:'- %s (%h)' --no-merges)\n"
-            fi
-            CHANGELOG="$CHANGELOG\n"
-          fi
-          
-          # Save to file for release notes
-          echo -e "$CHANGELOG" > changelog.txt
-          
-          echo "Generated changelog from ${PREV_TAG:-initial commit} to HEAD"
-        env:
-          GH_TOKEN: ${{ github.token }}
+        uses: ./.github/actions/generate-changelog
+        with:
+          github-token: ${{ github.token }}
       
       - name: Create Git tag
         if: steps.check_tag.outputs.exists == 'false'
@@ -152,7 +73,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          CHANGELOG=$(cat changelog.txt)
+          CHANGELOG="${{ steps.changelog.outputs.changelog }}"
           PRERELEASE_FLAG=""
           
           if [[ "${{ steps.get_version.outputs.version }}" =~ -rc\. ]] || [[ "${{ steps.get_version.outputs.version }}" =~ -beta\. ]] || [[ "${{ steps.get_version.outputs.version }}" =~ -alpha\. ]]; then

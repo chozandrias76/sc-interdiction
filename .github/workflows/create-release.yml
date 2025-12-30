@@ -102,101 +102,43 @@ jobs:
       
       - name: Generate changelog
         id: changelog
+        uses: ./.github/actions/generate-changelog
+        with:
+          previous-version: ${{ steps.current_version.outputs.version }}
+          github-token: ${{ github.token }}
+      
+      - name: Build release PR body
+        id: pr_body
         run: |
-          # Get the previous tag or use initial commit if no tags
-          PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || git rev-list --max-parents=0 HEAD)
+          CHANGELOG="${{ steps.changelog.outputs.changelog }}"
           
-          echo "Generating changelog from $PREV_TAG to HEAD"
-          
-          # Get merged PRs since last tag
-          MERGED_PRS=$(gh pr list \
-            --state merged \
-            --limit 100 \
-            --json number,title,mergedAt,url \
-            --jq 'sort_by(.mergedAt) | reverse | map(select(.mergedAt > "'$(git log -1 --format=%aI $PREV_TAG 2>/dev/null || echo "1970-01-01")'")) | .[] | "- #\(.number): \(.title)"' \
-            2>/dev/null || echo "")
-          
-          # Categorize changes by conventional commit type
-          CI_CHANGES=$(echo "$MERGED_PRS" | grep -E "^- #[0-9]+: (ci|build)" || echo "")
-          FEAT_CHANGES=$(echo "$MERGED_PRS" | grep -E "^- #[0-9]+: feat" || echo "")
-          FIX_CHANGES=$(echo "$MERGED_PRS" | grep -E "^- #[0-9]+: fix" || echo "")
-          TEST_CHANGES=$(echo "$MERGED_PRS" | grep -E "^- #[0-9]+: (test|tests)" || echo "")
-          DOCS_CHANGES=$(echo "$MERGED_PRS" | grep -E "^- #[0-9]+: docs" || echo "")
-          CHORE_CHANGES=$(echo "$MERGED_PRS" | grep -E "^- #[0-9]+: chore" || echo "")
-          REFACTOR_CHANGES=$(echo "$MERGED_PRS" | grep -E "^- #[0-9]+: refactor" || echo "")
-          OTHER_CHANGES=$(echo "$MERGED_PRS" | grep -vE "^- #[0-9]+: (ci|build|feat|fix|test|tests|docs|chore|refactor)" || echo "")
-          
-          # Build changelog
-          CHANGELOG="## Release v${{ steps.new_version.outputs.version }}"
-          CHANGELOG="$CHANGELOG\n\n"
-          
-          if [ -n "$FEAT_CHANGES" ]; then
-            CHANGELOG="$CHANGELOG### ✨ Features\n$FEAT_CHANGES\n\n"
-          fi
-          
-          if [ -n "$FIX_CHANGES" ]; then
-            CHANGELOG="$CHANGELOG### 🐛 Bug Fixes\n$FIX_CHANGES\n\n"
-          fi
-          
-          if [ -n "$CI_CHANGES" ]; then
-            CHANGELOG="$CHANGELOG### 🔧 CI/CD & Build\n$CI_CHANGES\n\n"
-          fi
-          
-          if [ -n "$TEST_CHANGES" ]; then
-            CHANGELOG="$CHANGELOG### ✅ Testing\n$TEST_CHANGES\n\n"
-          fi
-          
-          if [ -n "$DOCS_CHANGES" ]; then
-            CHANGELOG="$CHANGELOG### 📚 Documentation\n$DOCS_CHANGES\n\n"
-          fi
-          
-          if [ -n "$REFACTOR_CHANGES" ]; then
-            CHANGELOG="$CHANGELOG### ♻️ Refactoring\n$REFACTOR_CHANGES\n\n"
-          fi
-          
-          if [ -n "$CHORE_CHANGES" ]; then
-            CHANGELOG="$CHANGELOG### 🔨 Chores\n$CHORE_CHANGES\n\n"
-          fi
-          
-          if [ -n "$OTHER_CHANGES" ]; then
-            CHANGELOG="$CHANGELOG### 📦 Other Changes\n$OTHER_CHANGES\n\n"
-          fi
+          # Add release header
+          PR_BODY="## Release v${{ steps.new_version.outputs.version }}\n\n"
+          PR_BODY="$PR_BODY$CHANGELOG"
           
           # Add version info
-          CHANGELOG="$CHANGELOG## 📋 Version Info\n"
-          CHANGELOG="$CHANGELOG- **Previous**: \`${{ steps.current_version.outputs.version }}\`\n"
-          CHANGELOG="$CHANGELOG- **Current**: \`${{ steps.new_version.outputs.version }}\`\n"
-          CHANGELOG="$CHANGELOG- **Type**: ${{ inputs.version_bump }}\n"
+          PR_BODY="$PR_BODY\n## 📋 Version Info\n"
+          PR_BODY="$PR_BODY- **Previous**: \`${{ steps.current_version.outputs.version }}\`\n"
+          PR_BODY="$PR_BODY- **Current**: \`${{ steps.new_version.outputs.version }}\`\n"
+          PR_BODY="$PR_BODY- **Type**: ${{ inputs.version_bump }}\n"
           if [ "${{ inputs.prerelease }}" = "true" ]; then
-            CHANGELOG="$CHANGELOG- **Pre-release**: Yes\n"
+            PR_BODY="$PR_BODY- **Pre-release**: Yes\n"
           fi
-          CHANGELOG="$CHANGELOG\n"
           
-          # Add full changelog link
-          CHANGELOG="$CHANGELOG---\n"
-          CHANGELOG="$CHANGELOG**Full Changelog**: https://github.com/\${{ github.repository }}/compare/$PREV_TAG...v${{ steps.new_version.outputs.version }}"
-          
-          # Save to file for PR creation
-          echo "$CHANGELOG" > /tmp/changelog.md
-          
-          # Also output for summary
-          echo "changelog<<EOF" >> $GITHUB_OUTPUT
-          echo "$CHANGELOG" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-        env:
-          GH_TOKEN: ${{ github.token }}
+          # Save to file
+          echo -e "$PR_BODY" > /tmp/pr-body.md
       
       - name: Create PR to main
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          CHANGELOG=$(cat /tmp/changelog.md)
+          PR_BODY=$(cat /tmp/pr-body.md)
           
           gh pr create \
             --base main \
             --head "${{ steps.branch.outputs.name }}" \
             --title "release: version ${{ steps.new_version.outputs.version }}" \
-            --body "$CHANGELOG"
+            --body "$PR_BODY"
       
       - name: Create PR from develop to release branch
         env:
