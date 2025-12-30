@@ -23,11 +23,13 @@
   - Added fields: `quantum_fuel_capacity`, `hydrogen_fuel_capacity`, `qt_drive_size`
   - Added helper methods: `qt_drive_efficiency()`, `can_complete_route()`, `max_range_mkm()`
   - Populated all ships with realistic fuel capacity data based on size class
-  
-- [ ] **Route validation logic**
-  - Add `validate_route_fuel(route: &TradeRoute, ship: &CargoShip) -> FuelValidation`
-  - Return: `FuelValidation { is_possible: bool, fuel_required: f64, refuel_needed: bool }`
-  - Integrate into route analysis in `crates/intel/src/targets.rs`
+
+- [x] **Route validation logic**
+  - Created `FuelValidation` struct with fields: `is_possible`, `fuel_required`, `fuel_remaining`, `refuel_needed`
+  - Added `validate_route_fuel(ship, distance)` function
+  - Added `validate_route(distance)` method to `CargoShip`
+  - Integrated into `HotRoute` and `TradeRun` structs with distance calculation
+  - Routes now automatically include fuel feasibility assessment
 
 - [ ] **Display fuel warnings in output**
   - Update CLI route display to show fuel status

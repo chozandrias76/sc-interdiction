@@ -4,11 +4,11 @@ use std::collections::HashMap;
 use api_client::{TradeRoute, UexClient};
 use ordered_float::OrderedFloat;
 use route_graph::{
-    estimate_position, find_chokepoints, find_route_intersections, Chokepoint,
+    distance_between, estimate_position, find_chokepoints, find_route_intersections, Chokepoint,
     RouteGraph, RouteIntersection, RouteSegment,
 };
 use serde::{Deserialize, Serialize};
-use crate::ships::{CargoShip, estimate_ship_for_route, estimate_ship_for_routes};
+use crate::ships::{validate_route_fuel, CargoShip, FuelValidation, estimate_ship_for_route, estimate_ship_for_routes};
 
 /// Analyzes trade data to predict targets.
 pub struct TargetAnalyzer {
@@ -32,6 +32,13 @@ impl TargetAnalyzer {
                 let likely_ship = estimate_ship_for_route(&r);
                 let estimated_value = r.profit_for_scu(likely_ship.cargo_scu as f64);
 
+                // Calculate route distance
+                let distance_mkm = distance_between(&r.terminal_origin_name, &r.terminal_destination_name)
+                    .unwrap_or(0.0);
+
+                // Validate fuel for this route
+                let fuel_validation = validate_route_fuel(&likely_ship, distance_mkm);
+
                 HotRoute {
                     commodity: r.commodity_name.clone(),
                     commodity_code: r.commodity_code.clone(),
@@ -44,6 +51,8 @@ impl TargetAnalyzer {
                     likely_ship,
                     estimated_haul_value: estimated_value,
                     risk_score: calculate_risk_score(&r),
+                    distance_mkm,
+                    fuel_validation,
                 }
             })
             .collect();
@@ -302,6 +311,26 @@ impl TargetAnalyzer {
 
             let total_profit = outbound_profit + return_profit;
 
+            // Calculate total distance for round trip
+            let outbound_distance = distance_between(
+                &outbound.terminal_origin_name,
+                &outbound.terminal_destination_name,
+            )
+            .unwrap_or(0.0);
+
+            let return_distance = if let Some(ret) = best_return {
+                distance_between(&ret.terminal_origin_name, &ret.terminal_destination_name)
+                    .unwrap_or(0.0)
+            } else {
+                // Deadhead return - same distance back
+                outbound_distance
+            };
+
+            let total_distance_mkm = outbound_distance + return_distance;
+
+            // Validate fuel for complete round trip
+            let fuel_validation = validate_route_fuel(&likely_ship, total_distance_mkm);
+
             trade_runs.push(TradeRun {
                 outbound: RouteLeg {
                     commodity: outbound.commodity_name.clone(),
@@ -314,6 +343,8 @@ impl TargetAnalyzer {
                 likely_ship,
                 total_profit,
                 has_return_cargo: best_return.is_some(),
+                total_distance_mkm,
+                fuel_validation,
             });
         }
 
@@ -340,6 +371,10 @@ pub struct HotRoute {
     pub estimated_haul_value: f64,
     /// Risk score 0-100 (higher = more likely to be used).
     pub risk_score: f64,
+    /// Route distance in millions of kilometers.
+    pub distance_mkm: f64,
+    /// Fuel validation for this route with the likely ship.
+    pub fuel_validation: FuelValidation,
 }
 
 /// A complete round-trip trade run (outbound + return with cargo).
@@ -355,6 +390,10 @@ pub struct TradeRun {
     pub total_profit: f64,
     /// Whether this is a full round-trip with return cargo.
     pub has_return_cargo: bool,
+    /// Total distance for the round trip in millions of kilometers.
+    pub total_distance_mkm: f64,
+    /// Fuel validation for the complete round trip.
+    pub fuel_validation: FuelValidation,
 }
 
 /// A single leg of a trade route.

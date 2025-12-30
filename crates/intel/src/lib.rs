@@ -10,4 +10,4 @@ pub use targets::{
     RouteLeg, ShipFrequency, TargetAnalyzer, TargetPrediction, TradeActivity, TradeRun,
     TrafficDirection,
 };
-pub use ships::{CargoShip, CARGO_SHIPS};
+pub use ships::{validate_route_fuel, CargoShip, FuelValidation, CARGO_SHIPS};

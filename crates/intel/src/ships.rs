@@ -3,6 +3,19 @@
 use api_client::TradeRoute;
 use serde::{Deserialize, Serialize};
 
+/// Result of validating a route against ship fuel capacity.
+#[derive(Debug, Clone, Serialize)]
+pub struct FuelValidation {
+    /// Whether the route is possible with current fuel capacity.
+    pub is_possible: bool,
+    /// Quantum fuel required for the route (in units).
+    pub fuel_required: f64,
+    /// Fuel remaining after completing the route (0 if not possible).
+    pub fuel_remaining: f64,
+    /// Whether a refuel stop is needed.
+    pub refuel_needed: bool,
+}
+
 /// A cargo ship with relevant stats.
 #[derive(Debug, Clone, Copy, Serialize)]
 pub struct CargoShip {
@@ -58,6 +71,19 @@ impl CargoShip {
             route_graph::max_range_mkm(self.quantum_fuel_capacity, efficiency)
         } else {
             0.0
+        }
+    }
+
+    /// Validate if this ship can complete a trade route without refueling.
+    pub fn validate_route(&self, route_distance_mkm: f64) -> FuelValidation {
+        let (is_possible, fuel_required, fuel_remaining) =
+            self.can_complete_route(route_distance_mkm);
+
+        FuelValidation {
+            is_possible,
+            fuel_required,
+            fuel_remaining,
+            refuel_needed: !is_possible,
         }
     }
 }
@@ -367,6 +393,17 @@ pub fn estimate_ship_for_routes(routes: &[&TradeRoute]) -> CargoShip {
     }
 }
 
+/// Validate if a ship can complete a trade route based on distance.
+///
+/// # Arguments
+/// * `ship` - The cargo ship to validate
+/// * `route_distance_mkm` - Route distance in millions of kilometers
+///
+/// # Returns
+/// `FuelValidation` struct with feasibility and fuel consumption details
+pub fn validate_route_fuel(ship: &CargoShip, route_distance_mkm: f64) -> FuelValidation {
+    ship.validate_route(route_distance_mkm)
+}
 
 /// Estimated loot from a successful interdiction.
 /// TODO: Implement loot estimation based on cargo value and ship destruction
