@@ -498,3 +498,148 @@ mod fuel_station_tests {
         }
     }
 }
+
+/// A waypoint in a multi-hop route.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Waypoint {
+    /// Location name/code.
+    pub location: String,
+    /// Whether this is a refueling stop.
+    pub needs_refuel: bool,
+    /// Distance to this waypoint from previous location (Mkm).
+    pub distance_from_prev: f64,
+    /// Cumulative distance from origin (Mkm).
+    pub cumulative_distance: f64,
+}
+
+/// Find a route with refueling waypoints if needed.
+///
+/// Returns a list of waypoints from origin to destination.
+/// If the ship can complete the route without refueling, returns just origin and destination.
+/// Otherwise, inserts refueling stops at appropriate fuel stations along the way.
+///
+/// # Arguments
+/// * `origin` - Starting location name
+/// * `dest` - Destination location name  
+/// * `fuel_capacity` - Ship's quantum fuel capacity (units)
+/// * `efficiency` - Ship's quantum drive efficiency
+/// * `fuel_index` - Index of available fuel stations
+///
+/// # Returns
+/// * `Ok(Vec<Waypoint>)` - List of waypoints including refuel stops if needed
+/// * `Err(String)` - If route cannot be completed (no positions found, no fuel stations available, etc.)
+pub fn find_route_with_refueling(
+    origin: &str,
+    dest: &str,
+    fuel_capacity: f64,
+    efficiency: &QtDriveEfficiency,
+    fuel_index: &FuelStationIndex,
+) -> Result<Vec<Waypoint>, String> {
+    use crate::locations::{distance_between, estimate_position};
+
+    // Get positions
+    let origin_pos =
+        estimate_position(origin).ok_or_else(|| format!("Unknown origin location: {}", origin))?;
+    let dest_pos =
+        estimate_position(dest).ok_or_else(|| format!("Unknown destination location: {}", dest))?;
+
+    let total_distance = distance_between(origin, dest)
+        .ok_or_else(|| "Could not calculate distance between locations".to_string())?;
+
+    // Check if we can make it without refueling
+    let max_range = max_range_mkm(fuel_capacity, efficiency);
+
+    if total_distance <= max_range {
+        // Direct route - no refueling needed
+        return Ok(vec![
+            Waypoint {
+                location: origin.to_string(),
+                needs_refuel: false,
+                distance_from_prev: 0.0,
+                cumulative_distance: 0.0,
+            },
+            Waypoint {
+                location: dest.to_string(),
+                needs_refuel: false,
+                distance_from_prev: total_distance,
+                cumulative_distance: total_distance,
+            },
+        ]);
+    }
+
+    // Need refueling - find stations along the route
+    let mut waypoints = vec![Waypoint {
+        location: origin.to_string(),
+        needs_refuel: false,
+        distance_from_prev: 0.0,
+        cumulative_distance: 0.0,
+    }];
+
+    let mut current_pos = origin_pos;
+    let mut current_name = origin;
+    let mut remaining_fuel = fuel_capacity;
+    let mut cumulative_dist = 0.0;
+
+    // Keep finding refuel stops until we reach destination
+    let max_iterations = 10; // Prevent infinite loops
+    for _ in 0..max_iterations {
+        // Find nearest fuel station on route to destination
+        let station_opt = fuel_index.find_nearest_on_route(&current_pos, &dest_pos, max_range);
+
+        let (best_station, _deviation) = station_opt.ok_or_else(|| {
+            format!(
+                "No fuel stations found within range ({:.1} Mkm) from {}",
+                max_range, current_name
+            )
+        })?;
+
+        let station_pos = best_station
+            .position
+            .as_ref()
+            .ok_or_else(|| format!("Fuel station {} has no position", best_station.name))?;
+
+        let dist_to_station = current_pos.distance_to(station_pos);
+
+        // Check if we can reach this station with remaining fuel
+        let fuel_needed = calculate_qt_fuel_consumption(dist_to_station, efficiency);
+        if fuel_needed > remaining_fuel {
+            return Err(format!(
+                "Cannot reach next fuel station {} - need {:.0} units but only {:.0} remaining",
+                best_station.name, fuel_needed, remaining_fuel
+            ));
+        }
+
+        cumulative_dist += dist_to_station;
+
+        waypoints.push(Waypoint {
+            location: best_station.name.clone(),
+            needs_refuel: true,
+            distance_from_prev: dist_to_station,
+            cumulative_distance: cumulative_dist,
+        });
+
+        // Check if we can reach destination from this fuel station
+        let dist_to_dest = station_pos.distance_to(&dest_pos);
+        if dist_to_dest <= max_range {
+            // Final hop to destination
+            cumulative_dist += dist_to_dest;
+            waypoints.push(Waypoint {
+                location: dest.to_string(),
+                needs_refuel: false,
+                distance_from_prev: dist_to_dest,
+                cumulative_distance: cumulative_dist,
+            });
+            return Ok(waypoints);
+        }
+
+        // Update current position for next iteration
+        current_pos = *station_pos;
+        current_name = &best_station.name;
+        remaining_fuel = fuel_capacity; // Assume full refuel
+    }
+
+    Err(format!(
+        "Could not find route to {} - exceeded maximum refueling stops",
+        dest
+    ))
+}

@@ -11,8 +11,9 @@ mod spatial;
 
 pub use chokepoint::{find_chokepoints, Chokepoint, InterdictPosition, RoutePair};
 pub use fuel::{
-    calculate_qt_fuel_consumption, can_complete_route, efficiency_for_size, max_range_mkm,
-    QtDriveEfficiency, QT_DRIVE_EFFICIENCY,
+    calculate_qt_fuel_consumption, can_complete_route, efficiency_for_size,
+    find_route_with_refueling, max_range_mkm, FuelStationIndex, QtDriveEfficiency, Waypoint,
+    QT_DRIVE_EFFICIENCY,
 };
 pub use graph::{Edge, Node, NodeType, RouteGraph};
 pub use locations::{
