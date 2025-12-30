@@ -89,10 +89,8 @@ impl UexClient {
     #[instrument(skip(self))]
     pub async fn get_trade_routes(&self) -> Result<Vec<TradeRoute>> {
         // Fetch both prices and terminals concurrently
-        let (prices, terminals) = tokio::try_join!(
-            self.get_all_commodity_prices(),
-            self.get_terminals()
-        )?;
+        let (prices, terminals) =
+            tokio::try_join!(self.get_all_commodity_prices(), self.get_terminals())?;
 
         // Build terminal lookup map (id -> full name with location)
         let terminal_names: std::collections::HashMap<i64, String> = terminals
@@ -169,7 +167,11 @@ impl UexClient {
         }
 
         // Sort by profit per unit descending
-        routes.sort_by(|a, b| b.profit_per_unit.partial_cmp(&a.profit_per_unit).unwrap_or(std::cmp::Ordering::Equal));
+        routes.sort_by(|a, b| {
+            b.profit_per_unit
+                .partial_cmp(&a.profit_per_unit)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
 
         Ok(routes)
     }
@@ -193,7 +195,10 @@ impl UexClient {
         let body = response.text().await?;
         let parsed: T = serde_json::from_str(&body).map_err(|e| {
             eprintln!("Failed to parse JSON response from {}", url);
-            eprintln!("Response body (first 500 chars): {}", &body.chars().take(500).collect::<String>());
+            eprintln!(
+                "Response body (first 500 chars): {}",
+                &body.chars().take(500).collect::<String>()
+            );
             eprintln!("Parse error: {}", e);
             e
         })?;

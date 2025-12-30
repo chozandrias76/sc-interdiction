@@ -70,7 +70,9 @@ impl FleetYardsClient {
                 let message = response.text().await.unwrap_or_default();
                 return Err(match status {
                     404 => ApiError::NotFound(url),
-                    429 => ApiError::RateLimited { retry_after_secs: 60 },
+                    429 => ApiError::RateLimited {
+                        retry_after_secs: 60,
+                    },
                     _ => ApiError::Api { status, message },
                 });
             }
@@ -98,7 +100,9 @@ impl FleetYardsClient {
     pub async fn get_ship(&self, name: &str) -> Result<Option<ShipModel>> {
         let ships = self.get_ships().await?;
         let name_lower = name.to_lowercase();
-        Ok(ships.into_iter().find(|s| s.name.to_lowercase() == name_lower))
+        Ok(ships
+            .into_iter()
+            .find(|s| s.name.to_lowercase() == name_lower))
     }
 
     /// Get ships by manufacturer.
@@ -166,7 +170,7 @@ impl FleetYardsClient {
             version: env!("CARGO_PKG_VERSION").to_string(),
             fetched_at: std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
+                .unwrap_or_else(|_| std::time::Duration::from_secs(0))
                 .as_secs(),
             ships: ships.to_vec(),
         };
@@ -241,12 +245,18 @@ pub struct ShipModel {
 impl ShipModel {
     /// Get hydrogen fuel tank capacity.
     pub fn hydrogen_fuel_capacity(&self) -> Option<u64> {
-        self.metrics.as_ref()?.hydrogen_fuel_tank_size.map(|v| v as u64)
+        self.metrics
+            .as_ref()?
+            .hydrogen_fuel_tank_size
+            .map(|v| v as u64)
     }
 
     /// Get quantum fuel tank capacity.
     pub fn quantum_fuel_capacity(&self) -> Option<u64> {
-        self.metrics.as_ref()?.quantum_fuel_tank_size.map(|v| v as u64)
+        self.metrics
+            .as_ref()?
+            .quantum_fuel_tank_size
+            .map(|v| v as u64)
     }
 
     /// Get cargo capacity in SCU.

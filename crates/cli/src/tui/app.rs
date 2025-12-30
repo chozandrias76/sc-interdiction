@@ -3,7 +3,7 @@
 use api_client::UexClient;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use eyre::Result;
-use intel::{TargetAnalyzer, TargetPrediction, HotRoute, TrafficDirection};
+use intel::{HotRoute, TargetAnalyzer, TargetPrediction, TrafficDirection};
 use route_graph::RouteIntersection;
 
 /// Current view in the application.
@@ -173,6 +173,7 @@ impl App {
     }
 
     /// Handle key events. Returns true if the app should exit.
+    #[allow(clippy::too_many_lines)]
     pub fn on_key(&mut self, key: KeyEvent) -> bool {
         // Quit on q or Ctrl+C
         if key.code == KeyCode::Char('q')
@@ -287,28 +288,26 @@ impl App {
             }
 
             // Sorting
-            KeyCode::Char('s') => {
-                match self.view {
-                    View::Targets => {
-                        self.target_sort = match self.target_sort {
-                            TargetSort::Value => TargetSort::Threat,
-                            TargetSort::Threat => TargetSort::Ship,
-                            TargetSort::Ship => TargetSort::Commodity,
-                            TargetSort::Commodity => TargetSort::Value,
-                        };
-                        self.sort_targets();
-                    }
-                    View::Routes => {
-                        self.route_sort = match self.route_sort {
-                            RouteSort::Profit => RouteSort::Value,
-                            RouteSort::Value => RouteSort::Commodity,
-                            RouteSort::Commodity => RouteSort::Profit,
-                        };
-                        self.sort_routes();
-                    }
-                    _ => {}
+            KeyCode::Char('s') => match self.view {
+                View::Targets => {
+                    self.target_sort = match self.target_sort {
+                        TargetSort::Value => TargetSort::Threat,
+                        TargetSort::Threat => TargetSort::Ship,
+                        TargetSort::Ship => TargetSort::Commodity,
+                        TargetSort::Commodity => TargetSort::Value,
+                    };
+                    self.sort_targets();
                 }
-            }
+                View::Routes => {
+                    self.route_sort = match self.route_sort {
+                        RouteSort::Profit => RouteSort::Value,
+                        RouteSort::Value => RouteSort::Commodity,
+                        RouteSort::Commodity => RouteSort::Profit,
+                    };
+                    self.sort_routes();
+                }
+                _ => {}
+            },
             KeyCode::Char('S') => {
                 self.sort_asc = !self.sort_asc;
                 self.sort_targets();
@@ -398,26 +397,41 @@ impl App {
         match self.target_sort {
             TargetSort::Value => {
                 self.targets.sort_by(|a, b| {
-                    let cmp = b.estimated_cargo_value.partial_cmp(&a.estimated_cargo_value);
-                    if asc { cmp.map(|c| c.reverse()) } else { cmp }.unwrap_or(std::cmp::Ordering::Equal)
+                    let cmp = b
+                        .estimated_cargo_value
+                        .partial_cmp(&a.estimated_cargo_value);
+                    if asc { cmp.map(|c| c.reverse()) } else { cmp }
+                        .unwrap_or(std::cmp::Ordering::Equal)
                 });
             }
             TargetSort::Threat => {
                 self.targets.sort_by(|a, b| {
                     let cmp = b.likely_ship.threat_level.cmp(&a.likely_ship.threat_level);
-                    if asc { cmp.reverse() } else { cmp }
+                    if asc {
+                        cmp.reverse()
+                    } else {
+                        cmp
+                    }
                 });
             }
             TargetSort::Ship => {
                 self.targets.sort_by(|a, b| {
                     let cmp = a.likely_ship.name.cmp(&b.likely_ship.name);
-                    if asc { cmp } else { cmp.reverse() }
+                    if asc {
+                        cmp
+                    } else {
+                        cmp.reverse()
+                    }
                 });
             }
             TargetSort::Commodity => {
                 self.targets.sort_by(|a, b| {
                     let cmp = a.commodity.cmp(&b.commodity);
-                    if asc { cmp } else { cmp.reverse() }
+                    if asc {
+                        cmp
+                    } else {
+                        cmp.reverse()
+                    }
                 });
             }
         }
@@ -429,19 +443,25 @@ impl App {
             RouteSort::Profit => {
                 self.routes.sort_by(|a, b| {
                     let cmp = b.profit_per_scu.partial_cmp(&a.profit_per_scu);
-                    if asc { cmp.map(|c| c.reverse()) } else { cmp }.unwrap_or(std::cmp::Ordering::Equal)
+                    if asc { cmp.map(|c| c.reverse()) } else { cmp }
+                        .unwrap_or(std::cmp::Ordering::Equal)
                 });
             }
             RouteSort::Value => {
                 self.routes.sort_by(|a, b| {
                     let cmp = b.estimated_haul_value.partial_cmp(&a.estimated_haul_value);
-                    if asc { cmp.map(|c| c.reverse()) } else { cmp }.unwrap_or(std::cmp::Ordering::Equal)
+                    if asc { cmp.map(|c| c.reverse()) } else { cmp }
+                        .unwrap_or(std::cmp::Ordering::Equal)
                 });
             }
             RouteSort::Commodity => {
                 self.routes.sort_by(|a, b| {
                     let cmp = a.commodity.cmp(&b.commodity);
-                    if asc { cmp } else { cmp.reverse() }
+                    if asc {
+                        cmp
+                    } else {
+                        cmp.reverse()
+                    }
                 });
             }
         }
@@ -454,15 +474,36 @@ fn infer_system(location: &str) -> String {
 
     // Stanton system locations
     let stanton_locations = [
-        "hurston", "crusader", "arccorp", "microtech",
-        "lorville", "orison", "area18", "new babbage",
-        "port olisar", "everus", "baijini", "tressler",
-        "grim hex", "levski",
-        "hur-l", "cru-l", "arc-l", "mic-l",
-        "arial", "aberdeen", "magda", "ita",
-        "cellin", "daymar", "yela",
-        "lyria", "wala",
-        "calliope", "clio", "euterpe",
+        "hurston",
+        "crusader",
+        "arccorp",
+        "microtech",
+        "lorville",
+        "orison",
+        "area18",
+        "new babbage",
+        "port olisar",
+        "everus",
+        "baijini",
+        "tressler",
+        "grim hex",
+        "levski",
+        "hur-l",
+        "cru-l",
+        "arc-l",
+        "mic-l",
+        "arial",
+        "aberdeen",
+        "magda",
+        "ita",
+        "cellin",
+        "daymar",
+        "yela",
+        "lyria",
+        "wala",
+        "calliope",
+        "clio",
+        "euterpe",
     ];
 
     for loc in stanton_locations {
@@ -484,6 +525,7 @@ fn infer_system(location: &str) -> String {
 
 /// Build static map locations for a system.
 /// Uses angular positions to spread planets around the star for visualization.
+#[allow(clippy::too_many_lines)]
 fn build_map_locations(system: &str) -> Vec<MapLocation> {
     use std::f64::consts::PI;
 
@@ -543,7 +585,7 @@ fn build_map_locations(system: &str) -> Vec<MapLocation> {
                 locations.push(MapLocation {
                     name: name.to_string(),
                     angle: PI * 0.25 + (i as f64 * PI * 0.5), // Spread around Hurston
-                    orbital_radius: 1.5, // Moon orbital radius from planet
+                    orbital_radius: 1.5,                      // Moon orbital radius from planet
                     loc_type: MapLocationType::Moon,
                     parent: Some("Hurston".to_string()),
                 });

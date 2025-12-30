@@ -324,7 +324,7 @@ pub struct RouteIntersection {
     /// Average threat level of ships on these routes (1-10).
     pub avg_threat_level: f64,
     /// Average interdiction value per target - higher = better expected payout.
-    /// Calculated as average of (cargo_value / threat) across all routes.
+    /// Calculated as average of `cargo_value / threat` across all routes.
     /// Example: A zone with mostly C2 Hercules (threat 2) hauling 10M cargo
     /// has avg interdiction value of 5M per catch.
     /// A zone with Andromedas (threat 7) hauling same cargo = only 1.4M per catch.
@@ -341,7 +341,7 @@ pub struct JumpInstruction {
     /// The QT destination to select in your ship's navigation.
     pub destination: String,
     /// Exit quantum travel when your distance reads this many Mm (megameters).
-    /// Example: If exit_at_mm is 15000, exit QT when display shows ~15,000 Mm.
+    /// Example: If `exit_at_mm` is 15000, exit QT when display shows ~15,000 Mm.
     pub exit_at_mm: u64,
     /// Distance from the QT destination to the interdiction zone in Mm.
     pub distance_from_dest_mm: u64,
@@ -369,7 +369,7 @@ pub struct IntersectingRoute {
     pub cargo_value: f64,
     pub ship_name: String,
     pub threat_level: u8,
-    /// This route's interdiction value (cargo_value / threat).
+    /// This route's interdiction value (`cargo_value / threat`).
     pub interdiction_value: f64,
 }
 
@@ -534,19 +534,29 @@ fn extract_short_location(terminal_name: &str) -> Option<&str> {
     // Terminal names like "Commodity Shop - Admin - Port Olisar (Stanton > Crusader)"
     // Try to extract a recognizable location name
     let known_locations = [
-        "Hurston", "Crusader", "ArcCorp", "microTech",
-        "Lorville", "Orison", "Area18", "New Babbage",
-        "Port Olisar", "Everus Harbor", "Baijini Point", "Port Tressler",
-        "Grim HEX", "Levski",
-        "Pyro", "Gaslight", "Endgame", "Stanton Gateway",
+        "Hurston",
+        "Crusader",
+        "ArcCorp",
+        "microTech",
+        "Lorville",
+        "Orison",
+        "Area18",
+        "New Babbage",
+        "Port Olisar",
+        "Everus Harbor",
+        "Baijini Point",
+        "Port Tressler",
+        "Grim HEX",
+        "Levski",
+        "Pyro",
+        "Gaslight",
+        "Endgame",
+        "Stanton Gateway",
     ];
 
-    for loc in known_locations {
-        if terminal_name.to_lowercase().contains(&loc.to_lowercase()) {
-            return Some(loc);
-        }
-    }
-    None
+    known_locations
+        .into_iter()
+        .find(|&loc| terminal_name.to_lowercase().contains(&loc.to_lowercase()))
 }
 
 fn infer_system_from_routes(routes: &[&RouteSegment]) -> String {
@@ -591,6 +601,7 @@ fn qt_moon_pos(parent: Point3D, offset_radius: f64, angle_deg: f64) -> Point3D {
 }
 
 /// Get all QT-selectable destinations.
+#[allow(clippy::too_many_lines)]
 fn get_qt_destinations() -> Vec<QtDestination> {
     // Planet positions at orbital angles
     let hurston = qt_orbital_pos(12.85, 45.0);
@@ -600,61 +611,177 @@ fn get_qt_destinations() -> Vec<QtDestination> {
 
     vec![
         // Stanton planets (main bodies)
-        QtDestination { name: "Hurston", position: hurston },
-        QtDestination { name: "Crusader", position: crusader },
-        QtDestination { name: "ArcCorp", position: arccorp },
-        QtDestination { name: "microTech", position: microtech },
-
+        QtDestination {
+            name: "Hurston",
+            position: hurston,
+        },
+        QtDestination {
+            name: "Crusader",
+            position: crusader,
+        },
+        QtDestination {
+            name: "ArcCorp",
+            position: arccorp,
+        },
+        QtDestination {
+            name: "microTech",
+            position: microtech,
+        },
         // Hurston moons
-        QtDestination { name: "Arial", position: qt_moon_pos(hurston, 0.3, 30.0) },
-        QtDestination { name: "Aberdeen", position: qt_moon_pos(hurston, 0.35, 120.0) },
-        QtDestination { name: "Magda", position: qt_moon_pos(hurston, 0.28, 210.0) },
-        QtDestination { name: "Ita", position: qt_moon_pos(hurston, 0.32, 300.0) },
-
+        QtDestination {
+            name: "Arial",
+            position: qt_moon_pos(hurston, 0.3, 30.0),
+        },
+        QtDestination {
+            name: "Aberdeen",
+            position: qt_moon_pos(hurston, 0.35, 120.0),
+        },
+        QtDestination {
+            name: "Magda",
+            position: qt_moon_pos(hurston, 0.28, 210.0),
+        },
+        QtDestination {
+            name: "Ita",
+            position: qt_moon_pos(hurston, 0.32, 300.0),
+        },
         // Crusader moons
-        QtDestination { name: "Cellin", position: qt_moon_pos(crusader, 0.4, 0.0) },
-        QtDestination { name: "Daymar", position: qt_moon_pos(crusader, 0.45, 120.0) },
-        QtDestination { name: "Yela", position: qt_moon_pos(crusader, 0.38, 240.0) },
-
+        QtDestination {
+            name: "Cellin",
+            position: qt_moon_pos(crusader, 0.4, 0.0),
+        },
+        QtDestination {
+            name: "Daymar",
+            position: qt_moon_pos(crusader, 0.45, 120.0),
+        },
+        QtDestination {
+            name: "Yela",
+            position: qt_moon_pos(crusader, 0.38, 240.0),
+        },
         // ArcCorp moons
-        QtDestination { name: "Lyria", position: qt_moon_pos(arccorp, 0.25, 60.0) },
-        QtDestination { name: "Wala", position: qt_moon_pos(arccorp, 0.3, 180.0) },
-
+        QtDestination {
+            name: "Lyria",
+            position: qt_moon_pos(arccorp, 0.25, 60.0),
+        },
+        QtDestination {
+            name: "Wala",
+            position: qt_moon_pos(arccorp, 0.3, 180.0),
+        },
         // microTech moons
-        QtDestination { name: "Calliope", position: qt_moon_pos(microtech, 0.35, 30.0) },
-        QtDestination { name: "Clio", position: qt_moon_pos(microtech, 0.4, 150.0) },
-        QtDestination { name: "Euterpe", position: qt_moon_pos(microtech, 0.32, 270.0) },
-
+        QtDestination {
+            name: "Calliope",
+            position: qt_moon_pos(microtech, 0.35, 30.0),
+        },
+        QtDestination {
+            name: "Clio",
+            position: qt_moon_pos(microtech, 0.4, 150.0),
+        },
+        QtDestination {
+            name: "Euterpe",
+            position: qt_moon_pos(microtech, 0.32, 270.0),
+        },
         // Lagrange stations (positioned at proper angles relative to planets)
-        QtDestination { name: "HUR-L1", position: qt_orbital_pos(10.0, 45.0) },
-        QtDestination { name: "HUR-L2", position: qt_orbital_pos(15.0, 45.0) },
-        QtDestination { name: "HUR-L3", position: qt_orbital_pos(12.85, 225.0) },
-        QtDestination { name: "HUR-L4", position: qt_orbital_pos(12.85, 105.0) },
-        QtDestination { name: "HUR-L5", position: qt_orbital_pos(12.85, -15.0) },
-        QtDestination { name: "CRU-L1", position: qt_orbital_pos(15.0, 135.0) },
-        QtDestination { name: "CRU-L4", position: qt_orbital_pos(18.96, 195.0) },
-        QtDestination { name: "CRU-L5", position: qt_orbital_pos(18.96, 75.0) },
-        QtDestination { name: "ARC-L1", position: qt_orbital_pos(15.0, 225.0) },
-        QtDestination { name: "MIC-L1", position: qt_orbital_pos(18.0, 315.0) },
-        QtDestination { name: "MIC-L2", position: qt_orbital_pos(27.0, 315.0) },
-
+        QtDestination {
+            name: "HUR-L1",
+            position: qt_orbital_pos(10.0, 45.0),
+        },
+        QtDestination {
+            name: "HUR-L2",
+            position: qt_orbital_pos(15.0, 45.0),
+        },
+        QtDestination {
+            name: "HUR-L3",
+            position: qt_orbital_pos(12.85, 225.0),
+        },
+        QtDestination {
+            name: "HUR-L4",
+            position: qt_orbital_pos(12.85, 105.0),
+        },
+        QtDestination {
+            name: "HUR-L5",
+            position: qt_orbital_pos(12.85, -15.0),
+        },
+        QtDestination {
+            name: "CRU-L1",
+            position: qt_orbital_pos(15.0, 135.0),
+        },
+        QtDestination {
+            name: "CRU-L4",
+            position: qt_orbital_pos(18.96, 195.0),
+        },
+        QtDestination {
+            name: "CRU-L5",
+            position: qt_orbital_pos(18.96, 75.0),
+        },
+        QtDestination {
+            name: "ARC-L1",
+            position: qt_orbital_pos(15.0, 225.0),
+        },
+        QtDestination {
+            name: "MIC-L1",
+            position: qt_orbital_pos(18.0, 315.0),
+        },
+        QtDestination {
+            name: "MIC-L2",
+            position: qt_orbital_pos(27.0, 315.0),
+        },
         // Orbital stations
-        QtDestination { name: "Everus Harbor", position: qt_moon_pos(hurston, 0.05, 90.0) },
-        QtDestination { name: "Port Olisar", position: qt_moon_pos(crusader, 0.05, 90.0) },
-        QtDestination { name: "Baijini Point", position: qt_moon_pos(arccorp, 0.05, 90.0) },
-        QtDestination { name: "Port Tressler", position: qt_moon_pos(microtech, 0.05, 90.0) },
-        QtDestination { name: "Grim HEX", position: qt_moon_pos(qt_moon_pos(crusader, 0.38, 240.0), 0.1, 45.0) },
-
+        QtDestination {
+            name: "Everus Harbor",
+            position: qt_moon_pos(hurston, 0.05, 90.0),
+        },
+        QtDestination {
+            name: "Port Olisar",
+            position: qt_moon_pos(crusader, 0.05, 90.0),
+        },
+        QtDestination {
+            name: "Baijini Point",
+            position: qt_moon_pos(arccorp, 0.05, 90.0),
+        },
+        QtDestination {
+            name: "Port Tressler",
+            position: qt_moon_pos(microtech, 0.05, 90.0),
+        },
+        QtDestination {
+            name: "Grim HEX",
+            position: qt_moon_pos(qt_moon_pos(crusader, 0.38, 240.0), 0.1, 45.0),
+        },
         // Pyro system (different orbital angles)
-        QtDestination { name: "Stanton Gateway (Pyro)", position: qt_orbital_pos(100.0, 0.0) },
-        QtDestination { name: "Pyro I", position: qt_orbital_pos(5.0, 0.0) },
-        QtDestination { name: "Pyro II", position: qt_orbital_pos(10.0, 72.0) },
-        QtDestination { name: "Pyro III", position: qt_orbital_pos(18.0, 144.0) },
-        QtDestination { name: "Pyro IV", position: qt_orbital_pos(28.0, 216.0) },
-        QtDestination { name: "Pyro V", position: qt_orbital_pos(40.0, 270.0) },
-        QtDestination { name: "Pyro VI", position: qt_orbital_pos(55.0, 324.0) },
-        QtDestination { name: "Ruin Station", position: qt_moon_pos(qt_orbital_pos(5.0, 0.0), 0.5, 90.0) },
-        QtDestination { name: "Checkmate Station", position: qt_moon_pos(qt_orbital_pos(28.0, 216.0), 0.5, 90.0) },
+        QtDestination {
+            name: "Stanton Gateway (Pyro)",
+            position: qt_orbital_pos(100.0, 0.0),
+        },
+        QtDestination {
+            name: "Pyro I",
+            position: qt_orbital_pos(5.0, 0.0),
+        },
+        QtDestination {
+            name: "Pyro II",
+            position: qt_orbital_pos(10.0, 72.0),
+        },
+        QtDestination {
+            name: "Pyro III",
+            position: qt_orbital_pos(18.0, 144.0),
+        },
+        QtDestination {
+            name: "Pyro IV",
+            position: qt_orbital_pos(28.0, 216.0),
+        },
+        QtDestination {
+            name: "Pyro V",
+            position: qt_orbital_pos(40.0, 270.0),
+        },
+        QtDestination {
+            name: "Pyro VI",
+            position: qt_orbital_pos(55.0, 324.0),
+        },
+        QtDestination {
+            name: "Ruin Station",
+            position: qt_moon_pos(qt_orbital_pos(5.0, 0.0), 0.5, 90.0),
+        },
+        QtDestination {
+            name: "Checkmate Station",
+            position: qt_moon_pos(qt_orbital_pos(28.0, 216.0), 0.5, 90.0),
+        },
     ]
 }
 
@@ -746,11 +873,9 @@ fn calculate_jump_instruction(zone_position: &Point3D, _system: &str) -> JumpIns
         .iter()
         .skip(1)
         .take(2)
-        .map(|(_, dest, dist, _)| {
-            AltJumpInstruction {
-                destination: dest.name.to_string(),
-                exit_at_mm: (*dist * 1_000_000.0) as u64,
-            }
+        .map(|(_, dest, dist, _)| AltJumpInstruction {
+            destination: dest.name.to_string(),
+            exit_at_mm: (*dist * 1_000_000.0) as u64,
         })
         .collect();
 
@@ -764,7 +889,11 @@ fn calculate_jump_instruction(zone_position: &Point3D, _system: &str) -> JumpIns
 }
 
 /// Calculate perpendicular distance from a point to a line defined by two points.
-fn perpendicular_distance_to_line(point: &Point3D, line_start: &Point3D, line_end: &Point3D) -> f64 {
+fn perpendicular_distance_to_line(
+    point: &Point3D,
+    line_start: &Point3D,
+    line_end: &Point3D,
+) -> f64 {
     // Vector from line_start to line_end
     let line_vec = Point3D::new(
         line_end.x - line_start.x,

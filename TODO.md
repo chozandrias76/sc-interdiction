@@ -4,47 +4,32 @@
 
 ### UI/Visualization Improvements
 
-#### Hotspot Visibility Control
-- [x] **CLI**: Add `--top N` flag to `chokepoints` and `nearby` commands
-  - ✅ Renamed `--limit` to `--top` for `chokepoints` command
-  - ✅ Renamed `--count` to `--top` for `nearby` command
-  - ✅ Added validation with max limits (100 for chokepoints, 50 for nearby)
-  - ✅ Updated help text with max values
-  
-- [x] **API**: Add query parameter `?top=N` to chokepoints and hotspots endpoints
-  - ✅ Updated `/api/routes/chokepoints` to use `?top=N` parameter
-  - ✅ Updated `/api/intel/hotspots` to use `?top=N` parameter
-  - ✅ Added MAX_CHOKEPOINTS (100) and MAX_HOTSPOTS (100) constants
-  - ✅ Added input validation to prevent abuse
-  
-- [x] **Documentation**: Updated README with new parameters
-  - ✅ Added examples showing `--top` flag usage
-  - ✅ Documented max limits for each command
-  - ✅ Added API endpoint examples with query parameters
-  
-- [ ] **TUI Dashboard**: Add hotspot count selector
-  - Update `crates/cli/src/tui/` to include filter controls
-  - Allow user to adjust visible hotspots in real-time
+- [ ] **TUI Dashboard**: Add interactive hotspot count selector
+  - Hotspot visibility logic exists (`visible_hotspot_count()` in app.rs)
+  - Need: UI controls to adjust visible hotspots in real-time
 
 ---
 
 ### Route Planning & Fuel Management
 
 #### Validate Routes Against Ship Fuel Range
-- [ ] **Add quantum fuel consumption calculation**
-  - Create `crates/route-graph/src/fuel.rs` module
-  - Implement `calculate_qt_fuel_consumption(distance_km: f64, ship_qt_efficiency: f64) -> f64`
-  - Research/estimate QT fuel efficiency per ship class
-  
-- [ ] **Extend ship data with fuel capacity**
-  - Update `CargoShip` struct in `crates/intel/src/ships.rs`
-  - Add fields: `quantum_fuel_capacity: f64`, `hydrogen_fuel_capacity: f64`
-  - Port data from FleetYards API (already available in `FleetShip`)
-  
-- [ ] **Route validation logic**
-  - Add `validate_route_fuel(route: &TradeRoute, ship: &CargoShip) -> FuelValidation`
-  - Return: `FuelValidation { is_possible: bool, fuel_required: f64, refuel_needed: bool }`
-  - Integrate into route analysis in `crates/intel/src/targets.rs`
+- [x] **Add quantum fuel consumption calculation**
+  - Created `crates/route-graph/src/fuel.rs` module
+  - Implemented `calculate_qt_fuel_consumption()`, `can_complete_route()`, `max_range_mkm()`
+  - Added `QtDriveEfficiency` struct with S1/S2/S3 drive efficiency ratings
+
+- [x] **Extend ship data with fuel capacity**
+  - Updated `CargoShip` struct in `crates/intel/src/ships.rs`
+  - Added fields: `quantum_fuel_capacity`, `hydrogen_fuel_capacity`, `qt_drive_size`
+  - Added helper methods: `qt_drive_efficiency()`, `can_complete_route()`, `max_range_mkm()`
+  - Populated all ships with realistic fuel capacity data based on size class
+
+- [x] **Route validation logic**
+  - Created `FuelValidation` struct with fields: `is_possible`, `fuel_required`, `fuel_remaining`, `refuel_needed`
+  - Added `validate_route_fuel(ship, distance)` function
+  - Added `validate_route(distance)` method to `CargoShip`
+  - Integrated into `HotRoute` and `TradeRun` structs with distance calculation
+  - Routes now automatically include fuel feasibility assessment
 
 - [ ] **Display fuel warnings in output**
   - Update CLI route display to show fuel status
@@ -160,12 +145,12 @@
 
 ## Documentation
 
-- [x] Add API endpoint examples to README
-- [x] Document build configuration for /tmp directory usage
 - [ ] Document ship data schema and sources
 - [ ] Create architecture diagram (crates and data flow)
 - [ ] Add CONTRIBUTING.md with development setup
 - [ ] Document fuel consumption calculation methodology
+- [ ] Create `docs/BUILD_CONFIGURATION.md` with detailed build setup
+- [ ] Create `docs/QUICK_BUILD_SETUP.md` quick reference
 
 ---
 
@@ -173,19 +158,14 @@
 
 ### Build Optimization
 - [x] **Configure /tmp as build target directory**
-  - ✅ Updated `.envrc` with CARGO_TARGET_DIR=/tmp/cargo-target-sc-interdiction
-  - ✅ Created `.cargo/config.toml.template` with optimized build profiles
-  - ✅ Created `scripts/setup-build-env.sh` for environment setup
-  - ✅ Added `.cargo/config.toml` to `.gitignore`
-  - ✅ Created comprehensive documentation in `docs/BUILD_CONFIGURATION.md`
-  - ✅ Created quick reference in `docs/QUICK_BUILD_SETUP.md`
-  - ✅ Updated README with build setup instructions
-  
+  - `.envrc` with CARGO_TARGET_DIR
+  - `.cargo/config.toml.template` with optimized build profiles
+  - `scripts/setup-build-env.sh` for environment setup
+
 - [ ] **Optional: Faster linker integration**
   - Install and configure `mold` or `lld` linker
   - Add linker configuration to `.cargo/config.toml`
-  - Document linker installation in BUILD_CONFIGURATION.md
-  
+
 - [ ] **CI/CD pipeline optimization**
   - Configure GitHub Actions to use tmpfs for builds
   - Add caching strategy for dependencies

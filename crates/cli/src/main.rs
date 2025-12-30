@@ -162,6 +162,7 @@ enum Commands {
 }
 
 #[tokio::main]
+#[allow(clippy::too_many_lines)]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
 
@@ -169,7 +170,9 @@ async fn main() -> Result<()> {
     let filter = if cli.verbose { "debug" } else { "info" };
     tracing_subscriber::registry()
         .with(tracing_subscriber::fmt::layer())
-        .with(tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| filter.into()))
+        .with(
+            tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| filter.into()),
+        )
         .init();
 
     let api_key = cli.api_key.unwrap_or_default();
@@ -205,10 +208,7 @@ async fn main() -> Result<()> {
                         "   Likely ship: {} ({} SCU)",
                         route.likely_ship.name, route.likely_ship.cargo_scu
                     );
-                    println!(
-                        "   Est. haul value: {:.0} aUEC",
-                        route.estimated_haul_value
-                    );
+                    println!("   Est. haul value: {:.0} aUEC", route.estimated_haul_value);
                     println!();
                 }
             }
@@ -242,8 +242,7 @@ async fn main() -> Result<()> {
                     );
                     println!(
                         "   OUTBOUND: {} ({:.0}/SCU)",
-                        run.outbound.commodity,
-                        run.outbound.profit_per_scu
+                        run.outbound.commodity, run.outbound.profit_per_scu
                     );
                     println!(
                         "      {} -> {}",
@@ -253,8 +252,7 @@ async fn main() -> Result<()> {
                     if let Some(ref ret) = run.return_leg {
                         println!(
                             "   RETURN: {} ({:.0}/SCU)",
-                            ret.commodity,
-                            ret.profit_per_scu
+                            ret.commodity, ret.profit_per_scu
                         );
                         println!("      {} -> {}", ret.origin, ret.destination);
                     }
@@ -268,7 +266,7 @@ async fn main() -> Result<()> {
             // Validate and cap the top limit
             const MAX_CHOKEPOINTS: usize = 100;
             let top = top.min(MAX_CHOKEPOINTS);
-            
+
             let uex = UexClient::new();
             let analyzer = TargetAnalyzer::new(uex.clone());
 
@@ -280,8 +278,10 @@ async fn main() -> Result<()> {
                 graph.add_terminal(terminal);
             }
 
-            let systems: std::collections::HashSet<_> =
-                terminals.iter().filter_map(|t| t.star_system_name.clone()).collect();
+            let systems: std::collections::HashSet<_> = terminals
+                .iter()
+                .filter_map(|t| t.star_system_name.clone())
+                .collect();
             for system in systems {
                 graph.connect_system(&system);
             }
@@ -296,12 +296,7 @@ async fn main() -> Result<()> {
                 println!("{:=<80}\n", "");
 
                 for (i, cp) in chokepoints.iter().enumerate() {
-                    println!(
-                        "{}. {} ({})",
-                        i + 1,
-                        cp.node.name,
-                        cp.node.system
-                    );
+                    println!("{}. {} ({})", i + 1, cp.node.name, cp.node.system);
                     println!("   Routes through: {}", cp.route_count);
                     println!("   Traffic score: {:.0}", cp.traffic_score);
                     println!("   Position: {}", cp.suggested_position.description);
@@ -334,18 +329,12 @@ async fn main() -> Result<()> {
                             "[{}] {} hauling {}",
                             dir, target.likely_ship.name, target.commodity
                         );
-                        println!(
-                            "   Destination: {}",
-                            target.destination
-                        );
+                        println!("   Destination: {}", target.destination);
                         println!(
                             "   Est. cargo value: {:.0} aUEC",
                             target.estimated_cargo_value
                         );
-                        println!(
-                            "   Threat level: {}/10",
-                            target.likely_ship.threat_level
-                        );
+                        println!("   Threat level: {}/10", target.likely_ship.threat_level);
                         println!();
                     }
                 }
@@ -368,10 +357,7 @@ async fn main() -> Result<()> {
                 for ship in intel::CARGO_SHIPS {
                     println!(
                         "{:<25} {:>6} SCU {:>6}/10 {:>10} aUEC",
-                        ship.name,
-                        ship.cargo_scu,
-                        ship.threat_level,
-                        ship.ship_value_uec
+                        ship.name, ship.cargo_scu, ship.threat_level, ship.ship_value_uec
                     );
                 }
             }
@@ -495,11 +481,15 @@ async fn main() -> Result<()> {
             }
         }
 
-        Commands::Nearby { location, top, json } => {
+        Commands::Nearby {
+            location,
+            top,
+            json,
+        } => {
             // Validate and cap the top limit
             const MAX_NEARBY_HOTSPOTS: usize = 50;
             let top = top.min(MAX_NEARBY_HOTSPOTS);
-            
+
             let uex = UexClient::new();
             let analyzer = TargetAnalyzer::new(uex.clone());
 
@@ -511,8 +501,10 @@ async fn main() -> Result<()> {
                 graph.add_terminal(terminal);
             }
 
-            let systems: std::collections::HashSet<_> =
-                terminals.iter().filter_map(|t| t.star_system_name.clone()).collect();
+            let systems: std::collections::HashSet<_> = terminals
+                .iter()
+                .filter_map(|t| t.star_system_name.clone())
+                .collect();
             for system in systems {
                 graph.connect_system(&system);
             }
@@ -606,5 +598,6 @@ async fn main() -> Result<()> {
 
 /// Estimate position for a location name using the location database.
 fn estimate_location_position(location: &str) -> route_graph::Point3D {
-    route_graph::estimate_position(location).unwrap_or_else(|| route_graph::Point3D::new(0.0, 0.0, 0.0))
+    route_graph::estimate_position(location)
+        .unwrap_or_else(|| route_graph::Point3D::new(0.0, 0.0, 0.0))
 }

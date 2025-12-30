@@ -85,14 +85,10 @@ async fn get_chokepoints(
 ) -> impl IntoResponse {
     // Validate and cap the limit
     let top = query.top.min(MAX_CHOKEPOINTS);
-    
+
     let graph = state.graph.read().await;
 
-    match state
-        .analyzer
-        .find_interdiction_points(&graph, top)
-        .await
-    {
+    match state.analyzer.find_interdiction_points(&graph, top).await {
         Ok(chokepoints) => Json(chokepoints).into_response(),
         Err(e) => {
             error!("Failed to find chokepoints: {}", e);
@@ -137,7 +133,7 @@ async fn get_hotspots(
 ) -> impl IntoResponse {
     // Validate and cap the limit
     let top = query.top.min(MAX_HOTSPOTS);
-    
+
     match state.analyzer.get_interdiction_hotspots(top).await {
         Ok(hotspots) => Json(hotspots).into_response(),
         Err(e) => {

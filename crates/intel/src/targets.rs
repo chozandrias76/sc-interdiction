@@ -1,14 +1,14 @@
 //! Target prediction based on trade route analysis.
 
-use std::collections::HashMap;
+use crate::ships::{estimate_ship_for_route, estimate_ship_for_routes, CargoShip};
 use api_client::{TradeRoute, UexClient};
 use ordered_float::OrderedFloat;
 use route_graph::{
-    estimate_position, find_chokepoints, find_route_intersections, Chokepoint,
-    RouteGraph, RouteIntersection, RouteSegment,
+    estimate_position, find_chokepoints, find_route_intersections, Chokepoint, RouteGraph,
+    RouteIntersection, RouteSegment,
 };
 use serde::{Deserialize, Serialize};
-use crate::ships::{CargoShip, estimate_ship_for_route, estimate_ship_for_routes};
+use std::collections::HashMap;
 
 /// Analyzes trade data to predict targets.
 pub struct TargetAnalyzer {
@@ -64,11 +64,18 @@ impl TargetAnalyzer {
         let predictions: Vec<TargetPrediction> = routes
             .into_iter()
             .filter(|r| {
-                r.terminal_origin_name.to_lowercase().contains(&location_lower)
-                    || r.terminal_destination_name.to_lowercase().contains(&location_lower)
+                r.terminal_origin_name
+                    .to_lowercase()
+                    .contains(&location_lower)
+                    || r.terminal_destination_name
+                        .to_lowercase()
+                        .contains(&location_lower)
             })
             .map(|r| {
-                let is_departing = r.terminal_origin_name.to_lowercase().contains(&location_lower);
+                let is_departing = r
+                    .terminal_origin_name
+                    .to_lowercase()
+                    .contains(&location_lower);
                 let likely_ship = estimate_ship_for_route(&r);
                 let estimated_cargo_value = r.profit_for_scu(likely_ship.cargo_scu as f64)
                     + (r.price_origin * likely_ship.cargo_scu as f64);
@@ -154,14 +161,18 @@ impl TargetAnalyzer {
                     .filter(|r| r.profit_per_unit > 0.0 && r.scu_origin > 0.0)
                     // Prefer routes going back to original origin, but accept any profitable return
                     .max_by(|a, b| {
-                        let a_returns_home = a.terminal_destination_name == outbound.terminal_origin_name;
-                        let b_returns_home = b.terminal_destination_name == outbound.terminal_origin_name;
+                        let a_returns_home =
+                            a.terminal_destination_name == outbound.terminal_origin_name;
+                        let b_returns_home =
+                            b.terminal_destination_name == outbound.terminal_origin_name;
 
                         match (a_returns_home, b_returns_home) {
                             (true, false) => std::cmp::Ordering::Greater,
                             (false, true) => std::cmp::Ordering::Less,
-                            _ => a.profit_per_unit.partial_cmp(&b.profit_per_unit)
-                                .unwrap_or(std::cmp::Ordering::Equal)
+                            _ => a
+                                .profit_per_unit
+                                .partial_cmp(&b.profit_per_unit)
+                                .unwrap_or(std::cmp::Ordering::Equal),
                         }
                     })
                     .copied()
@@ -327,7 +338,10 @@ pub struct ShipFrequency {
 
 impl TargetAnalyzer {
     /// Get top interdiction hotspots ranked by total cargo value.
-    pub async fn get_interdiction_hotspots(&self, limit: usize) -> api_client::Result<Vec<InterdictionHotspot>> {
+    pub async fn get_interdiction_hotspots(
+        &self,
+        limit: usize,
+    ) -> api_client::Result<Vec<InterdictionHotspot>> {
         let routes = self.uex.get_trade_routes().await?;
 
         // Aggregate data by location (both origin and destination)
@@ -344,16 +358,16 @@ impl TargetAnalyzer {
 
             // Add to origin location
             let origin = &route.terminal_origin_name;
-            let origin_agg = location_data.entry(origin.clone()).or_insert_with(|| {
-                LocationAggregator::new(origin.clone(), extract_system(origin))
-            });
+            let origin_agg = location_data
+                .entry(origin.clone())
+                .or_insert_with(|| LocationAggregator::new(origin.clone(), extract_system(origin)));
             origin_agg.add_route(&route.commodity_name, cargo_value, &ship);
 
             // Add to destination location
             let dest = &route.terminal_destination_name;
-            let dest_agg = location_data.entry(dest.clone()).or_insert_with(|| {
-                LocationAggregator::new(dest.clone(), extract_system(dest))
-            });
+            let dest_agg = location_data
+                .entry(dest.clone())
+                .or_insert_with(|| LocationAggregator::new(dest.clone(), extract_system(dest)));
             dest_agg.add_route(&route.commodity_name, cargo_value, &ship);
         }
 
@@ -449,9 +463,15 @@ impl LocationAggregator {
         self.route_count += 1;
         self.threat_levels.push(ship.threat_level);
 
-        *self.commodity_values.entry(commodity.to_string()).or_default() += cargo_value;
+        *self
+            .commodity_values
+            .entry(commodity.to_string())
+            .or_default() += cargo_value;
 
-        let entry = self.ship_counts.entry(ship.name.to_string()).or_insert((0, ship.threat_level));
+        let entry = self
+            .ship_counts
+            .entry(ship.name.to_string())
+            .or_insert((0, ship.threat_level));
         entry.0 += 1;
     }
 
@@ -478,7 +498,7 @@ impl LocationAggregator {
 
         // Get likely ships
         let mut ships: Vec<_> = self.ship_counts.into_iter().collect();
-        ships.sort_by(|a, b| b.1.0.cmp(&a.1.0));
+        ships.sort_by(|a, b| b.1 .0.cmp(&a.1 .0));
         let likely_ships: Vec<ShipFrequency> = ships
             .into_iter()
             .take(5)

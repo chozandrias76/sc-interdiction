@@ -5,8 +5,9 @@ use intel::TrafficDirection;
 use ratatui::{
     prelude::*,
     widgets::{
+        canvas::{Canvas, Circle, Line as CanvasLine},
         Block, Borders, Cell, Clear, Paragraph, Row, Scrollbar, ScrollbarOrientation,
-        ScrollbarState, Table, Tabs, Wrap, canvas::{Canvas, Circle, Line as CanvasLine},
+        ScrollbarState, Table, Tabs, Wrap,
     },
 };
 
@@ -145,16 +146,12 @@ fn render_targets(frame: &mut Frame, app: &mut App, area: Rect) {
 
     let table = Table::new(rows, widths)
         .header(header)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title(format!(
-                    " Targets ({} shown){}{} ",
-                    filtered.len(),
-                    sort_indicator,
-                    filter_info
-                )),
-        )
+        .block(Block::default().borders(Borders::ALL).title(format!(
+            " Targets ({} shown){}{} ",
+            filtered.len(),
+            sort_indicator,
+            filter_info
+        )))
         .row_highlight_style(Style::default().add_modifier(Modifier::BOLD));
 
     frame.render_widget(table, area);
@@ -163,8 +160,7 @@ fn render_targets(frame: &mut Frame, app: &mut App, area: Rect) {
     let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight)
         .begin_symbol(Some("↑"))
         .end_symbol(Some("↓"));
-    let mut scrollbar_state =
-        ScrollbarState::new(filtered.len()).position(app.selected);
+    let mut scrollbar_state = ScrollbarState::new(filtered.len()).position(app.selected);
     frame.render_stateful_widget(
         scrollbar,
         area.inner(Margin::new(0, 1)),
@@ -235,13 +231,13 @@ fn render_routes(frame: &mut Frame, app: &mut App, area: Rect) {
         RouteSort::Commodity => " (sort: Commodity)",
     };
 
-    let table = Table::new(rows, widths)
-        .header(header)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title(format!(" Hot Routes ({} total){} ", app.routes.len(), sort_indicator)),
-        );
+    let table = Table::new(rows, widths).header(header).block(
+        Block::default().borders(Borders::ALL).title(format!(
+            " Hot Routes ({} total){} ",
+            app.routes.len(),
+            sort_indicator
+        )),
+    );
 
     frame.render_widget(table, area);
 
@@ -249,8 +245,7 @@ fn render_routes(frame: &mut Frame, app: &mut App, area: Rect) {
     let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight)
         .begin_symbol(Some("↑"))
         .end_symbol(Some("↓"));
-    let mut scrollbar_state =
-        ScrollbarState::new(app.routes.len()).position(app.selected);
+    let mut scrollbar_state = ScrollbarState::new(app.routes.len()).position(app.selected);
     frame.render_stateful_widget(
         scrollbar,
         area.inner(Margin::new(0, 1)),
@@ -270,7 +265,10 @@ fn render_map(frame: &mut Frame, app: &App, area: Rect) {
 }
 
 /// Convert a location to its display (x, y) coordinates using angle and orbital radius.
-fn location_to_xy(loc: &super::app::MapLocation, planet_positions: &std::collections::HashMap<String, (f64, f64)>) -> (f64, f64) {
+fn location_to_xy(
+    loc: &super::app::MapLocation,
+    planet_positions: &std::collections::HashMap<String, (f64, f64)>,
+) -> (f64, f64) {
     let (base_x, base_y) = if let Some(parent) = &loc.parent {
         // Get parent's position
         planet_positions.get(parent).copied().unwrap_or((0.0, 0.0))
@@ -284,9 +282,11 @@ fn location_to_xy(loc: &super::app::MapLocation, planet_positions: &std::collect
     (x, y)
 }
 
+#[allow(clippy::too_many_lines)]
 fn render_system_canvas(frame: &mut Frame, app: &App, area: Rect) {
     // First pass: calculate planet positions (they orbit the star)
-    let mut planet_positions: std::collections::HashMap<String, (f64, f64)> = std::collections::HashMap::new();
+    let mut planet_positions: std::collections::HashMap<String, (f64, f64)> =
+        std::collections::HashMap::new();
 
     for loc in &app.map_locations {
         if loc.loc_type == MapLocationType::Planet {
@@ -297,7 +297,8 @@ fn render_system_canvas(frame: &mut Frame, app: &App, area: Rect) {
     }
 
     // Second pass: calculate moon positions (they orbit planets)
-    let mut moon_positions: std::collections::HashMap<String, (f64, f64)> = std::collections::HashMap::new();
+    let mut moon_positions: std::collections::HashMap<String, (f64, f64)> =
+        std::collections::HashMap::new();
     for loc in &app.map_locations {
         if loc.loc_type == MapLocationType::Moon {
             if let Some(parent) = &loc.parent {
@@ -363,8 +364,10 @@ fn render_system_canvas(frame: &mut Frame, app: &App, area: Rect) {
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .title(format!(" {} System Map | {} | {}% zoom | n/N:limit z/Z:zoom a:all ",
-                    app.map_system, hotspot_info, zoom_pct))
+                .title(format!(
+                    " {} System Map | {} | {}% zoom | n/N:limit z/Z:zoom a:all ",
+                    app.map_system, hotspot_info, zoom_pct
+                ))
                 .title_style(Style::default().fg(Color::Cyan).bold()),
         )
         .x_bounds([center_x - range, center_x + range])
@@ -408,7 +411,12 @@ fn render_system_canvas(frame: &mut Frame, app: &App, area: Rect) {
                     MapLocationType::Station => (Color::Green, 0.5),
                 };
 
-                ctx.draw(&Circle { x, y, radius, color });
+                ctx.draw(&Circle {
+                    x,
+                    y,
+                    radius,
+                    color,
+                });
 
                 // Label for planets
                 if loc.loc_type == MapLocationType::Planet {
@@ -464,6 +472,7 @@ fn render_system_canvas(frame: &mut Frame, app: &App, area: Rect) {
     frame.render_widget(canvas, area);
 }
 
+#[allow(clippy::too_many_lines)]
 fn render_hotspot_details(frame: &mut Frame, app: &App, area: Rect) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -559,8 +568,10 @@ fn render_hotspot_details(frame: &mut Frame, app: &App, area: Rect) {
                 };
                 Row::new(vec![
                     Cell::from(truncate(&route.commodity, 15)),
-                    Cell::from(format_value(route.cargo_value)).style(Style::default().fg(Color::Green)),
-                    Cell::from(format!("{}", route.threat_level)).style(Style::default().fg(threat_color)),
+                    Cell::from(format_value(route.cargo_value))
+                        .style(Style::default().fg(Color::Green)),
+                    Cell::from(format!("{}", route.threat_level))
+                        .style(Style::default().fg(threat_color)),
                 ])
             })
             .collect();
@@ -650,11 +661,9 @@ fn render_help(frame: &mut Frame, area: Rect) {
 
 fn render_status_bar(frame: &mut Frame, app: &App, area: Rect) {
     let status = if let Some(ref error) = app.error {
-        Paragraph::new(error.as_str())
-            .style(Style::default().fg(Color::Red))
+        Paragraph::new(error.as_str()).style(Style::default().fg(Color::Red))
     } else {
-        Paragraph::new(app.status.as_str())
-            .style(Style::default().fg(Color::Gray))
+        Paragraph::new(app.status.as_str()).style(Style::default().fg(Color::Gray))
     };
 
     let keys = " q:Quit | 1/2/3:Views | Tab:Next | ?:Help | s:Sort ";

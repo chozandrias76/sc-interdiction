@@ -165,7 +165,7 @@ pub static CARGO_SHIPS: &[CargoShip] = &[
 /// This includes orbital stations and some landing zones with external pads.
 static FREIGHT_ELEVATOR_LOCATIONS: &[&str] = &[
     // Stanton orbital stations
-    "station",           // Generic - catches most orbital stations
+    "station", // Generic - catches most orbital stations
     "everus harbor",
     "port tressler",
     "baijini point",
@@ -176,7 +176,7 @@ static FREIGHT_ELEVATOR_LOCATIONS: &[&str] = &[
     "cru-l",
     "mic-l",
     // Nyx
-    "levski",            // Levski has external freight elevators
+    "levski", // Levski has external freight elevators
     "stanton gateway",
     // Pyro stations
     "checkmate",
@@ -269,7 +269,10 @@ pub fn estimate_ship_for_routes(routes: &[&TradeRoute]) -> CargoShip {
     dockable.sort_by_key(|s| s.cargo_scu);
 
     // Find smallest ship that can carry the max cargo
-    if let Some(ship) = dockable.iter().find(|s| s.cargo_scu as f64 >= max_scu_needed) {
+    if let Some(ship) = dockable
+        .iter()
+        .find(|s| s.cargo_scu as f64 >= max_scu_needed)
+    {
         return (*ship).clone();
     }
 
@@ -288,7 +291,6 @@ pub fn estimate_ship_for_routes(routes: &[&TradeRoute]) -> CargoShip {
         requires_freight_elevator: false,
     }
 }
-
 
 /// Estimated loot from a successful interdiction.
 /// TODO: Implement loot estimation based on cargo value and ship destruction

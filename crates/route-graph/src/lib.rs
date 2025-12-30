@@ -4,11 +4,16 @@
 //! Used to identify chokepoints and optimal interdiction positions.
 
 mod chokepoint;
+pub mod fuel;
 mod graph;
 mod locations;
 mod spatial;
 
 pub use chokepoint::{find_chokepoints, Chokepoint, InterdictPosition, RoutePair};
+pub use fuel::{
+    calculate_qt_fuel_consumption, can_complete_route, efficiency_for_size, max_range_mkm,
+    QtDriveEfficiency, QT_DRIVE_EFFICIENCY,
+};
 pub use graph::{Edge, Node, NodeType, RouteGraph};
 pub use locations::{
     distance_between, estimate_position, locations_in_system, LocationPosition, LOCATION_POSITIONS,

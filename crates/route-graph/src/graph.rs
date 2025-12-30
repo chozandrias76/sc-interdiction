@@ -2,8 +2,8 @@
 
 use api_client::{Station, Terminal};
 use ordered_float::OrderedFloat;
-use petgraph::graph::{DiGraph, NodeIndex};
 use petgraph::algo::dijkstra;
+use petgraph::graph::{DiGraph, NodeIndex};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use thiserror::Error;
@@ -43,7 +43,8 @@ pub enum NodeType {
 }
 
 impl NodeType {
-    pub fn from_str(s: &str) -> Self {
+    /// Parse a node type from a string.
+    pub fn parse(s: &str) -> Self {
         match s.to_uppercase().as_str() {
             "STATION" => Self::Station,
             "OUTPOST" => Self::Outpost,
@@ -89,7 +90,7 @@ impl RouteGraph {
         let node = Node {
             id: station.id.clone(),
             name: station.name.clone(),
-            node_type: NodeType::from_str(&station.station_type),
+            node_type: NodeType::parse(&station.station_type),
             system: station.system_code.clone(),
             parent_body: station.parent_name.clone(),
             coords: None,
@@ -110,9 +111,11 @@ impl RouteGraph {
         let node = Node {
             id: terminal.id.to_string(),
             name: terminal.name.clone().unwrap_or_default(),
-            node_type: NodeType::from_str(&terminal.terminal_type.clone().unwrap_or_default()),
+            node_type: NodeType::parse(&terminal.terminal_type.clone().unwrap_or_default()),
             system: terminal.star_system_name.clone().unwrap_or_default(),
-            parent_body: terminal.moon_name.clone()
+            parent_body: terminal
+                .moon_name
+                .clone()
                 .filter(|m| !m.is_empty())
                 .or_else(|| terminal.planet_name.clone())
                 .unwrap_or_default(),
@@ -228,9 +231,7 @@ impl RouteGraph {
 
     /// Get node by code.
     pub fn get_node(&self, code: &str) -> Option<&Node> {
-        self.node_indices
-            .get(code)
-            .map(|&idx| &self.graph[idx])
+        self.node_indices.get(code).map(|&idx| &self.graph[idx])
     }
 
     /// Get number of connections for a node (degree).
@@ -249,9 +250,9 @@ impl RouteGraph {
 
         self.graph
             .neighbors(idx)
-            .map(|neighbor_idx| {
-                let edge_idx = self.graph.find_edge(idx, neighbor_idx).expect("edge exists");
-                (&self.graph[neighbor_idx], &self.graph[edge_idx])
+            .filter_map(|neighbor_idx| {
+                let edge_idx = self.graph.find_edge(idx, neighbor_idx)?;
+                Some((&self.graph[neighbor_idx], &self.graph[edge_idx]))
             })
             .collect()
     }

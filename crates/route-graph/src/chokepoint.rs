@@ -67,10 +67,7 @@ pub fn find_chokepoints(
             .or_default()
             .push(route.clone());
 
-        node_traffic
-            .entry(dest.clone())
-            .or_default()
-            .push(route);
+        node_traffic.entry(dest.clone()).or_default().push(route);
     }
 
     // Convert to chokepoints, sorted by traffic
@@ -134,4 +131,3 @@ fn suggest_interdict_position(node: &Node) -> InterdictPosition {
         direction,
     }
 }
-
