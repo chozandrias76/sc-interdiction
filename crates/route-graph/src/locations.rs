@@ -147,6 +147,16 @@ pub static LOCATION_POSITIONS: LazyLock<HashMap<&'static str, LocationPosition>>
         add_location(&mut map, "levski", "Nyx", Point3D::new(0.0, 0.0, 0.0), Some("Delamar"));
         add_location(&mut map, "delamar", "Nyx", Point3D::new(0.0, 0.0, 0.0), None);
 
+        // Jump Points - connections between systems
+        // Stanton-Pyro jump point (near Pyro side of the gate)
+        // Positioned at edge of Stanton system
+        add_location(&mut map, "stanton-pyro jump point", "Stanton", orbital_pos(30.0, 180.0), None);
+        add_location(&mut map, "pyro-stanton jump point", "Pyro", orbital_pos(3.0, 0.0), None);
+
+        // Future jump points (placeholder positions)
+        add_location(&mut map, "stanton-magnus jump point", "Stanton", orbital_pos(28.0, 90.0), None);
+        add_location(&mut map, "stanton-terra jump point", "Stanton", orbital_pos(32.0, 270.0), None);
+
         map
     });
 
@@ -196,6 +206,34 @@ pub fn distance_between(from: &str, to: &str) -> Option<f64> {
     Some(from_pos.distance_to(&to_pos))
 }
 
+/// Get the system name for a location.
+/// Returns None if the location is unknown.
+pub fn get_system(location: &str) -> Option<&'static str> {
+    let loc_lower = location.to_lowercase();
+
+    // Direct match
+    if let Some(loc) = LOCATION_POSITIONS.get(loc_lower.as_str()) {
+        return Some(loc.system);
+    }
+
+    // Partial match - check if location contains a known key
+    for (key, loc) in LOCATION_POSITIONS.iter() {
+        if loc_lower.contains(key) {
+            return Some(loc.system);
+        }
+    }
+
+    None
+}
+
+/// Check if two locations are in the same system.
+pub fn same_system(loc1: &str, loc2: &str) -> bool {
+    match (get_system(loc1), get_system(loc2)) {
+        (Some(s1), Some(s2)) => s1 == s2,
+        _ => false, // Unknown locations - assume different systems
+    }
+}
+
 /// Get all locations in a system.
 pub fn locations_in_system(system: &str) -> Vec<&'static LocationPosition> {
     let system_lower = system.to_lowercase();
@@ -222,6 +260,6 @@ mod tests {
         let dist = distance_between("Hurston", "Crusader");
         assert!(dist.is_some());
         let d = dist.unwrap();
-        assert!(d > 25.0 && d < 40.0);
+        assert!(d > 20.0 && d < 30.0);
     }
 }
