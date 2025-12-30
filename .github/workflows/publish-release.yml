@@ -1,0 +1,130 @@
+name: Publish Release
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+    types: [closed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  publish:
+    name: Publish Release
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || (github.event.pull_request.merged == true && startsWith(github.head_ref, 'release/'))
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      
+      - name: Setup Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: Get version from Cargo.toml
+        id: get_version
+        run: |
+          VERSION=$(grep -m1 '^version = ' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+      
+      - name: Check if tag exists
+        id: check_tag
+        run: |
+          if git rev-parse "v${{ steps.get_version.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Tag v${{ steps.get_version.outputs.version }} already exists"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Tag v${{ steps.get_version.outputs.version }} does not exist"
+          fi
+      
+      - name: Build release artifacts
+        if: steps.check_tag.outputs.exists == 'false'
+        run: cargo build --release --all-features
+      
+      - name: Generate changelog
+        if: steps.check_tag.outputs.exists == 'false'
+        id: changelog
+        uses: ./.github/actions/generate-changelog
+        with:
+          github-token: ${{ github.token }}
+      
+      - name: Create Git tag
+        if: steps.check_tag.outputs.exists == 'false'
+        run: |
+          git tag -a "v${{ steps.get_version.outputs.version }}" -m "Release version ${{ steps.get_version.outputs.version }}"
+          git push origin "v${{ steps.get_version.outputs.version }}"
+      
+      - name: Create GitHub Release
+        if: steps.check_tag.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          CHANGELOG="${{ steps.changelog.outputs.changelog }}"
+          PRERELEASE_FLAG=""
+          
+          if [[ "${{ steps.get_version.outputs.version }}" =~ -rc\. ]] || [[ "${{ steps.get_version.outputs.version }}" =~ -beta\. ]] || [[ "${{ steps.get_version.outputs.version }}" =~ -alpha\. ]]; then
+            PRERELEASE_FLAG="--prerelease"
+          fi
+          
+          gh release create "v${{ steps.get_version.outputs.version }}" \
+            --title "Release v${{ steps.get_version.outputs.version }}" \
+            --notes "## What's Changed
+
+          $CHANGELOG
+
+          ## Installation
+
+          Download the appropriate binary for your platform from the assets below.
+
+          ## Full Changelog
+          See all changes at: https://github.com/${{ github.repository }}/compare/v${{ steps.get_version.outputs.version }}...HEAD" \
+            $PRERELEASE_FLAG \
+            target/release/sc-interdiction* || true
+      
+      - name: Merge back to develop
+        if: steps.check_tag.outputs.exists == 'false'
+        run: |
+          git fetch origin develop
+          git checkout develop
+          git merge --no-ff main -m "chore: merge release v${{ steps.get_version.outputs.version }} back to develop"
+          git push origin develop
+      
+      - name: Delete release branch
+        if: steps.check_tag.outputs.exists == 'false' && github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          BRANCH_NAME="${{ github.head_ref }}"
+          if [[ "$BRANCH_NAME" =~ ^release/ ]]; then
+            git push origin --delete "$BRANCH_NAME" || true
+            echo "Deleted release branch: $BRANCH_NAME"
+          fi
+      
+      - name: Output summary
+        if: steps.check_tag.outputs.exists == 'false'
+        run: |
+          echo "## Release Published" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Version: \`v${{ steps.get_version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Git tag created and pushed" >> $GITHUB_STEP_SUMMARY
+          echo "✅ GitHub release created" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Changes merged back to develop" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Release branch deleted" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🎉 Release v${{ steps.get_version.outputs.version }} is now live!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "View release: https://github.com/${{ github.repository }}/releases/tag/v${{ steps.get_version.outputs.version }}" >> $GITHUB_STEP_SUMMARY

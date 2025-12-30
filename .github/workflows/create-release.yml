@@ -1,0 +1,168 @@
+name: Create Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_bump:
+        description: 'Version bump type'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      prerelease:
+        description: 'Is this a pre-release?'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  create-release-branch:
+    name: Create Release Branch and PR
+    runs-on: ubuntu-latest
+    environment: Actions and Workflows
+    steps:
+      - name: Checkout develop
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+          fetch-depth: 0
+      
+      - name: Setup Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: Get current version
+        id: current_version
+        run: |
+          CURRENT_VERSION=$(grep -m1 '^version = ' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
+          echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $CURRENT_VERSION"
+      
+      - name: Calculate new version
+        id: new_version
+        run: |
+          VERSION="${{ steps.current_version.outputs.version }}"
+          IFS='.' read -r major minor patch <<< "$VERSION"
+          
+          case "${{ inputs.version_bump }}" in
+            major)
+              major=$((major + 1))
+              minor=0
+              patch=0
+              ;;
+            minor)
+              minor=$((minor + 1))
+              patch=0
+              ;;
+            patch)
+              patch=$((patch + 1))
+              ;;
+          esac
+          
+          NEW_VERSION="${major}.${minor}.${patch}"
+          
+          if [ "${{ inputs.prerelease }}" = "true" ]; then
+            NEW_VERSION="${NEW_VERSION}-rc.1"
+          fi
+          
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "New version: $NEW_VERSION"
+      
+      - name: Create release branch
+        id: branch
+        run: |
+          BRANCH_NAME="release/${{ steps.new_version.outputs.version }}"
+          git checkout -b "$BRANCH_NAME"
+          echo "name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+      
+      - name: Update version in workspace Cargo.toml
+        run: |
+          sed -i 's/^version = ".*"/version = "${{ steps.new_version.outputs.version }}"/' Cargo.toml
+          echo "Updated workspace version to ${{ steps.new_version.outputs.version }}"
+      
+      - name: Update lockfile
+        run: cargo update --workspace
+      
+      - name: Commit version bump
+        run: |
+          git add Cargo.toml Cargo.lock
+          git commit -m "chore: bump version to ${{ steps.new_version.outputs.version }}"
+      
+      - name: Push release branch
+        run: |
+          # Force push in case branch exists from failed previous run
+          git push -f origin "${{ steps.branch.outputs.name }}"
+      
+      - name: Generate changelog
+        id: changelog
+        uses: ./.github/actions/generate-changelog
+        with:
+          previous-version: ${{ steps.current_version.outputs.version }}
+          github-token: ${{ github.token }}
+      
+      - name: Build release PR body
+        id: pr_body
+        run: |
+          CHANGELOG="${{ steps.changelog.outputs.changelog }}"
+          
+          # Build PR body with required sections
+          PR_BODY="## Summary\n"
+          PR_BODY="${PR_BODY}Release v${{ steps.new_version.outputs.version }} - ${{ inputs.version_bump }} version bump.\n\n"
+          
+          PR_BODY="${PR_BODY}## Changes\n"
+          PR_BODY="${PR_BODY}$CHANGELOG"
+          
+          PR_BODY="${PR_BODY}\n## Test Results\n"
+          PR_BODY="${PR_BODY}- ✅ All CI checks will run on this PR\n"
+          PR_BODY="${PR_BODY}- ✅ Release branch created from develop\n"
+          PR_BODY="${PR_BODY}- ✅ Version bumped from ${{ steps.current_version.outputs.version }} to ${{ steps.new_version.outputs.version }}\n\n"
+          
+          PR_BODY="${PR_BODY}## 📋 Version Info\n"
+          PR_BODY="${PR_BODY}- **Previous**: \`${{ steps.current_version.outputs.version }}\`\n"
+          PR_BODY="${PR_BODY}- **Current**: \`${{ steps.new_version.outputs.version }}\`\n"
+          PR_BODY="${PR_BODY}- **Type**: ${{ inputs.version_bump }}\n"
+          if [ "${{ inputs.prerelease }}" = "true" ]; then
+            PR_BODY="${PR_BODY}- **Pre-release**: Yes\n"
+          fi
+          
+          # Save to file
+          echo -e "$PR_BODY" > /tmp/pr-body.md
+      
+      - name: Create PR to main
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
+        run: |
+          PR_BODY=$(cat /tmp/pr-body.md)
+          
+          gh pr create \
+            --base main \
+            --head "${{ steps.branch.outputs.name }}" \
+            --title "chore(release): v${{ steps.new_version.outputs.version }}" \
+            --body "$PR_BODY"
+      
+      - name: Output summary
+        run: |
+          echo "## Release Creation Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Created release branch: \`${{ steps.branch.outputs.name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Version bumped: \`${{ steps.current_version.outputs.version }}\` → \`${{ steps.new_version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "✅ PRs created:" >> $GITHUB_STEP_SUMMARY
+          echo "   - develop → ${{ steps.branch.outputs.name }}" >> $GITHUB_STEP_SUMMARY
+          echo "   - ${{ steps.branch.outputs.name }} → main" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "1. Review and merge the PR from develop to ${{ steps.branch.outputs.name }}" >> $GITHUB_STEP_SUMMARY
+          echo "2. Wait for all CI checks to pass" >> $GITHUB_STEP_SUMMARY
+          echo "3. Review and merge the PR from ${{ steps.branch.outputs.name }} to main" >> $GITHUB_STEP_SUMMARY
+          echo "4. The release will be automatically created when merged to main" >> $GITHUB_STEP_SUMMARY

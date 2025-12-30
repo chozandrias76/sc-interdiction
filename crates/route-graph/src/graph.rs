@@ -2,8 +2,8 @@
 
 use api_client::{Station, Terminal};
 use ordered_float::OrderedFloat;
+use petgraph::algo::astar;
 use petgraph::graph::{DiGraph, NodeIndex};
-use petgraph::algo::dijkstra;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use thiserror::Error;
@@ -30,6 +30,8 @@ pub struct Node {
     pub parent_body: String,
     /// Coordinates if available (x, y, z).
     pub coords: Option<(f64, f64, f64)>,
+    /// Whether this location offers refueling services.
+    pub is_fuel_station: bool,
 }
 
 /// Type of location node.
@@ -43,7 +45,8 @@ pub enum NodeType {
 }
 
 impl NodeType {
-    pub fn from_str(s: &str) -> Self {
+    /// Parse a node type from a string.
+    pub fn parse(s: &str) -> Self {
         match s.to_uppercase().as_str() {
             "STATION" => Self::Station,
             "OUTPOST" => Self::Outpost,
@@ -89,10 +92,11 @@ impl RouteGraph {
         let node = Node {
             id: station.id.clone(),
             name: station.name.clone(),
-            node_type: NodeType::from_str(&station.station_type),
+            node_type: NodeType::parse(&station.station_type),
             system: station.system_code.clone(),
             parent_body: station.parent_name.clone(),
             coords: None,
+            is_fuel_station: false, // Station data doesn't include refuel info
         };
 
         let idx = self.graph.add_node(node);
@@ -102,25 +106,28 @@ impl RouteGraph {
 
     /// Add a node from a Terminal.
     pub fn add_terminal(&mut self, terminal: &Terminal) -> NodeIndex {
-        if let Some(&idx) = self.node_indices.get(&terminal.code) {
+        let code = terminal.code.clone().unwrap_or_default();
+        if let Some(&idx) = self.node_indices.get(&code) {
             return idx;
         }
 
         let node = Node {
             id: terminal.id.to_string(),
-            name: terminal.name.clone(),
-            node_type: NodeType::from_str(&terminal.terminal_type),
-            system: terminal.star_system_name.clone(),
-            parent_body: if !terminal.moon_name.is_empty() {
-                terminal.moon_name.clone()
-            } else {
-                terminal.planet_name.clone()
-            },
+            name: terminal.name.clone().unwrap_or_default(),
+            node_type: NodeType::parse(&terminal.terminal_type.clone().unwrap_or_default()),
+            system: terminal.star_system_name.clone().unwrap_or_default(),
+            parent_body: terminal
+                .moon_name
+                .clone()
+                .filter(|m| !m.is_empty())
+                .or_else(|| terminal.planet_name.clone())
+                .unwrap_or_default(),
             coords: None,
+            is_fuel_station: terminal.is_refuel,
         };
 
         let idx = self.graph.add_node(node);
-        self.node_indices.insert(terminal.code.clone(), idx);
+        self.node_indices.insert(code, idx);
         idx
     }
 
@@ -175,9 +182,23 @@ impl RouteGraph {
                 let (_, idx_a) = &system_nodes[i];
                 let (_, idx_b) = &system_nodes[j];
 
-                // Estimate distance based on typical intra-system distances
-                // TODO: Use actual coordinates when available
-                let distance = 500_000.0; // ~500k km default
+                let node_a = &self.graph[*idx_a];
+                let node_b = &self.graph[*idx_b];
+
+                // Calculate distance using actual coordinates when available
+                let distance = match (node_a.coords, node_b.coords) {
+                    (Some((x1, y1, z1)), Some((x2, y2, z2))) => {
+                        // Calculate Euclidean distance in 3D space
+                        let dx = x2 - x1;
+                        let dy = y2 - y1;
+                        let dz = z2 - z1;
+                        (dx * dx + dy * dy + dz * dz).sqrt()
+                    }
+                    _ => {
+                        // Fall back to default estimate when coordinates not available
+                        500_000.0 // ~500k km default
+                    }
+                };
 
                 let edge = Edge {
                     distance,
@@ -205,20 +226,30 @@ impl RouteGraph {
             .copied()
             .ok_or_else(|| GraphError::NodeNotFound(to_code.to_string()))?;
 
-        let distances = dijkstra(&self.graph, from_idx, Some(to_idx), |e| {
-            OrderedFloat(e.weight().travel_time)
-        });
+        // Use A* algorithm to find the shortest path
+        // The heuristic is 0 (making it equivalent to Dijkstra but with path reconstruction)
+        let result = astar(
+            &self.graph,
+            from_idx,
+            |idx| idx == to_idx,
+            |e| OrderedFloat(e.weight().travel_time),
+            |_| OrderedFloat(0.0), // Zero heuristic = Dijkstra with path
+        );
 
-        if !distances.contains_key(&to_idx) {
-            return Err(GraphError::NoPath {
+        match result {
+            Some((_cost, path)) => {
+                // Convert node indices to node codes
+                let codes: Vec<String> = path
+                    .into_iter()
+                    .map(|idx| self.graph[idx].id.clone())
+                    .collect();
+                Ok(codes)
+            }
+            None => Err(GraphError::NoPath {
                 from: from_code.to_string(),
                 to: to_code.to_string(),
-            });
+            }),
         }
-
-        // Reconstruct path (simplified - just returns node codes for now)
-        // TODO: Implement proper path reconstruction
-        Ok(vec![from_code.to_string(), to_code.to_string()])
     }
 
     /// Get all nodes in the graph.
@@ -228,9 +259,7 @@ impl RouteGraph {
 
     /// Get node by code.
     pub fn get_node(&self, code: &str) -> Option<&Node> {
-        self.node_indices
-            .get(code)
-            .map(|&idx| &self.graph[idx])
+        self.node_indices.get(code).map(|&idx| &self.graph[idx])
     }
 
     /// Get number of connections for a node (degree).
@@ -249,9 +278,9 @@ impl RouteGraph {
 
         self.graph
             .neighbors(idx)
-            .map(|neighbor_idx| {
-                let edge_idx = self.graph.find_edge(idx, neighbor_idx).expect("edge exists");
-                (&self.graph[neighbor_idx], &self.graph[edge_idx])
+            .filter_map(|neighbor_idx| {
+                let edge_idx = self.graph.find_edge(idx, neighbor_idx)?;
+                Some((&self.graph[neighbor_idx], &self.graph[edge_idx]))
             })
             .collect()
     }

@@ -2,10 +2,14 @@
 //!
 //! Analyzes trade data to predict hauler routes and identify high-value targets.
 
-mod targets;
 mod ships;
+mod targets;
 
+#[cfg(test)]
+mod ships_tests;
+
+pub use ships::{CargoShip, LootEstimate, CARGO_SHIPS};
 pub use targets::{
-    HotRoute, TargetAnalyzer, TargetPrediction, TradeActivity, TrafficDirection,
+    CommodityValue, HotRoute, InterdictionHotspot, RouteLeg, ShipFrequency, TargetAnalyzer,
+    TargetPrediction, TradeActivity, TradeRun, TrafficDirection,
 };
-pub use ships::{CargoShip, CARGO_SHIPS};

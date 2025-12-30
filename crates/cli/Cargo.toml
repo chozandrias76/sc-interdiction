@@ -17,11 +17,18 @@ serde_json.workspace = true
 clap.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
+ratatui.workspace = true
+crossterm.workspace = true
+dirs = "5"
 
 api-client.workspace = true
 route-graph.workspace = true
 intel.workspace = true
 server = { path = "../server" }
+unicode-width = "0.2.0"
 
 [lints]
 workspace = true
+
+[dev-dependencies]
+insta = "1.45.1"

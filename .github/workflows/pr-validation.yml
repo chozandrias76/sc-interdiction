@@ -1,0 +1,147 @@
+name: PR Validation
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  validate-pr:
+    runs-on: ubuntu-latest
+    name: Validate PR Title and Description
+    steps:
+      - name: Check PR Title and Description
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            });
+
+            const body = pr.body || '';
+            const title = pr.title;
+            const errors = [];
+            const warnings = [];
+
+            // ========================================
+            // Title Validation (Conventional Commits)
+            // ========================================
+            const titleRegex = /^(feat|fix|chore|docs|refactor|test|perf|ci|build|style|revert)(\(.+\))?:.+/;
+            if (!titleRegex.test(title)) {
+              errors.push('Title must follow conventional commits format: type(scope): description');
+              errors.push('Valid types: feat, fix, chore, docs, refactor, test, perf, ci, build, style, revert');
+            }
+
+            if (title.length > 72) {
+              warnings.push('Title is longer than 72 characters - consider shortening');
+            }
+
+            // ========================================
+            // Description Length Validation
+            // ========================================
+            if (body.length < 100) {
+              errors.push(`Description too short (${body.length} chars). Minimum: 100 characters`);
+            }
+
+            if (body.length > 10000) {
+              errors.push(`Description too long (${body.length} chars). Maximum: 10,000 characters`);
+            }
+
+            // ========================================
+            // Required Sections Validation
+            // ========================================
+            const requiredSections = [
+              { header: '## Summary', name: 'Summary' },
+              { header: '## Changes', name: 'Changes' },
+              { header: '## Test Results', name: 'Test Results' }
+            ];
+
+            for (const section of requiredSections) {
+              if (!body.includes(section.header)) {
+                errors.push(`Missing required section: "${section.header}"`);
+              } else {
+                // Check that section isn't empty (look for next ## level header or end of string)
+                const regex = new RegExp(`${section.header}\\s*([\\s\\S]*?)(?=^## |$)`, 'm');
+                const match = body.match(regex);
+                if (match && match[1].trim().length < 10) {
+                  errors.push(`"${section.header}" section appears empty (min 10 chars)`);
+                }
+              }
+            }
+
+            // ========================================
+            // Test Results Validation
+            // ========================================
+            const hasTestIndicator = body.match(/✅|tests? (passing|pass)/i) ||
+                                     body.match(/\d+\s+tests?\s+pass/i) ||
+                                     body.match(/All.*tests.*pass/i);
+
+            if (!hasTestIndicator) {
+              warnings.push('Consider adding test pass indicators (e.g., "✅ All tests passing")');
+            }
+
+            // ========================================
+            // PR Size Warning
+            // ========================================
+            const changedFiles = pr.changed_files;
+            const additions = pr.additions;
+            const deletions = pr.deletions;
+
+            if (changedFiles > 30) {
+              warnings.push(`Large PR: ${changedFiles} files changed. Consider splitting into smaller PRs.`);
+            }
+
+            if (additions + deletions > 1000) {
+              warnings.push(`Large changeset: +${additions} -${deletions} lines. Consider splitting into smaller PRs.`);
+            }
+
+            // ========================================
+            // Check for Breaking Changes
+            // ========================================
+            const hasBreakingIndicator = title.includes('!') ||
+                                         body.includes('BREAKING CHANGE') ||
+                                         body.includes('## Breaking Changes');
+
+            if (hasBreakingIndicator && !body.includes('## Breaking Changes')) {
+              warnings.push('Breaking change detected but no "## Breaking Changes" section found');
+            }
+
+            // ========================================
+            // Output Results
+            // ========================================
+            if (warnings.length > 0) {
+              console.log('\n⚠️  Warnings:');
+              warnings.forEach(w => console.log(`   - ${w}`));
+            }
+
+            if (errors.length > 0) {
+              let errorMessage = '❌ PR Validation Failed\n\n';
+              errorMessage += 'Errors:\n';
+              errors.forEach(e => errorMessage += `  - ${e}\n`);
+
+              if (warnings.length > 0) {
+                errorMessage += '\nWarnings:\n';
+                warnings.forEach(w => errorMessage += `  - ${w}\n`);
+              }
+
+              errorMessage += '\n📝 PR Template:\n';
+              errorMessage += '```markdown\n';
+              errorMessage += '## Summary\n';
+              errorMessage += 'Brief description of what this PR does.\n\n';
+              errorMessage += '## Changes\n';
+              errorMessage += '- List of changes\n';
+              errorMessage += '- Use bullet points\n\n';
+              errorMessage += '## Test Results\n';
+              errorMessage += '- ✅ All XX tests passing\n';
+              errorMessage += '- ✅ Clippy passes with 0 errors\n';
+              errorMessage += '```\n';
+
+              core.setFailed(errorMessage);
+            } else {
+              console.log('\n✅ PR Validation Passed');
+              console.log(`   Title: ${title}`);
+              console.log(`   Description: ${body.length} characters`);
+              console.log(`   Changed files: ${changedFiles}`);
+              console.log(`   Lines: +${additions} -${deletions}`);
+            }

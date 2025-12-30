@@ -1,0 +1,12 @@
+# Clippy Configuration for Code Quality
+#
+# These rules enforce code quality standards across the project.
+# Run with: cargo clippy
+
+# Complexity limits
+cognitive-complexity-threshold = 15
+type-complexity-threshold = 250
+
+# Warn on functions that are too long (lines of code)
+# Note: Clippy doesn't have a direct "too many lines" lint,
+# but we can use other metrics as proxies

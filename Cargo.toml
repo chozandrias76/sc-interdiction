@@ -3,7 +3,7 @@ resolver = "2"
 members = ["crates/*"]
 
 [workspace.package]
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 license = "MIT"
 repository = "https://github.com/yourusername/sc-interdiction"
@@ -25,6 +25,10 @@ serde_json = "1.0"
 
 # CLI
 clap = { version = "4.0", features = ["derive", "env"] }
+
+# TUI
+ratatui = "0.29"
+crossterm = "0.28"
 
 # Web server
 axum = "0.7"
@@ -48,18 +52,46 @@ route-graph = { path = "crates/route-graph" }
 intel = { path = "crates/intel" }
 
 [workspace.lints.rust]
-unsafe_code = "warn"
-unused = "warn"
+unsafe_code = "deny"
+unused = "deny"
 
 [workspace.lints.clippy]
-unwrap_used = "warn"
-expect_used = "warn"
-panic = "warn"
+# Error handling - stricter in production, relaxed in tests
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+indexing_slicing = "warn"
+fallible_impl_from = "deny"
+
+# Code quality
 doc_markdown = "warn"
-redundant_else = "warn"
-semicolon_if_nothing_returned = "warn"
-match_same_arms = "warn"
-manual_let_else = "warn"
+redundant_else = "deny"
+semicolon_if_nothing_returned = "deny"
+match_same_arms = "deny"
+manual_let_else = "deny"
+cognitive_complexity = "deny"
+too_many_lines = "deny"
+type_complexity = "warn"
+
+# Prevent debug artifacts in production
+dbg_macro = "deny"
+todo = "deny"
+unimplemented = "deny"
+print_stdout = "warn"
+print_stderr = "warn"
+
+# Best practices
+missing_errors_doc = "warn"
+missing_panics_doc = "warn"
+must_use_candidate = "warn"
+explicit_iter_loop = "warn"
+explicit_into_iter_loop = "warn"
+unnecessary_wraps = "warn"
+used_underscore_binding = "warn"
+
+# Style consistency
+enum_glob_use = "deny"
+wildcard_imports = "deny"
 
 [profile.release]
 lto = true
