@@ -10,6 +10,27 @@ set -e
 
 echo "🔍 Running pre-commit quality checks..."
 
+# Check commit size (lines changed)
+echo "  → Checking commit size..."
+LINES_CHANGED=$(git diff --cached --numstat | awk '{sum += $1 + $2} END {print sum}')
+MAX_LINES=500
+
+if [ -n "$LINES_CHANGED" ] && [ "$LINES_CHANGED" -gt "$MAX_LINES" ]; then
+    echo "⚠️  Large commit detected: $LINES_CHANGED lines changed (limit: $MAX_LINES)"
+    echo "   Consider breaking this into smaller, focused commits."
+    echo "   Exceptions:"
+    echo "   - Merge commits (use standard merge process)"
+    echo "   - Auto-generated code, lock files, or dependencies"
+    echo "   - Initial implementation of large features (document why in commit message)"
+    echo ""
+    read -p "   Continue anyway? [y/N] " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "❌ Commit cancelled. Please split into smaller commits."
+        exit 1
+    fi
+fi
+
 # Run cargo clippy with strict quality checks
 echo "  → Running clippy with cognitive complexity and code quality checks..."
 if ! cargo clippy --all-targets --all-features -- \
