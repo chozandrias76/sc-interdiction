@@ -1,5 +1,10 @@
 //! Tests for ship-related functionality.
 
+#![allow(clippy::unwrap_used)]
+#![allow(clippy::expect_used)]
+#![allow(clippy::panic)]
+#![allow(clippy::indexing_slicing)]
+
 use crate::ships::{estimate_ship_for_route, CargoShip, LootEstimate, CARGO_SHIPS};
 use api_client::TradeRoute;
 

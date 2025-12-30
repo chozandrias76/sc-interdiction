@@ -40,8 +40,16 @@ impl EventHandler {
                     .checked_sub(last_tick.elapsed())
                     .unwrap_or(tick_rate);
 
-                if event::poll(timeout).expect("Failed to poll events") {
-                    match event::read().expect("Failed to read event") {
+                let Ok(has_event) = event::poll(timeout) else {
+                    return; // Exit thread on terminal error
+                };
+
+                if has_event {
+                    let Ok(event) = event::read() else {
+                        return; // Exit thread on terminal error
+                    };
+
+                    match event {
                         CrosstermEvent::Key(e) => {
                             if sender.send(Event::Key(e)).is_err() {
                                 return;

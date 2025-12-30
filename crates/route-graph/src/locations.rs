@@ -411,6 +411,11 @@ pub fn locations_in_system(system: &str) -> Vec<&'static LocationPosition> {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_used)]
+    #![allow(clippy::expect_used)]
+    #![allow(clippy::panic)]
+    #![allow(clippy::indexing_slicing)]
+
     use super::*;
 
     #[test]

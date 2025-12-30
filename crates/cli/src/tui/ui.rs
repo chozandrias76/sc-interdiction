@@ -31,6 +31,11 @@ pub fn render(frame: &mut Frame, app: &mut App) {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_used)]
+    #![allow(clippy::expect_used)]
+    #![allow(clippy::panic)]
+    #![allow(clippy::indexing_slicing)]
+
     use super::super::text::ScrollState;
     use super::super::types::{RouteSort, TargetSort, View};
     use super::*;

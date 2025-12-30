@@ -1,5 +1,10 @@
 //! Unit tests for TargetAnalyzer helper functions and business logic
 
+#![allow(clippy::unwrap_used)]
+#![allow(clippy::expect_used)]
+#![allow(clippy::panic)]
+#![allow(clippy::indexing_slicing)]
+
 use super::*;
 use api_client::TradeRoute;
 
