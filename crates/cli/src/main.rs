@@ -286,7 +286,7 @@ async fn main() -> Result<()> {
                 graph.connect_system(&system);
             }
 
-            let chokepoints = analyzer.find_interdiction_points(&graph, top).await?;
+            let chokepoints = analyzer.find_interdiction_points(&graph, top, false).await?;
 
             if json {
                 println!("{}", serde_json::to_string_pretty(&chokepoints)?);
@@ -517,7 +517,7 @@ async fn main() -> Result<()> {
                 graph.connect_system(&system);
             }
 
-            let chokepoints = analyzer.find_interdiction_points(&graph, 50).await?;
+            let chokepoints = analyzer.find_interdiction_points(&graph, 50, false).await?;
 
             // Build spatial index
             let spatial_index = route_graph::SpatialIndex::from_chokepoints(chokepoints);

@@ -90,7 +90,7 @@ async fn get_chokepoints(
 
     match state
         .analyzer
-        .find_interdiction_points(&graph, top)
+        .find_interdiction_points(&graph, top, false)
         .await
     {
         Ok(chokepoints) => Json(chokepoints).into_response(),
