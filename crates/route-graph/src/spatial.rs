@@ -489,15 +489,7 @@ pub fn find_route_intersections(
             let name = generate_intersection_name(&zone_routes);
             let system = infer_system_from_routes(&zone_routes);
 
-            let suggested_tactics = if avg_threat < 2.5 {
-                "Easy pickings - solo Mantis can handle most targets".to_string()
-            } else if avg_threat < 4.0 {
-                "Mixed targets - bring a wingman for armed haulers".to_string()
-            } else if avg_threat < 5.5 {
-                "Dangerous - combat wing of 3+ recommended".to_string()
-            } else {
-                "High risk - expect armed escorts, need full fleet".to_string()
-            };
+            let suggested_tactics = suggest_tactics(avg_threat);
 
             // Calculate jump instructions
             let jump_to = calculate_jump_instruction(&position, &system);
@@ -527,6 +519,7 @@ pub fn find_route_intersections(
     intersections
 }
 
+fn suggest_tactics(avg_threat: f64) -> String {    if avg_threat < 2.5 {        "Easy pickings - solo Mantis can handle most targets".to_string()    } else if avg_threat < 4.0 {        "Mixed targets - bring a wingman for armed haulers".to_string()    } else if avg_threat < 5.5 {        "Dangerous - combat wing of 3+ recommended".to_string()    } else {        "High risk - expect armed escorts, need full fleet".to_string()    }}
 fn generate_intersection_name(routes: &[&RouteSegment]) -> String {
     // Find common elements in route names
     let mut locations: Vec<&str> = Vec::new();
