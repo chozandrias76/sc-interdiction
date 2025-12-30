@@ -82,16 +82,14 @@ jobs:
           
           gh release create "v${{ steps.get_version.outputs.version }}" \
             --title "Release v${{ steps.get_version.outputs.version }}" \
-            --notes "## What's Changed
+            --notes "$CHANGELOG
 
-          $CHANGELOG
+## 📦 Installation
 
-          ## Installation
+Download the appropriate binary for your platform from the assets below.
 
-          Download the appropriate binary for your platform from the assets below.
-
-          ## Full Changelog
-          See all changes at: https://github.com/${{ github.repository }}/compare/v${{ steps.get_version.outputs.version }}...HEAD" \
+## 📝 Full Changelog
+https://github.com/${{ github.repository }}/compare/v${{ steps.get_version.outputs.version }}...HEAD" \
             $PRERELEASE_FLAG \
             target/release/sc-interdiction* || true
       
