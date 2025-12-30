@@ -64,6 +64,83 @@ Only use `--no-verify` when absolutely necessary:
 git commit --no-verify -m "emergency hotfix"
 ```
 
+## Pull Request Guidelines
+
+### PR Title Format
+
+Use [Conventional Commits](https://www.conventionalcommits.org/) format:
+
+```
+type(scope): description
+```
+
+**Valid types:**
+- `feat`: New feature
+- `fix`: Bug fix
+- `chore`: Maintenance tasks (dependencies, config, etc.)
+- `docs`: Documentation changes
+- `refactor`: Code refactoring
+- `test`: Adding or updating tests
+- `perf`: Performance improvements
+- `ci`: CI/CD changes
+- `build`: Build system changes
+- `style`: Code style changes (formatting)
+- `revert`: Revert previous commit
+
+**Examples:**
+```
+feat(tui): add filtering support for terminals
+fix(api-client): handle rate limit errors correctly
+chore: enforce stricter clippy lints
+docs(readme): add installation instructions
+```
+
+### PR Description Requirements
+
+Pull requests are validated automatically and **must include**:
+
+1. **Minimum length:** 100 characters
+2. **Maximum length:** 10,000 characters
+3. **Required sections:**
+   - `## Summary` - Brief description of the changes
+   - `## Changes` - Detailed list of what was modified
+   - `## Test Results` - Evidence that tests pass
+
+**Template:**
+```markdown
+## Summary
+Brief description of what this PR does.
+
+## Changes
+- Change 1
+- Change 2
+- Change 3
+
+## Test Results
+- ✅ All 73 tests passing
+- ✅ Clippy passes with 0 errors
+- ✅ Pre-commit hooks pass
+
+## Breaking Changes
+<!-- If applicable, describe breaking changes -->
+```
+
+### PR Size Guidelines
+
+- **Recommended:** < 30 files changed, < 1000 lines changed
+- **Large PRs** (>30 files or >1000 lines) will trigger warnings
+- Consider splitting large changes into multiple focused PRs
+
+### Validation Workflow
+
+All PRs are automatically validated by GitHub Actions:
+- Title format check (conventional commits)
+- Description length and structure validation
+- Required sections check
+- Size warnings for large PRs
+
+The validation must pass before merging.
+
 ## Development Setup
 
 Install the pre-commit hook:
