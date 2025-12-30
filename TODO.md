@@ -39,11 +39,11 @@
   - ✅ Built spatial index with nearest-neighbor queries
   - ✅ Added system filtering and route proximity searches
   
-- [ ] **Path finding with fuel constraints**
-  - Extend `RouteGraph` to support multi-hop routing with refuel stops
-  - Implement `find_route_with_refueling(origin, dest, ship_fuel_capacity) -> Vec<Waypoint>`
-  - Each waypoint includes: location, refuel (yes/no), fuel cost
-  - Use existing `fuel_sufficient` field to determine when refueling needed
+- [x] **Path finding with fuel constraints**
+  - ✅ Implemented `find_route_with_refueling(origin, dest, ship_fuel_capacity) -> Vec<Waypoint>`
+  - ✅ Each waypoint includes: location, refuel (yes/no), distances
+  - ✅ Uses `fuel_sufficient` field to determine when refueling needed
+  - ✅ Returns direct route if possible, multi-hop with refuel stops otherwise
   
 - [ ] **Refueling cost calculation**
   - Add hydrogen fuel pricing to commodity data
@@ -62,10 +62,11 @@
   - ✅ Populated from `Terminal.is_refuel` when building graph via `add_terminal()`
   - ✅ Defaults to false for Station nodes (no refuel data available)
   
-- [ ] **Filter terminals by type**
-  - Add `--type fuel` flag to `terminals` command
-  - Support types: fuel, refinery, commodity, commodity_raw, vehicle_rent, vehicle_buy
-  - Use existing `Terminal.terminal_type` field
+- [x] **Filter terminals by type**
+  - ✅ Added `--type` flag to `terminals` command
+  - ✅ Supports types: fuel (is_refuel), refinery (is_refinery), or any terminal_type value
+  - ✅ Case-insensitive matching on terminal_type field
+  - ✅ Works with existing `--system` filter
   
 - [ ] **Visual indicators**
   - CLI: Add `[⛽]` icon next to fuel stations in output
