@@ -4,6 +4,7 @@
 
 mod app;
 mod event;
+mod text;
 mod ui;
 
 pub use app::App;

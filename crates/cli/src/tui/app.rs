@@ -6,6 +6,8 @@ use eyre::Result;
 use intel::{TargetAnalyzer, TargetPrediction, HotRoute, TrafficDirection};
 use route_graph::RouteIntersection;
 
+use super::text::ScrollState;
+
 /// Current view in the application.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum View {
@@ -99,6 +101,8 @@ pub struct App {
     pub error: Option<String>,
     /// Status message.
     pub status: String,
+    /// Scroll state for text display.
+    pub scroll: ScrollState,
 }
 
 impl App {
@@ -133,6 +137,7 @@ impl App {
             loading: true,
             error: None,
             status: "Loading data...".to_string(),
+            scroll: ScrollState::new(),
         };
 
         // Load data
@@ -169,7 +174,7 @@ impl App {
 
     /// Handle tick events.
     pub fn on_tick(&mut self) {
-        // Could be used for animations or periodic updates
+        self.scroll.on_tick();
     }
 
     /// Handle key events. Returns true if the app should exit.
@@ -706,3 +711,4 @@ fn load_hotspots(routes: &[HotRoute]) -> Vec<RouteIntersection> {
 
     intersections
 }
+

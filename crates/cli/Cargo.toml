@@ -25,6 +25,10 @@ api-client.workspace = true
 route-graph.workspace = true
 intel.workspace = true
 server = { path = "../server" }
+unicode-width = "0.2.0"
 
 [lints]
 workspace = true
+
+[dev-dependencies]
+insta = "1.45.1"
