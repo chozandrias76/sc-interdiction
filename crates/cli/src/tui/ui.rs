@@ -92,6 +92,9 @@ mod tests {
             likely_ship: ship,
             estimated_haul_value: 51_000.0,
             risk_score: 75.0,
+            distance_mkm: 12.5,
+            fuel_sufficient: true,
+            fuel_required: 1000.0,
         }];
 
         App {

@@ -32,6 +32,17 @@ impl TargetAnalyzer {
                 let likely_ship = estimate_ship_for_route(&r);
                 let estimated_value = r.profit_for_scu(likely_ship.cargo_scu as f64);
 
+                // Calculate route distance
+                let distance_mkm = route_graph::distance_between(
+                    &r.terminal_origin_name,
+                    &r.terminal_destination_name,
+                )
+                .unwrap_or(0.0);
+
+                // Check fuel sufficiency
+                let (fuel_sufficient, fuel_required, _) =
+                    likely_ship.can_complete_route(distance_mkm);
+
                 HotRoute {
                     commodity: r.commodity_name.clone(),
                     commodity_code: r.commodity_code.clone(),
@@ -42,6 +53,9 @@ impl TargetAnalyzer {
                     likely_ship,
                     estimated_haul_value: estimated_value,
                     risk_score: calculate_risk_score(&r),
+                    distance_mkm,
+                    fuel_sufficient,
+                    fuel_required,
                 }
             })
             .collect();
@@ -209,9 +223,23 @@ impl TargetAnalyzer {
             let outbound_profit = outbound.profit_for_scu(cargo_scu);
             let outbound_cargo_value = outbound.price_origin * cargo_scu;
 
-            let (return_leg, return_profit) = if let Some(ret) = best_return {
+            // Calculate outbound distance
+            let outbound_dist = route_graph::distance_between(
+                &outbound.terminal_origin_name,
+                &outbound.terminal_destination_name,
+            )
+            .unwrap_or(0.0);
+
+            let (return_leg, return_profit, return_dist) = if let Some(ret) = best_return {
                 let ret_profit = ret.profit_for_scu(cargo_scu);
                 let ret_cargo_value = ret.price_origin * cargo_scu;
+
+                let dist = route_graph::distance_between(
+                    &ret.terminal_origin_name,
+                    &ret.terminal_destination_name,
+                )
+                .unwrap_or(0.0);
+
                 (
                     Some(RouteLeg {
                         commodity: ret.commodity_name.clone(),
@@ -219,14 +247,18 @@ impl TargetAnalyzer {
                         destination: ret.terminal_destination_name.clone(),
                         profit_per_scu: ret.profit_per_unit,
                         cargo_value: ret_cargo_value,
+                        distance_mkm: dist,
                     }),
                     ret_profit,
+                    dist,
                 )
             } else {
-                (None, 0.0)
+                (None, 0.0, 0.0)
             };
 
             let total_profit = outbound_profit + return_profit;
+            let total_distance = outbound_dist + return_dist;
+            let (fuel_sufficient, _, _) = likely_ship.can_complete_route(total_distance);
 
             trade_runs.push(TradeRun {
                 outbound: RouteLeg {
@@ -235,11 +267,14 @@ impl TargetAnalyzer {
                     destination: outbound.terminal_destination_name.clone(),
                     profit_per_scu: outbound.profit_per_unit,
                     cargo_value: outbound_cargo_value,
+                    distance_mkm: outbound_dist,
                 },
                 return_leg,
                 likely_ship,
                 total_profit,
                 has_return_cargo: best_return.is_some(),
+                total_distance_mkm: total_distance,
+                fuel_sufficient,
             });
         }
 
@@ -251,7 +286,7 @@ impl TargetAnalyzer {
     }
 }
 
-/// A profitable trade route.
+/// A hot trade route (single commodity, origin -> destination).
 #[derive(Debug, Clone, Serialize)]
 pub struct HotRoute {
     pub commodity: String,
@@ -264,6 +299,12 @@ pub struct HotRoute {
     pub estimated_haul_value: f64,
     /// Risk score 0-100 (higher = more likely to be used).
     pub risk_score: f64,
+    /// Route distance in millions of km (Mkm).
+    pub distance_mkm: f64,
+    /// Whether the likely ship can complete this route without refueling.
+    pub fuel_sufficient: bool,
+    /// Quantum fuel required for this route (units).
+    pub fuel_required: f64,
 }
 
 /// A complete round-trip trade run (outbound + return with cargo).
@@ -279,6 +320,10 @@ pub struct TradeRun {
     pub total_profit: f64,
     /// Whether this is a full round-trip with return cargo.
     pub has_return_cargo: bool,
+    /// Total distance for round trip (Mkm).
+    pub total_distance_mkm: f64,
+    /// Whether the ship can complete the full trip without refueling.
+    pub fuel_sufficient: bool,
 }
 
 /// A single leg of a trade route.
@@ -289,6 +334,8 @@ pub struct RouteLeg {
     pub destination: String,
     pub profit_per_scu: f64,
     pub cargo_value: f64,
+    /// Route distance in millions of km (Mkm).
+    pub distance_mkm: f64,
 }
 
 /// Prediction of a target at a location.
