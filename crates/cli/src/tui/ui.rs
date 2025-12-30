@@ -3,12 +3,14 @@
 use super::app::App;
 use super::text::{scroll_text, truncate};
 use super::types::{MapLocation, MapLocationType, RouteSort, TargetSort, View};
+use super::views::render_help;
+use super::widgets::{format_value, render_header, render_status_bar};
 use intel::TrafficDirection;
 use ratatui::{
     prelude::*,
     widgets::{
-        Block, Borders, Cell, Clear, Paragraph, Row, Scrollbar, ScrollbarOrientation,
-        ScrollbarState, Table, Tabs, Wrap, canvas::{Canvas, Circle, Line as CanvasLine},
+        Block, Borders, Cell, Paragraph, Row, Scrollbar, ScrollbarOrientation,
+        ScrollbarState, Table, canvas::{Canvas, Circle, Line as CanvasLine},
     },
 };
 
@@ -33,29 +35,6 @@ pub fn render(frame: &mut Frame, app: &mut App) {
     }
 
     render_status_bar(frame, app, chunks[2]);
-}
-
-fn render_header(frame: &mut Frame, app: &App, area: Rect) {
-    let titles = vec!["[1] Targets", "[2] Routes", "[3] Map"];
-    let selected = match app.view {
-        View::Targets => 0,
-        View::Routes => 1,
-        View::Map => 2,
-        View::Help => 0,
-    };
-
-    let tabs = Tabs::new(titles)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title(format!(" SC Interdiction - {} ", app.location))
-                .title_style(Style::default().fg(Color::Cyan).bold()),
-        )
-        .select(selected)
-        .style(Style::default().fg(Color::White))
-        .highlight_style(Style::default().fg(Color::Yellow).bold());
-
-    frame.render_widget(tabs, area);
 }
 
 fn render_targets(frame: &mut Frame, app: &mut App, area: Rect) {
@@ -584,116 +563,6 @@ fn render_hotspot_details(frame: &mut Frame, app: &App, area: Rect) {
 
         frame.render_widget(table, chunks[1]);
     }
-}
-
-fn render_help(frame: &mut Frame, area: Rect) {
-    let help_text = r#"
-  NAVIGATION
-    ↑/k, ↓/j     Move up/down
-    ←/h, →/l     Select hotspot (Map view)
-    PgUp/PgDn    Page up/down
-    Home/End     Jump to start/end
-
-  VIEWS
-    Tab          Switch view
-    1            Targets view
-    2            Routes view
-    3            Map view
-    ?            Toggle help
-
-  MAP CONTROLS
-    z/[          Zoom out
-    Z/]          Zoom in
-    0            Reset zoom
-    n            Show fewer hotspots
-    N            Show more hotspots
-    a            Toggle all/top-1 hotspots
-
-  FILTERING (Targets)
-    i            Toggle inbound only
-    o            Toggle outbound only
-    +/-          Adjust min threat level
-
-  SORTING
-    s            Cycle sort column
-    S            Toggle sort direction
-
-  GENERAL
-    q, Ctrl+C    Quit
-"#;
-
-    let help = Paragraph::new(help_text)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title(" Help ")
-                .title_style(Style::default().fg(Color::Cyan)),
-        )
-        .style(Style::default().fg(Color::White))
-        .wrap(Wrap { trim: false });
-
-    // Center the help panel
-    let popup_area = centered_rect(60, 70, area);
-    frame.render_widget(Clear, popup_area);
-    frame.render_widget(help, popup_area);
-}
-
-fn render_status_bar(frame: &mut Frame, app: &App, area: Rect) {
-    let status = if let Some(ref error) = app.error {
-        Paragraph::new(error.as_str())
-            .style(Style::default().fg(Color::Red))
-    } else {
-        Paragraph::new(app.status.as_str())
-            .style(Style::default().fg(Color::Gray))
-    };
-
-    let keys = " q:Quit | 1/2/3:Views | Tab:Next | ?:Help | s:Sort ";
-
-    let chunks = Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
-        .split(area);
-
-    let status_block = status.block(Block::default().borders(Borders::ALL));
-    let keys_block = Paragraph::new(keys)
-        .style(Style::default().fg(Color::DarkGray))
-        .alignment(Alignment::Right)
-        .block(Block::default().borders(Borders::ALL));
-
-    frame.render_widget(status_block, chunks[0]);
-    frame.render_widget(keys_block, chunks[1]);
-}
-
-/// Format a value in aUEC with K/M suffixes.
-fn format_value(value: f64) -> String {
-    if value >= 1_000_000.0 {
-        format!("{:.2}M", value / 1_000_000.0)
-    } else if value >= 1_000.0 {
-        format!("{:.1}K", value / 1_000.0)
-    } else {
-        format!("{:.0}", value)
-    }
-}
-
-/// Create a centered rectangle for popups.
-fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
-    let popup_layout = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Percentage((100 - percent_y) / 2),
-            Constraint::Percentage(percent_y),
-            Constraint::Percentage((100 - percent_y) / 2),
-        ])
-        .split(r);
-
-    Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints([
-            Constraint::Percentage((100 - percent_x) / 2),
-            Constraint::Percentage(percent_x),
-            Constraint::Percentage((100 - percent_x) / 2),
-        ])
-        .split(popup_layout[1])[1]
 }
 
 #[cfg(test)]
