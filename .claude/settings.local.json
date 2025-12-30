@@ -34,7 +34,13 @@
       "Bash(make build:*)",
       "Bash(\"a:/Code Projects/sc-interdiction/make.cmd\" build)",
       "Bash(~/.local/bin/direnv allow \"a:/Code Projects/sc-interdiction\")",
-      "Bash(wsl -e bash -c:*)"
+      "Bash(wsl -e bash -c:*)",
+      "Bash(make test:*)",
+      "Bash(CARGO_INCREMENTAL=0 cargo test:*)",
+      "Bash(wsl -e bash:*)",
+      "Bash(cat:*)",
+      "Bash(cd:*)",
+      "Bash(git reset:*)"
     ]
   }
 }
