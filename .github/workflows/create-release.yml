@@ -100,41 +100,45 @@ jobs:
       - name: Push release branch
         run: git push origin "${{ steps.branch.outputs.name }}"
       
+      - name: Generate changelog
+        id: changelog
+        uses: ./.github/actions/generate-changelog
+        with:
+          previous-version: ${{ steps.current_version.outputs.version }}
+          github-token: ${{ github.token }}
+      
+      - name: Build release PR body
+        id: pr_body
+        run: |
+          CHANGELOG="${{ steps.changelog.outputs.changelog }}"
+          
+          # Add release header
+          PR_BODY="## Release v${{ steps.new_version.outputs.version }}\n\n"
+          PR_BODY="$PR_BODY$CHANGELOG"
+          
+          # Add version info
+          PR_BODY="$PR_BODY\n## 📋 Version Info\n"
+          PR_BODY="$PR_BODY- **Previous**: \`${{ steps.current_version.outputs.version }}\`\n"
+          PR_BODY="$PR_BODY- **Current**: \`${{ steps.new_version.outputs.version }}\`\n"
+          PR_BODY="$PR_BODY- **Type**: ${{ inputs.version_bump }}\n"
+          if [ "${{ inputs.prerelease }}" = "true" ]; then
+            PR_BODY="$PR_BODY- **Pre-release**: Yes\n"
+          fi
+          
+          # Save to file
+          echo -e "$PR_BODY" > /tmp/pr-body.md
+      
       - name: Create PR to main
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          PR_BODY=$(cat /tmp/pr-body.md)
+          
           gh pr create \
             --base main \
             --head "${{ steps.branch.outputs.name }}" \
             --title "release: version ${{ steps.new_version.outputs.version }}" \
-            --body "## Release ${{ steps.new_version.outputs.version }}
-
-          ### Version Bump
-          - Type: **${{ inputs.version_bump }}**
-          - Previous version: \`${{ steps.current_version.outputs.version }}\`
-          - New version: \`${{ steps.new_version.outputs.version }}\`
-          - Pre-release: ${{ inputs.prerelease }}
-
-          ### Summary
-          This PR merges the release branch into \`main\` for version ${{ steps.new_version.outputs.version }}.
-
-          ### Changes
-          - Version bumped in Cargo.toml
-          - Cargo.lock updated
-
-          ### Pre-merge Checklist
-          - [ ] All CI checks pass
-          - [ ] All tests pass on all platforms
-          - [ ] Security audit passes
-          - [ ] Code coverage meets requirements
-          - [ ] Release notes reviewed
-
-          ### Test Results
-          CI will run comprehensive tests across all platforms. Review the checks below before merging.
-
-          ---
-          *This PR was automatically created by the Create Release workflow.*"
+            --body "$PR_BODY"
       
       - name: Create PR from develop to release branch
         env:

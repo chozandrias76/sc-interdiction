@@ -58,22 +58,9 @@ jobs:
       - name: Generate changelog
         if: steps.check_tag.outputs.exists == 'false'
         id: changelog
-        run: |
-          # Get the previous tag
-          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-          
-          if [ -z "$PREV_TAG" ]; then
-            # First release - get all commits
-            CHANGELOG=$(git log --pretty=format:"- %s (%h)" --no-merges)
-          else
-            # Get commits since last tag
-            CHANGELOG=$(git log ${PREV_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges)
-          fi
-          
-          # Save to file for release notes
-          echo "$CHANGELOG" > changelog.txt
-          
-          echo "Generated changelog from ${PREV_TAG:-initial commit} to HEAD"
+        uses: ./.github/actions/generate-changelog
+        with:
+          github-token: ${{ github.token }}
       
       - name: Create Git tag
         if: steps.check_tag.outputs.exists == 'false'
@@ -86,7 +73,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          CHANGELOG=$(cat changelog.txt)
+          CHANGELOG="${{ steps.changelog.outputs.changelog }}"
           PRERELEASE_FLAG=""
           
           if [[ "${{ steps.get_version.outputs.version }}" =~ -rc\. ]] || [[ "${{ steps.get_version.outputs.version }}" =~ -beta\. ]] || [[ "${{ steps.get_version.outputs.version }}" =~ -alpha\. ]]; then

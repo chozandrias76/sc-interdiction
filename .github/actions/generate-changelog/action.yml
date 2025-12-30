@@ -1,0 +1,108 @@
+name: 'Generate Changelog'
+description: 'Generate a categorized changelog from merged PRs'
+inputs:
+  previous-version:
+    description: 'Previous version tag (without v prefix, leave empty for auto-detect)'
+    required: false
+    default: ''
+  github-token:
+    description: 'GitHub token for API access'
+    required: true
+outputs:
+  changelog:
+    description: 'Generated changelog in markdown format'
+    value: ${{ steps.generate.outputs.changelog }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Generate changelog
+      id: generate
+      shell: bash
+      run: |
+        # Get the previous tag
+        if [ -n "${{ inputs.previous-version }}" ]; then
+          PREV_TAG="v${{ inputs.previous-version }}"
+        else
+          PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+        fi
+        
+        echo "Generating changelog from ${PREV_TAG:-initial commit} to HEAD"
+        
+        # Get merged PRs since last tag
+        if [ -z "$PREV_TAG" ]; then
+          SINCE_DATE="1970-01-01"
+        else
+          SINCE_DATE=$(git log -1 --format=%aI $PREV_TAG 2>/dev/null || echo "1970-01-01")
+        fi
+        
+        MERGED_PRS=$(gh pr list \
+          --state merged \
+          --limit 100 \
+          --json number,title,mergedAt \
+          --jq 'sort_by(.mergedAt) | reverse | map(select(.mergedAt > "'$SINCE_DATE'")) | .[] | "- #\(.number): \(.title)"' \
+          2>/dev/null || echo "")
+        
+        # Categorize changes by conventional commit type
+        CI_CHANGES=$(echo "$MERGED_PRS" | grep -E "^- #[0-9]+: (ci|build)" || echo "")
+        FEAT_CHANGES=$(echo "$MERGED_PRS" | grep -E "^- #[0-9]+: feat" || echo "")
+        FIX_CHANGES=$(echo "$MERGED_PRS" | grep -E "^- #[0-9]+: fix" || echo "")
+        TEST_CHANGES=$(echo "$MERGED_PRS" | grep -E "^- #[0-9]+: (test|tests)" || echo "")
+        DOCS_CHANGES=$(echo "$MERGED_PRS" | grep -E "^- #[0-9]+: docs" || echo "")
+        CHORE_CHANGES=$(echo "$MERGED_PRS" | grep -E "^- #[0-9]+: chore" || echo "")
+        REFACTOR_CHANGES=$(echo "$MERGED_PRS" | grep -E "^- #[0-9]+: refactor" || echo "")
+        OTHER_CHANGES=$(echo "$MERGED_PRS" | grep -vE "^- #[0-9]+: (ci|build|feat|fix|test|tests|docs|chore|refactor)" || echo "")
+        
+        # Build changelog
+        CHANGELOG="## What's Changed\n\n"
+        
+        if [ -n "$FEAT_CHANGES" ]; then
+          CHANGELOG="$CHANGELOG### ✨ Features\n$FEAT_CHANGES\n\n"
+        fi
+        
+        if [ -n "$FIX_CHANGES" ]; then
+          CHANGELOG="$CHANGELOG### 🐛 Bug Fixes\n$FIX_CHANGES\n\n"
+        fi
+        
+        if [ -n "$CI_CHANGES" ]; then
+          CHANGELOG="$CHANGELOG### 🔧 CI/CD & Build\n$CI_CHANGES\n\n"
+        fi
+        
+        if [ -n "$TEST_CHANGES" ]; then
+          CHANGELOG="$CHANGELOG### ✅ Testing\n$TEST_CHANGES\n\n"
+        fi
+        
+        if [ -n "$DOCS_CHANGES" ]; then
+          CHANGELOG="$CHANGELOG### 📚 Documentation\n$DOCS_CHANGES\n\n"
+        fi
+        
+        if [ -n "$REFACTOR_CHANGES" ]; then
+          CHANGELOG="$CHANGELOG### ♻️ Refactoring\n$REFACTOR_CHANGES\n\n"
+        fi
+        
+        if [ -n "$CHORE_CHANGES" ]; then
+          CHANGELOG="$CHANGELOG### 🔨 Chores\n$CHORE_CHANGES\n\n"
+        fi
+        
+        if [ -n "$OTHER_CHANGES" ]; then
+          CHANGELOG="$CHANGELOG### 📦 Other Changes\n$OTHER_CHANGES\n\n"
+        fi
+        
+        # If no PRs found, fall back to commit messages
+        if [ -z "$MERGED_PRS" ]; then
+          CHANGELOG="$CHANGELOG### Commits\n"
+          if [ -z "$PREV_TAG" ]; then
+            CHANGELOG="$CHANGELOG$(git log --pretty=format:'- %s (%h)' --no-merges)\n"
+          else
+            CHANGELOG="$CHANGELOG$(git log ${PREV_TAG}..HEAD --pretty=format:'- %s (%h)' --no-merges)\n"
+          fi
+          CHANGELOG="$CHANGELOG\n"
+        fi
+        
+        # Save changelog
+        {
+          echo 'changelog<<EOF'
+          echo -e "$CHANGELOG"
+          echo 'EOF'
+        } >> $GITHUB_OUTPUT
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
