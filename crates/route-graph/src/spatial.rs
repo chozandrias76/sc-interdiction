@@ -338,6 +338,8 @@ pub struct RouteIntersection {
 /// Instructions for reaching an interdiction zone via quantum travel.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JumpInstruction {
+    /// Suggested starting location for this jump (nearest station/landing zone).
+    pub from: String,
     /// The QT destination to select in your ship's navigation.
     pub destination: String,
     /// Exit quantum travel when your distance reads this many Mm (megameters).
@@ -377,11 +379,20 @@ pub struct IntersectingRoute {
 ///
 /// This finds points in 3D space where trade route paths cross or come close,
 /// making them ideal interdiction spots to catch ships from multiple routes.
+///
+/// Excludes intersections at route endpoints (terminals) - we only want
+/// mid-route intersections where interdiction is viable.
 pub fn find_route_intersections(
     routes: &[RouteSegment],
     proximity_threshold: f64, // How close routes need to be to count as intersecting (in Mkm)
     min_routes: usize,        // Minimum routes that must converge
 ) -> Vec<RouteIntersection> {
+    // Minimum distance from endpoints to count as a mid-route intersection (in Mkm)
+    // This prevents terminals from being flagged as "intersections"
+    // Terminals are typically within 0.05-0.1 Mkm of their parent planet
+    // Using 0.3 Mkm to exclude the immediate vicinity of terminals
+    let endpoint_exclusion = 0.3;
+
     // For each pair of routes, find if/where they intersect
     let mut intersection_zones: Vec<(Point3D, Vec<&RouteSegment>)> = Vec::new();
 
@@ -390,6 +401,18 @@ pub fn find_route_intersections(
             let (closest_point, distance) = routes[i].closest_approach_to(&routes[j]);
 
             if distance <= proximity_threshold {
+                // IMPORTANT: Skip if the intersection is at or near any endpoint
+                // This filters out shared terminals (like Port Olisar)
+                let near_endpoint =
+                    closest_point.distance_to(&routes[i].origin) < endpoint_exclusion ||
+                    closest_point.distance_to(&routes[i].destination) < endpoint_exclusion ||
+                    closest_point.distance_to(&routes[j].origin) < endpoint_exclusion ||
+                    closest_point.distance_to(&routes[j].destination) < endpoint_exclusion;
+
+                if near_endpoint {
+                    continue; // Skip this intersection - it's at a terminal
+                }
+
                 // Check if this point is near an existing intersection zone
                 let mut found_zone = false;
                 for (zone_center, zone_routes) in &mut intersection_zones {
@@ -669,97 +692,108 @@ fn get_qt_destinations() -> Vec<QtDestination> {
 fn calculate_jump_instruction(zone_position: &Point3D, _system: &str) -> JumpInstruction {
     let destinations = get_qt_destinations();
 
-    // For each destination, calculate:
-    // 1. The closest point on the line from origin (0,0,0) to destination that passes near zone
-    // 2. How far from that destination the zone is (exit distance)
-    // 3. How far off the direct path the zone is (lateral error - must be < 20km)
+    // First, find the best origin-destination pair where the path passes through the zone
+    let mut best_pair: Option<(&QtDestination, &QtDestination, f64, f64)> = None;
+    let mut best_score = f64::MIN;
 
-    // We'll assume the player starts from various positions, so we look for destinations
-    // where the zone lies roughly ON the path TO that destination from typical starting points
-
-    let mut scored: Vec<(f64, &QtDestination, f64, f64)> = destinations
-        .iter()
-        .filter_map(|dest| {
-            // Distance from zone to destination
-            let zone_to_dest = zone_position.distance_to(&dest.position);
-
-            // For a good interdiction point, the zone should be:
-            // 1. Between some origin and this destination
-            // 2. Not too far off the main travel corridor
-
-            // Calculate perpendicular distance from zone to the line from origin (0,0,0) to dest
-            // This tells us how far off the main travel path the zone is
-            let lateral_offset = perpendicular_distance_to_line(
-                zone_position,
-                &Point3D::new(0.0, 0.0, 0.0), // Stanton center as rough origin
-                &dest.position,
-            );
-
-            // Convert to km for comparison with Mantis range
-            let lateral_offset_km = lateral_offset * 1_000_000.0; // Mkm to km
-
-            // Score: prefer destinations where:
-            // - Zone is close to the travel path (low lateral offset)
-            // - Zone is at a reasonable distance from destination (not too close, not too far)
-
-            // If lateral offset > 1000km, this destination's path doesn't pass near the zone
-            if lateral_offset_km > 1000.0 {
-                return None;
+    for origin in &destinations {
+        for dest in &destinations {
+            if std::ptr::eq(origin, dest) {
+                continue;
             }
 
-            // Score based on how well-aligned the path is (lower lateral = better)
-            // and reasonable exit distance
-            let alignment_score = 1000.0 - lateral_offset_km.min(1000.0);
+            // Calculate perpendicular distance from zone to the line from origin to dest
+            let lateral_offset = perpendicular_distance_to_line(
+                zone_position,
+                &origin.position,
+                &dest.position,
+            );
+            let lateral_offset_km = lateral_offset * 1_000_000.0; // Mkm to km
 
-            Some((alignment_score, dest, zone_to_dest, lateral_offset_km))
-        })
-        .collect();
+            // Skip if zone is too far off the path
+            if lateral_offset_km > 500.0 {
+                continue;
+            }
 
-    // Sort by alignment score (best first)
-    scored.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
+            // Check that zone is between origin and destination (not behind or past)
+            let origin_to_zone = zone_position.distance_to(&origin.position);
+            let zone_to_dest = zone_position.distance_to(&dest.position);
+            let origin_to_dest = origin.position.distance_to(&dest.position);
 
-    // If no aligned destinations, fall back to nearest
-    if scored.is_empty() {
-        let mut distances: Vec<(&QtDestination, f64)> = destinations
-            .iter()
-            .map(|dest| (dest, zone_position.distance_to(&dest.position)))
-            .collect();
-        distances.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
+            // Zone should be on the path, not past the destination
+            if origin_to_zone > origin_to_dest || zone_to_dest > origin_to_dest {
+                continue;
+            }
 
-        let primary = &distances[0];
-        let primary_dist_mm = (primary.1 * 1_000_000.0) as u64;
+            // Score: low lateral offset is best, prefer shorter total distance
+            let alignment_score = 500.0 - lateral_offset_km;
+            let distance_penalty = origin_to_dest * 0.1; // Slight preference for shorter jumps
+            let score = alignment_score - distance_penalty;
+
+            if score > best_score {
+                best_score = score;
+                best_pair = Some((origin, dest, zone_to_dest, lateral_offset_km));
+            }
+        }
+    }
+
+    // If we found a good pair, use it
+    if let Some((origin, dest, zone_to_dest, lateral_km)) = best_pair {
+        let exit_dist_mm = (zone_to_dest * 1_000_000.0) as u64;
+
+        // Build alternatives from other good destinations
+        let mut alternatives: Vec<AltJumpInstruction> = Vec::new();
+        for alt_dest in &destinations {
+            if std::ptr::eq(alt_dest, dest) || std::ptr::eq(alt_dest, origin) {
+                continue;
+            }
+            let lat = perpendicular_distance_to_line(zone_position, &origin.position, &alt_dest.position);
+            if lat * 1_000_000.0 < 500.0 {
+                let alt_dist = zone_position.distance_to(&alt_dest.position);
+                alternatives.push(AltJumpInstruction {
+                    destination: alt_dest.name.to_string(),
+                    exit_at_mm: (alt_dist * 1_000_000.0) as u64,
+                });
+                if alternatives.len() >= 2 {
+                    break;
+                }
+            }
+        }
 
         return JumpInstruction {
-            destination: primary.0.name.to_string(),
-            exit_at_mm: primary_dist_mm,
-            distance_from_dest_mm: primary_dist_mm,
-            lateral_offset_km: 9999.0, // Unknown - not on path
-            alternatives: vec![],
+            from: origin.name.to_string(),
+            destination: dest.name.to_string(),
+            exit_at_mm: exit_dist_mm,
+            distance_from_dest_mm: exit_dist_mm,
+            lateral_offset_km: lateral_km,
+            alternatives,
         };
     }
 
-    let (_, primary_dest, primary_dist, lateral_km) = &scored[0];
-    let primary_dist_mm = (*primary_dist * 1_000_000.0) as u64;
-
-    // Build alternatives
-    let alternatives: Vec<AltJumpInstruction> = scored
+    // Fallback: find nearest destination and suggest starting from opposite side
+    let mut distances: Vec<(&QtDestination, f64)> = destinations
         .iter()
-        .skip(1)
-        .take(2)
-        .map(|(_, dest, dist, _)| {
-            AltJumpInstruction {
-                destination: dest.name.to_string(),
-                exit_at_mm: (*dist * 1_000_000.0) as u64,
-            }
-        })
+        .map(|dest| (dest, zone_position.distance_to(&dest.position)))
         .collect();
+    distances.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
+
+    let primary = &distances[0];
+    let primary_dist_mm = (primary.1 * 1_000_000.0) as u64;
+
+    // Find a reasonable origin on the other side of the zone
+    let from_name = if distances.len() > 1 {
+        distances[1].0.name.to_string()
+    } else {
+        "Nearest Station".to_string()
+    };
 
     JumpInstruction {
-        destination: primary_dest.name.to_string(),
+        from: from_name,
+        destination: primary.0.name.to_string(),
         exit_at_mm: primary_dist_mm,
         distance_from_dest_mm: primary_dist_mm,
-        lateral_offset_km: *lateral_km,
-        alternatives,
+        lateral_offset_km: 9999.0, // Unknown - not well-aligned
+        alternatives: vec![],
     }
 }
 
