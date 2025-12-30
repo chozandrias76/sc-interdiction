@@ -49,13 +49,16 @@ mod tests {
             threat_level: 3,
             ship_value_uec: 600_000,
             requires_freight_elevator: false,
+            quantum_fuel_capacity: 10000.0,
+            hydrogen_fuel_capacity: 1800.0,
+            qt_drive_size: 3,
         };
 
         let targets = vec![
             TargetPrediction {
                 commodity: "Quantanium".to_string(),
                 destination: "Area18 TDD".to_string(),
-                likely_ship: ship.clone(),
+                likely_ship: ship,
                 direction: TrafficDirection::Departing,
                 estimated_cargo_value: 1_250_000.0,
             },
@@ -70,6 +73,9 @@ mod tests {
                     threat_level: 8,
                     ship_value_uec: 4_800_000,
                     requires_freight_elevator: true,
+                    quantum_fuel_capacity: 10000.0,
+                    hydrogen_fuel_capacity: 2500.0,
+                    qt_drive_size: 3,
                 },
                 direction: TrafficDirection::Arriving,
                 estimated_cargo_value: 980_000.0,
@@ -83,7 +89,7 @@ mod tests {
             destination: "Area18 TDD".to_string(),
             profit_per_scu: 88.5,
             available_scu: 576.0,
-            likely_ship: ship.clone(),
+            likely_ship: ship,
             estimated_haul_value: 51_000.0,
             risk_score: 75.0,
         }];

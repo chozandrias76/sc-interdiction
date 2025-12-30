@@ -19,6 +19,12 @@ pub struct CargoShip {
     pub ship_value_uec: u64,
     /// Whether this ship requires a station with external freight elevators (Hull series).
     pub requires_freight_elevator: bool,
+    /// Quantum fuel tank capacity (units).
+    pub quantum_fuel_capacity: f64,
+    /// Hydrogen fuel tank capacity (units).
+    pub hydrogen_fuel_capacity: f64,
+    /// Quantum drive size class (1=S1/small, 2=S2/medium, 3=S3/large).
+    pub qt_drive_size: u8,
 }
 
 impl CargoShip {
@@ -30,6 +36,31 @@ impl CargoShip {
         let crew_factor = 1.0 + (self.crew_size.saturating_sub(1) as f64 * 0.2); // Each extra crew adds 20% difficulty
         cargo_value / (threat_factor * crew_factor)
     }
+
+    /// Get the quantum drive efficiency for this ship.
+    pub fn qt_drive_efficiency(&self) -> Option<&'static route_graph::QtDriveEfficiency> {
+        route_graph::efficiency_for_size(self.qt_drive_size)
+    }
+
+    /// Check if this ship can complete a route of given distance (Mkm).
+    ///
+    /// Returns (can_complete, fuel_required, fuel_remaining).
+    pub fn can_complete_route(&self, distance_mkm: f64) -> (bool, f64, f64) {
+        if let Some(efficiency) = self.qt_drive_efficiency() {
+            route_graph::can_complete_route(distance_mkm, self.quantum_fuel_capacity, efficiency)
+        } else {
+            (false, 0.0, 0.0)
+        }
+    }
+
+    /// Calculate maximum quantum travel range in Mkm.
+    pub fn max_range_mkm(&self) -> f64 {
+        if let Some(efficiency) = self.qt_drive_efficiency() {
+            route_graph::max_range_mkm(self.quantum_fuel_capacity, efficiency)
+        } else {
+            0.0
+        }
+    }
 }
 
 /// Common cargo ships in Star Citizen.
@@ -39,106 +70,142 @@ impl CargoShip {
 /// - Can it escape easily?
 pub static CARGO_SHIPS: &[CargoShip] = &[
     // Small haulers - easy targets, low cargo
+    // S1 drives: ~583-1250 QT fuel, ~100-300 H fuel
     CargoShip {
         name: "Aurora CL",
         manufacturer: "RSI",
         cargo_scu: 6,
         crew_size: 1,
-        threat_level: 1, // Paper thin, no weapons, can't run
+        threat_level: 1,
         ship_value_uec: 45_000,
         requires_freight_elevator: false,
+        quantum_fuel_capacity: 583.0,
+        hydrogen_fuel_capacity: 105.0,
+        qt_drive_size: 1,
     },
     CargoShip {
         name: "Avenger Titan",
         manufacturer: "Aegis",
         cargo_scu: 8,
         crew_size: 1,
-        threat_level: 4, // Actually has teeth - nose gun hurts
+        threat_level: 4,
         ship_value_uec: 85_000,
         requires_freight_elevator: false,
+        quantum_fuel_capacity: 700.0,
+        hydrogen_fuel_capacity: 140.0,
+        qt_drive_size: 1,
     },
     CargoShip {
         name: "Nomad",
         manufacturer: "Consolidated Outland",
         cargo_scu: 24,
         crew_size: 1,
-        threat_level: 2, // Weak weapons, slow, but tanky shields
+        threat_level: 2,
         ship_value_uec: 95_000,
         requires_freight_elevator: false,
+        quantum_fuel_capacity: 1250.0,
+        hydrogen_fuel_capacity: 200.0,
+        qt_drive_size: 1,
     },
     CargoShip {
         name: "Cutlass Black",
         manufacturer: "Drake",
         cargo_scu: 46,
         crew_size: 2,
-        threat_level: 5, // Turret + pilot guns, common pirate ship
+        threat_level: 5,
         ship_value_uec: 150_000,
         requires_freight_elevator: false,
+        quantum_fuel_capacity: 2500.0,
+        hydrogen_fuel_capacity: 450.0,
+        qt_drive_size: 2,
     },
     // Medium haulers
+    // S2 drives: ~2500-5000 QT fuel, ~400-800 H fuel
     CargoShip {
         name: "Freelancer",
         manufacturer: "MISC",
         cargo_scu: 66,
         crew_size: 2,
-        threat_level: 4, // Tanky, rear turret, but blind spots
+        threat_level: 4,
         ship_value_uec: 180_000,
         requires_freight_elevator: false,
+        quantum_fuel_capacity: 2500.0,
+        hydrogen_fuel_capacity: 500.0,
+        qt_drive_size: 2,
     },
     CargoShip {
         name: "Freelancer MAX",
         manufacturer: "MISC",
         cargo_scu: 120,
         crew_size: 2,
-        threat_level: 3, // Traded guns for cargo - weaker than base Freelancer
+        threat_level: 3,
         ship_value_uec: 220_000,
         requires_freight_elevator: false,
+        quantum_fuel_capacity: 3500.0,
+        hydrogen_fuel_capacity: 600.0,
+        qt_drive_size: 2,
     },
     CargoShip {
         name: "Constellation Taurus",
         manufacturer: "RSI",
         cargo_scu: 174,
         crew_size: 2,
-        threat_level: 4, // No snub fighter, reduced turrets vs Andromeda
+        threat_level: 4,
         ship_value_uec: 350_000,
         requires_freight_elevator: false,
+        quantum_fuel_capacity: 5000.0,
+        hydrogen_fuel_capacity: 800.0,
+        qt_drive_size: 2,
     },
     CargoShip {
         name: "Constellation Andromeda",
         manufacturer: "RSI",
         cargo_scu: 96,
         crew_size: 4,
-        threat_level: 7, // Snub fighter + 4 turrets + missiles = dangerous
+        threat_level: 7,
         ship_value_uec: 400_000,
         requires_freight_elevator: false,
+        quantum_fuel_capacity: 5000.0,
+        hydrogen_fuel_capacity: 800.0,
+        qt_drive_size: 2,
     },
     // Large haulers - high value, variable threat
+    // S3 drives: ~10000-20000 QT fuel, ~1500-2500 H fuel
     CargoShip {
         name: "Caterpillar",
         manufacturer: "Drake",
         cargo_scu: 576,
         crew_size: 4,
-        threat_level: 3, // Big slow barn, turrets but poor coverage, easy to kill
+        threat_level: 3,
         ship_value_uec: 600_000,
         requires_freight_elevator: false,
+        quantum_fuel_capacity: 10000.0,
+        hydrogen_fuel_capacity: 1800.0,
+        qt_drive_size: 3,
     },
     CargoShip {
         name: "C2 Hercules",
         manufacturer: "Crusader",
         cargo_scu: 696,
         crew_size: 2,
-        threat_level: 2, // Flying warehouse - tanky HP but weak weapons, slow
+        threat_level: 2,
         ship_value_uec: 800_000,
         requires_freight_elevator: false,
+        quantum_fuel_capacity: 10000.0,
+        hydrogen_fuel_capacity: 2500.0,
+        qt_drive_size: 3,
     },
     CargoShip {
         name: "Hull C",
         manufacturer: "MISC",
         cargo_scu: 4608,
         crew_size: 3,
-        threat_level: 1, // Completely defenseless when loaded, can't even run
+        threat_level: 1,
         ship_value_uec: 1_200_000,
         requires_freight_elevator: true,
+        quantum_fuel_capacity: 20000.0,
+        hydrogen_fuel_capacity: 2000.0,
+        qt_drive_size: 3,
     },
     // Industrial/Mining (sometimes haul refined)
     CargoShip {
@@ -146,18 +213,24 @@ pub static CARGO_SHIPS: &[CargoShip] = &[
         manufacturer: "MISC",
         cargo_scu: 96,
         crew_size: 1,
-        threat_level: 1, // No weapons at all
+        threat_level: 1,
         ship_value_uec: 150_000,
         requires_freight_elevator: false,
+        quantum_fuel_capacity: 2500.0,
+        hydrogen_fuel_capacity: 400.0,
+        qt_drive_size: 2,
     },
     CargoShip {
         name: "MOLE",
         manufacturer: "ARGO",
         cargo_scu: 96,
         crew_size: 4,
-        threat_level: 1, // Mining lasers only, sitting duck
+        threat_level: 1,
         ship_value_uec: 500_000,
         requires_freight_elevator: false,
+        quantum_fuel_capacity: 3500.0,
+        hydrogen_fuel_capacity: 600.0,
+        qt_drive_size: 2,
     },
 ];
 
@@ -231,6 +304,9 @@ pub fn estimate_ship_for_route(route: &TradeRoute) -> CargoShip {
         threat_level: 3,
         ship_value_uec: 100_000,
         requires_freight_elevator: false,
+        quantum_fuel_capacity: 2500.0,
+        hydrogen_fuel_capacity: 500.0,
+        qt_drive_size: 2,
     }
 }
 
@@ -246,6 +322,9 @@ pub fn estimate_ship_for_routes(routes: &[&TradeRoute]) -> CargoShip {
             threat_level: 3,
             ship_value_uec: 100_000,
             requires_freight_elevator: false,
+            quantum_fuel_capacity: 2500.0,
+            hydrogen_fuel_capacity: 500.0,
+            qt_drive_size: 2,
         };
     }
 
@@ -289,6 +368,9 @@ pub fn estimate_ship_for_routes(routes: &[&TradeRoute]) -> CargoShip {
         threat_level: 3,
         ship_value_uec: 100_000,
         requires_freight_elevator: false,
+        quantum_fuel_capacity: 2500.0,
+        hydrogen_fuel_capacity: 500.0,
+        qt_drive_size: 2,
     }
 }
 
