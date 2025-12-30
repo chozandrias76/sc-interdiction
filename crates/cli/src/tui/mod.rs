@@ -3,7 +3,9 @@
 //! Provides an interactive dashboard for analyzing trade routes and targets.
 
 mod app;
+mod data;
 mod event;
+mod handlers;
 mod text;
 mod types;
 mod ui;
