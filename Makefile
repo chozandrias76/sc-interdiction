@@ -6,7 +6,10 @@
 export CARGO_TARGET_DIR ?= /tmp/cargo-target-sc-interdiction
 export CARGO_INCREMENTAL ?= 1
 
-.PHONY: help setup build build-release test test-pkg test-cli clean check fmt clippy doc run serve
+.PHONY: help setup build build-release test test-pkg test-cli coverage coverage-html coverage-check install-coverage-tools clean check fmt clippy doc run serve
+
+# Coverage threshold
+COVERAGE_THRESHOLD := 80
 
 # Default target
 help:
@@ -26,6 +29,10 @@ help:
 	@echo "  make test-cli                 - Run tests in CLI crate"
 	@echo "  make test-pkg PKG=<name>      - Run tests in specific package"
 	@echo "  make test-pkg PKG=<name> TEST=<test> - Run specific test in package"
+	@echo "  make coverage                 - Generate coverage report"
+	@echo "  make coverage-html            - Generate HTML coverage report"
+	@echo "  make coverage-check           - Check if coverage >= $(COVERAGE_THRESHOLD)%"
+	@echo "  make install-coverage-tools   - Install cargo-tarpaulin"
 	@echo "  make clippy                   - Run linter"
 	@echo "  make fmt                      - Format code"
 	@echo "  make doc                      - Build and open documentation"
@@ -88,6 +95,34 @@ test-pkg:
 
 test-cli:
 	cargo test -p sc-interdiction
+
+# Coverage commands
+coverage:
+	cargo tarpaulin --out Stdout --skip-clean
+
+coverage-html:
+	cargo tarpaulin --out Html --skip-clean
+	@echo "✓ Coverage report generated at: target/tarpaulin/tarpaulin-report.html"
+
+coverage-check:
+	@echo "Checking test coverage..."
+	@cargo tarpaulin --out Stdout --skip-clean | tee /tmp/coverage.txt
+	@COVERAGE=$$(grep -oP '(\d+\.\d+)%' /tmp/coverage.txt | tail -1 | sed 's/%//'); \
+	echo "Current coverage: $$COVERAGE%"; \
+	echo "Required coverage: $(COVERAGE_THRESHOLD)%"; \
+	if [ $$(echo "$$COVERAGE < $(COVERAGE_THRESHOLD)" | bc -l) -eq 1 ]; then \
+		echo "❌ Coverage $$COVERAGE% is below threshold $(COVERAGE_THRESHOLD)%"; \
+		exit 1; \
+	else \
+		echo "✅ Coverage $$COVERAGE% meets threshold $(COVERAGE_THRESHOLD)%"; \
+	fi
+
+install-coverage-tools:
+	@echo "Installing cargo-tarpaulin..."
+	@echo "NOTE: This requires pkg-config and libssl-dev to be installed."
+	@echo "On Ubuntu/Debian: sudo apt install pkg-config libssl-dev"
+	@echo "On macOS: brew install pkg-config openssl"
+	cargo install cargo-tarpaulin
 
 clippy:
 	cargo clippy --all-targets --all-features
