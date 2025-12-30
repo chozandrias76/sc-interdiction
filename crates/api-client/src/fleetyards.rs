@@ -12,7 +12,7 @@ use tracing::{info, instrument, warn};
 
 const BASE_URL: &str = "https://api.fleetyards.net/v1";
 
-/// Client for the FleetYards API.
+/// Client for the `FleetYards` API.
 #[derive(Clone)]
 pub struct FleetYardsClient {
     client: Client,
@@ -20,7 +20,7 @@ pub struct FleetYardsClient {
 }
 
 impl FleetYardsClient {
-    /// Create a new FleetYards client.
+    /// Create a new `FleetYards` client.
     pub fn new() -> Self {
         Self {
             client: Client::new(),
@@ -28,7 +28,7 @@ impl FleetYardsClient {
         }
     }
 
-    /// Create a new FleetYards client with local caching.
+    /// Create a new `FleetYards` client with local caching.
     pub fn with_cache(cache_dir: PathBuf) -> Self {
         Self {
             client: Client::new(),
@@ -166,7 +166,7 @@ impl FleetYardsClient {
             version: env!("CARGO_PKG_VERSION").to_string(),
             fetched_at: std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
+                .expect("System time should be after UNIX_EPOCH")
                 .as_secs(),
             ships: ships.to_vec(),
         };
@@ -204,7 +204,7 @@ pub struct ShipCache {
     pub ships: Vec<ShipModel>,
 }
 
-/// A ship model from FleetYards.
+/// A ship model from `FleetYards`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ShipModel {

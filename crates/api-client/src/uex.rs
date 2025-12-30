@@ -80,7 +80,7 @@ impl UexClient {
     /// Get profitable trade routes by calculating from price data.
     ///
     /// Routes are calculated by finding profitable buy/sell combinations
-    /// across all terminals using data from the commodities_prices_all endpoint.
+    /// across all terminals using data from the `commodities_prices_all` endpoint.
     /// Terminal location info is fetched from the terminals endpoint to enable
     /// location-based searches (e.g., "Crusader", "Hurston").
     ///
@@ -280,7 +280,7 @@ impl CommodityPrice {
     }
 }
 
-/// Price information for a commodity at a terminal (from commodities_prices_all endpoint).
+/// Price information for a commodity at a terminal (from `commodities_prices_all` endpoint).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CommodityPriceAll {
     pub id: i64,
