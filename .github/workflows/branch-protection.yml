@@ -3,19 +3,19 @@ name: Branch Protection
 on:
   pull_request:
     branches:
-      - master
+      - main
 
 jobs:
   validate-source-branch:
     name: Validate PR Source Branch
     runs-on: ubuntu-latest
     steps:
-      - name: Check if PR is from develop
+      - name: Check if PR is from release branch
         run: |
-          if [ "${{ github.head_ref }}" != "develop" ]; then
-            echo "Error: Pull requests to master must originate from the develop branch."
+          if [[ ! "${{ github.head_ref }}" =~ ^release/[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Error: Pull requests to main must originate from a release/ branch with semantic versioning."
             echo "Current source branch: ${{ github.head_ref }}"
-            echo "Expected source branch: develop"
+            echo "Expected format: release/X.Y.Z (e.g., release/1.2.3)"
             exit 1
           fi
-          echo "Success: PR is from develop branch"
+          echo "Success: PR is from valid release branch: ${{ github.head_ref }}"
