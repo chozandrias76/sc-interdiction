@@ -5,6 +5,7 @@
 mod app;
 mod event;
 mod text;
+mod types;
 mod ui;
 
 pub use app::App;

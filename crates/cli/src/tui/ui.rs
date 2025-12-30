@@ -1,7 +1,8 @@
 //! UI rendering for the TUI.
 
-use super::app::{App, MapLocationType, RouteSort, TargetSort, View};
+use super::app::App;
 use super::text::{scroll_text, truncate};
+use super::types::{MapLocation, MapLocationType, RouteSort, TargetSort, View};
 use intel::TrafficDirection;
 use ratatui::{
     prelude::*,
@@ -267,7 +268,7 @@ fn render_map(frame: &mut Frame, app: &App, area: Rect) {
 }
 
 /// Convert a location to its display (x, y) coordinates using angle and orbital radius.
-fn location_to_xy(loc: &super::app::MapLocation, planet_positions: &std::collections::HashMap<String, (f64, f64)>) -> (f64, f64) {
+fn location_to_xy(loc: &MapLocation, planet_positions: &std::collections::HashMap<String, (f64, f64)>) -> (f64, f64) {
     let (base_x, base_y) = if let Some(parent) = &loc.parent {
         // Get parent's position
         planet_positions.get(parent).copied().unwrap_or((0.0, 0.0))
