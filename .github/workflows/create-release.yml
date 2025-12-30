@@ -144,30 +144,6 @@ jobs:
             --title "release: version ${{ steps.new_version.outputs.version }}" \
             --body "$PR_BODY"
       
-      - name: Create PR from develop to release branch
-        env:
-          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
-        run: |
-          gh pr create \
-            --base "${{ steps.branch.outputs.name }}" \
-            --head develop \
-            --title "chore: merge develop into ${{ steps.branch.outputs.name }}" \
-            --body "## Merge develop into release branch
-
-          This PR merges the latest changes from \`develop\` into the release branch \`${{ steps.branch.outputs.name }}\`.
-
-          ### Summary
-          Includes all changes from develop branch for release ${{ steps.new_version.outputs.version }}.
-
-          ### Changes
-          All commits from develop since the last release.
-
-          ### Test Results
-          CI will validate all changes.
-
-          ---
-          *This PR was automatically created by the Create Release workflow.*"
-      
       - name: Output summary
         run: |
           echo "## Release Creation Summary" >> $GITHUB_STEP_SUMMARY
