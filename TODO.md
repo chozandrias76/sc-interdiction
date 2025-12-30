@@ -56,10 +56,11 @@
   - Display total route time including refuel stops
 
 #### Mark Fuel Terminals in Route Graph
-- [ ] **Add fuel station markers to graph**
-  - Update `Node` struct in `crates/route-graph/src/graph.rs`
-  - Add field: `is_fuel_station: bool`
-  - Populate from `Terminal.is_refuel` when building graph
+- [x] **Add fuel station markers to graph**
+  - ✅ Updated `Node` struct in `crates/route-graph/src/graph.rs`
+  - ✅ Added field: `is_fuel_station: bool`
+  - ✅ Populated from `Terminal.is_refuel` when building graph via `add_terminal()`
+  - ✅ Defaults to false for Station nodes (no refuel data available)
   
 - [ ] **Filter terminals by type**
   - Add `--type fuel` flag to `terminals` command
