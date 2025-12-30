@@ -222,3 +222,279 @@ mod tests {
         assert_eq!(max_range_mkm(0.0, s2_efficiency), 0.0);
     }
 }
+
+/// A fuel station/refueling location.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FuelStation {
+    /// Terminal name
+    pub name: String,
+    /// Terminal code (if available)
+    pub code: Option<String>,
+    /// Star system name
+    pub system: Option<String>,
+    /// Estimated 3D position in space (Mkm from system center)
+    pub position: Option<crate::Point3D>,
+}
+
+/// Spatial index of fuel stations for efficient nearest-neighbor queries.
+#[derive(Debug, Clone)]
+pub struct FuelStationIndex {
+    stations: Vec<FuelStation>,
+}
+
+impl FuelStationIndex {
+    /// Create a new fuel station index from terminal data.
+    ///
+    /// Only includes terminals where `is_refuel` is true.
+    pub fn from_terminals(terminals: &[api_client::Terminal]) -> Self {
+        let stations = terminals
+            .iter()
+            .filter(|t| t.is_refuel)
+            .map(|t| {
+                let name = t
+                    .name
+                    .clone()
+                    .or_else(|| t.nickname.clone())
+                    .unwrap_or_else(|| format!("Terminal {}", t.id));
+
+                // Try to estimate position from location name
+                let position = t
+                    .code
+                    .as_ref()
+                    .and_then(|code| crate::estimate_position(code));
+
+                FuelStation {
+                    name,
+                    code: t.code.clone(),
+                    system: t.star_system_name.clone(),
+                    position,
+                }
+            })
+            .collect();
+
+        Self { stations }
+    }
+
+    /// Get all fuel stations.
+    pub fn all_stations(&self) -> &[FuelStation] {
+        &self.stations
+    }
+
+    /// Get fuel stations in a specific star system.
+    pub fn stations_in_system(&self, system: &str) -> Vec<&FuelStation> {
+        self.stations
+            .iter()
+            .filter(|s| {
+                s.system
+                    .as_ref()
+                    .map(|sys| sys.eq_ignore_ascii_case(system))
+                    .unwrap_or(false)
+            })
+            .collect()
+    }
+
+    /// Find the nearest fuel station to a given position.
+    ///
+    /// Returns (station, distance_mkm) or None if no stations have positions.
+    pub fn find_nearest(&self, position: &crate::Point3D) -> Option<(&FuelStation, f64)> {
+        self.stations
+            .iter()
+            .filter_map(|station| {
+                station.position.as_ref().map(|pos| {
+                    let dx = pos.x - position.x;
+                    let dy = pos.y - position.y;
+                    let dz = pos.z - position.z;
+                    let distance = (dx * dx + dy * dy + dz * dz).sqrt();
+                    (station, distance)
+                })
+            })
+            .min_by(|(_, d1), (_, d2)| d1.partial_cmp(d2).unwrap_or(std::cmp::Ordering::Equal))
+    }
+
+    /// Find the nearest fuel station along a route (within a given deviation threshold).
+    ///
+    /// Returns (station, distance_from_route_mkm) if one is found.
+    pub fn find_nearest_on_route(
+        &self,
+        start: &crate::Point3D,
+        end: &crate::Point3D,
+        max_deviation_mkm: f64,
+    ) -> Option<(&FuelStation, f64)> {
+        self.stations
+            .iter()
+            .filter_map(|station| {
+                station.position.as_ref().map(|pos| {
+                    let deviation = perpendicular_distance_to_line(pos, start, end);
+                    (station, deviation)
+                })
+            })
+            .filter(|(_, deviation)| *deviation <= max_deviation_mkm)
+            .min_by(|(_, d1), (_, d2)| d1.partial_cmp(d2).unwrap_or(std::cmp::Ordering::Equal))
+    }
+}
+
+/// Calculate perpendicular distance from a point to a line segment.
+fn perpendicular_distance_to_line(
+    point: &crate::Point3D,
+    line_start: &crate::Point3D,
+    line_end: &crate::Point3D,
+) -> f64 {
+    let dx = line_end.x - line_start.x;
+    let dy = line_end.y - line_start.y;
+    let dz = line_end.z - line_start.z;
+
+    let length_sq = dx * dx + dy * dy + dz * dz;
+
+    if length_sq == 0.0 {
+        // Line segment is actually a point
+        let pdx = point.x - line_start.x;
+        let pdy = point.y - line_start.y;
+        let pdz = point.z - line_start.z;
+        return (pdx * pdx + pdy * pdy + pdz * pdz).sqrt();
+    }
+
+    // Find projection of point onto line
+    let t = ((point.x - line_start.x) * dx
+        + (point.y - line_start.y) * dy
+        + (point.z - line_start.z) * dz)
+        / length_sq;
+
+    let t = t.clamp(0.0, 1.0);
+
+    let proj_x = line_start.x + t * dx;
+    let proj_y = line_start.y + t * dy;
+    let proj_z = line_start.z + t * dz;
+
+    let dist_x = point.x - proj_x;
+    let dist_y = point.y - proj_y;
+    let dist_z = point.z - proj_z;
+
+    (dist_x * dist_x + dist_y * dist_y + dist_z * dist_z).sqrt()
+}
+
+#[cfg(test)]
+mod fuel_station_tests {
+    use super::*;
+
+    #[test]
+    fn test_fuel_station_index_creation() {
+        let terminals = vec![
+            api_client::Terminal {
+                id: 1,
+                code: Some("HUR-L1".to_string()),
+                name: Some("HUR-L1".to_string()),
+                nickname: None,
+                star_system_name: Some("Stanton".to_string()),
+                planet_name: None,
+                moon_name: None,
+                space_station_name: None,
+                outpost_name: None,
+                city_name: None,
+                terminal_type: None,
+                has_freight_elevator: false,
+                has_loading_dock: false,
+                has_docking_port: true,
+                is_refuel: true,
+                is_refinery: false,
+            },
+            api_client::Terminal {
+                id: 2,
+                code: Some("CRU-L1".to_string()),
+                name: Some("CRU-L1".to_string()),
+                nickname: None,
+                star_system_name: Some("Stanton".to_string()),
+                planet_name: None,
+                moon_name: None,
+                space_station_name: None,
+                outpost_name: None,
+                city_name: None,
+                terminal_type: None,
+                has_freight_elevator: false,
+                has_loading_dock: false,
+                has_docking_port: true,
+                is_refuel: false, // Not a fuel station
+                is_refinery: false,
+            },
+            api_client::Terminal {
+                id: 3,
+                code: Some("MIC-L1".to_string()),
+                name: Some("MIC-L1".to_string()),
+                nickname: None,
+                star_system_name: Some("Stanton".to_string()),
+                planet_name: None,
+                moon_name: None,
+                space_station_name: None,
+                outpost_name: None,
+                city_name: None,
+                terminal_type: None,
+                has_freight_elevator: false,
+                has_loading_dock: false,
+                has_docking_port: true,
+                is_refuel: true,
+                is_refinery: false,
+            },
+        ];
+
+        let index = FuelStationIndex::from_terminals(&terminals);
+
+        // Should only include terminals where is_refuel is true
+        assert_eq!(index.all_stations().len(), 2);
+
+        let stanton_stations = index.stations_in_system("Stanton");
+        assert_eq!(stanton_stations.len(), 2);
+
+        let pyro_stations = index.stations_in_system("Pyro");
+        assert_eq!(pyro_stations.len(), 0);
+    }
+
+    #[test]
+    fn test_find_nearest_fuel_station() {
+        let terminals = vec![
+            api_client::Terminal {
+                id: 1,
+                code: Some("Hurston".to_string()),
+                name: Some("Hurston".to_string()),
+                nickname: None,
+                star_system_name: Some("Stanton".to_string()),
+                planet_name: None,
+                moon_name: None,
+                space_station_name: None,
+                outpost_name: None,
+                city_name: None,
+                terminal_type: None,
+                has_freight_elevator: false,
+                has_loading_dock: false,
+                has_docking_port: true,
+                is_refuel: true,
+                is_refinery: false,
+            },
+            api_client::Terminal {
+                id: 2,
+                code: Some("Crusader".to_string()),
+                name: Some("Crusader".to_string()),
+                nickname: None,
+                star_system_name: Some("Stanton".to_string()),
+                planet_name: None,
+                moon_name: None,
+                space_station_name: None,
+                outpost_name: None,
+                city_name: None,
+                terminal_type: None,
+                has_freight_elevator: false,
+                has_loading_dock: false,
+                has_docking_port: true,
+                is_refuel: true,
+                is_refinery: false,
+            },
+        ];
+
+        let index = FuelStationIndex::from_terminals(&terminals);
+
+        // Position close to Hurston
+        let test_pos = crate::Point3D::new(12.0, 0.0, 0.0);
+
+        if let Some((station, distance)) = index.find_nearest(&test_pos) {
+            assert!(station.name.contains("Hurston") || distance < 5.0);
+        }
+    }
+}

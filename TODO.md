@@ -37,10 +37,11 @@
   - Show estimated fuel cost
 
 #### Find Refueling Waypoints
-- [ ] **Index fuel terminals**
-  - Use existing `Terminal.is_refuel` field (already in UEX API!)
-  - Create `FuelStationIndex` in `crates/route-graph/src/fuel.rs`
-  - Build spatial index of refuel locations
+- [x] **Index fuel terminals**
+  - ✅ Created `FuelStation` and `FuelStationIndex` structures
+  - ✅ Uses existing `Terminal.is_refuel` field from UEX API
+  - ✅ Built spatial index with nearest-neighbor queries
+  - ✅ Added system filtering and route proximity searches
   
 - [ ] **Path finding with fuel constraints**
   - Extend `RouteGraph` to support multi-hop routing with refuel stops
@@ -147,7 +148,11 @@
 
 - [ ] Document ship data schema and sources
 - [ ] Create architecture diagram (crates and data flow)
-- [ ] Add CONTRIBUTING.md with development setup
+- [x] **Add CONTRIBUTING.md with development setup**
+  - ✅ Created docs/CONTRIBUTING.md
+  - ✅ Documented commit size policy
+  - ✅ Conventional commit format examples
+  - ✅ Pre-commit hook installation instructions
 - [ ] Document fuel consumption calculation methodology
 - [ ] Create `docs/BUILD_CONFIGURATION.md` with detailed build setup
 - [ ] Create `docs/QUICK_BUILD_SETUP.md` quick reference
@@ -170,3 +175,9 @@
   - Configure GitHub Actions to use tmpfs for builds
   - Add caching strategy for dependencies
   - Optimize build matrix for different targets
+
+### Code Quality
+- [x] **Commit size enforcement**
+  - ✅ Added pre-commit hook to warn on commits >500 lines
+  - ✅ Interactive prompt with guidance on valid exceptions
+  - ✅ Updated scripts/pre-commit.sh source
