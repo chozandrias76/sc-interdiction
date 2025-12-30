@@ -6,7 +6,8 @@ mod targets;
 mod ships;
 
 pub use targets::{
-    CommodityValue, HotRoute, InterdictionHotspot, RouteLeg, ShipFrequency, TargetAnalyzer,
-    TargetPrediction, TradeActivity, TradeRun, TrafficDirection,
+    CommodityValue, CrossSystemRoute, HotRoute, InterdictionHotspot, JumpPointChokepoint,
+    RouteLeg, ShipFrequency, TargetAnalyzer, TargetPrediction, TradeActivity, TradeRun,
+    TrafficDirection,
 };
 pub use ships::{CargoShip, CARGO_SHIPS};

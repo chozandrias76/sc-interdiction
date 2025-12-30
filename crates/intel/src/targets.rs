@@ -36,7 +36,9 @@ impl TargetAnalyzer {
                     commodity: r.commodity_name.clone(),
                     commodity_code: r.commodity_code.clone(),
                     origin: r.terminal_origin_name.clone(),
+                    origin_system: r.origin_system.clone(),
                     destination: r.terminal_destination_name.clone(),
+                    destination_system: r.destination_system.clone(),
                     profit_per_scu: r.profit_per_unit,
                     available_scu: r.max_profitable_scu(),
                     likely_ship,
@@ -95,21 +97,49 @@ impl TargetAnalyzer {
     }
 
     /// Find best interdiction points based on current trade data.
+    /// 
+    /// If `cross_system` is true, includes routes between different systems.
+    /// If false, only includes routes within the same system.
     pub async fn find_interdiction_points(
         &self,
         graph: &RouteGraph,
         top_n: usize,
+        cross_system: bool,
     ) -> api_client::Result<Vec<Chokepoint>> {
         let routes = self.uex.get_trade_routes().await?;
 
+        // Build a map of terminal ID to code for lookup
+        let terminals = self.uex.get_terminals().await?;
+        let id_to_code: std::collections::HashMap<i64, String> = terminals
+            .iter()
+            .filter_map(|t| t.code.as_ref().map(|code| (t.id, code.clone())))
+            .collect();
+
         let trade_routes: Vec<_> = routes
             .iter()
-            .map(|r| {
-                (
-                    r.terminal_origin_name.clone(),
-                    r.terminal_destination_name.clone(),
+            .filter(|r| {
+                // Filter based on cross_system flag
+                if cross_system {
+                    // Only include routes where origin and destination are in DIFFERENT systems
+                    !r.origin_system.is_empty() 
+                        && !r.destination_system.is_empty()
+                        && !r.origin_system.eq_ignore_ascii_case(&r.destination_system)
+                } else {
+                    // Only include routes where both origin and destination are in the SAME system
+                    !r.origin_system.is_empty() 
+                        && !r.destination_system.is_empty()
+                        && r.origin_system.eq_ignore_ascii_case(&r.destination_system)
+                }
+            })
+            .filter_map(|r| {
+                // Look up terminal codes, skip if not found
+                let origin_code = id_to_code.get(&r.id_terminal_origin)?;
+                let dest_code = id_to_code.get(&r.id_terminal_destination)?;
+                Some((
+                    origin_code.clone(),
+                    dest_code.clone(),
                     r.profit_per_unit,
-                )
+                ))
             })
             .collect();
 
@@ -117,6 +147,80 @@ impl TargetAnalyzer {
         chokepoints.truncate(top_n);
 
         Ok(chokepoints)
+    }
+
+    /// Find jump point chokepoints for cross-system routes.
+    /// Groups routes by the systems they connect (e.g., Stanton-Pyro).
+    pub async fn find_jump_point_chokepoints(
+        &self,
+        top_n: usize,
+    ) -> api_client::Result<Vec<JumpPointChokepoint>> {
+        let routes = self.uex.get_trade_routes().await?;
+
+        // Group cross-system routes by system pair
+        let mut system_pairs: std::collections::HashMap<(String, String), Vec<CrossSystemRoute>> = 
+            std::collections::HashMap::new();
+
+        for route in routes.iter() {
+            if route.origin_system.is_empty() || route.destination_system.is_empty() {
+                continue;
+            }
+
+            // Skip intra-system routes
+            if route.origin_system.eq_ignore_ascii_case(&route.destination_system) {
+                continue;
+            }
+
+            // Normalize system pair (alphabetically ordered for consistency)
+            let (sys1, sys2) = if route.origin_system < route.destination_system {
+                (route.origin_system.clone(), route.destination_system.clone())
+            } else {
+                (route.destination_system.clone(), route.origin_system.clone())
+            };
+
+            let cross_route = CrossSystemRoute {
+                commodity: route.commodity_name.clone(),
+                origin: route.terminal_origin_name.clone(),
+                destination: route.terminal_destination_name.clone(),
+                origin_system: route.origin_system.clone(),
+                destination_system: route.destination_system.clone(),
+                profit_per_scu: route.profit_per_unit,
+            };
+
+            system_pairs
+                .entry((sys1, sys2))
+                .or_default()
+                .push(cross_route);
+        }
+
+        // Convert to jump point chokepoints
+        let mut jump_points: Vec<JumpPointChokepoint> = system_pairs
+            .into_iter()
+            .map(|((sys1, sys2), routes)| {
+                let route_count = routes.len();
+                let traffic_score: f64 = routes.iter().map(|r| r.profit_per_scu).sum();
+
+                JumpPointChokepoint {
+                    system_a: sys1.clone(),
+                    system_b: sys2.clone(),
+                    jump_point_name: format!("{}-{} Jump Point", sys1, sys2),
+                    route_count,
+                    traffic_score,
+                    routes,
+                }
+            })
+            .collect();
+
+        // Sort by traffic score
+        jump_points.sort_by(|a, b| {
+            b.traffic_score
+                .partial_cmp(&a.traffic_score)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+
+        jump_points.truncate(top_n);
+
+        Ok(jump_points)
     }
 
     /// Get complete trade runs (round-trips) sorted by total profitability.
@@ -227,7 +331,9 @@ pub struct HotRoute {
     pub commodity: String,
     pub commodity_code: String,
     pub origin: String,
+    pub origin_system: String,
     pub destination: String,
+    pub destination_system: String,
     pub profit_per_scu: f64,
     pub available_scu: f64,
     pub likely_ship: CargoShip,
@@ -317,12 +423,40 @@ pub struct CommodityValue {
     pub estimated_value: f64,
 }
 
-/// Ship type with frequency.
+/// Ship frequency at a location.
 #[derive(Debug, Clone, Serialize)]
 pub struct ShipFrequency {
     pub ship_name: String,
-    pub count: usize,
-    pub threat_level: u8,
+    pub frequency: usize,
+    pub avg_threat_level: f64,
+}
+
+/// A jump point chokepoint for cross-system routes.
+#[derive(Debug, Clone, Serialize)]
+pub struct JumpPointChokepoint {
+    /// First system in the connection.
+    pub system_a: String,
+    /// Second system in the connection.
+    pub system_b: String,
+    /// Name of the jump point.
+    pub jump_point_name: String,
+    /// Number of routes passing through this jump point.
+    pub route_count: usize,
+    /// Total traffic score based on route profitability.
+    pub traffic_score: f64,
+    /// Cross-system routes using this jump point.
+    pub routes: Vec<CrossSystemRoute>,
+}
+
+/// A cross-system trade route.
+#[derive(Debug, Clone, Serialize)]
+pub struct CrossSystemRoute {
+    pub commodity: String,
+    pub origin: String,
+    pub destination: String,
+    pub origin_system: String,
+    pub destination_system: String,
+    pub profit_per_scu: f64,
 }
 
 impl TargetAnalyzer {
@@ -484,8 +618,8 @@ impl LocationAggregator {
             .take(5)
             .map(|(name, (count, threat))| ShipFrequency {
                 ship_name: name,
-                count,
-                threat_level: threat,
+                frequency: count,
+                avg_threat_level: threat as f64,
             })
             .collect();
 
