@@ -80,7 +80,7 @@ impl UexClient {
     /// Get profitable trade routes by calculating from price data.
     ///
     /// Routes are calculated by finding profitable buy/sell combinations
-    /// across all terminals using data from the commodities_prices_all endpoint.
+    /// across all terminals using data from the `commodities_prices_all` endpoint.
     /// Terminal location info is fetched from the terminals endpoint to enable
     /// location-based searches (e.g., "Crusader", "Hurston").
     ///
@@ -92,14 +92,18 @@ impl UexClient {
         let (prices, terminals) =
             tokio::try_join!(self.get_all_commodity_prices(), self.get_terminals())?;
 
-        // Build terminal lookup map (id -> full name with location)
-        let terminal_names: std::collections::HashMap<i64, String> = terminals
-            .into_iter()
-            .map(|t| {
-                let full_name = t.full_name();
-                (t.id, full_name)
-            })
-            .collect();
+        // Build terminal lookup maps (id -> full name with location, id -> system)
+        let mut terminal_names: std::collections::HashMap<i64, String> =
+            std::collections::HashMap::new();
+        let mut terminal_systems: std::collections::HashMap<i64, String> =
+            std::collections::HashMap::new();
+
+        for t in terminals {
+            terminal_names.insert(t.id, t.full_name());
+            if let Some(system) = t.star_system_name.clone() {
+                terminal_systems.insert(t.id, system);
+            }
+        }
 
         // Group prices by commodity
         let mut by_commodity: std::collections::HashMap<i64, Vec<&CommodityPriceAll>> =
@@ -147,14 +151,26 @@ impl UexClient {
                             .cloned()
                             .unwrap_or_else(|| dest.terminal_name.clone());
 
+                        // Get system names
+                        let origin_system = terminal_systems
+                            .get(&origin.id_terminal)
+                            .cloned()
+                            .unwrap_or_default();
+                        let dest_system = terminal_systems
+                            .get(&dest.id_terminal)
+                            .cloned()
+                            .unwrap_or_default();
+
                         routes.push(TradeRoute {
                             id_commodity: *commodity_id,
                             commodity_name: origin.commodity_name.clone(),
                             commodity_code: String::new(),
                             id_terminal_origin: origin.id_terminal,
                             terminal_origin_name: origin_name,
+                            origin_system,
                             id_terminal_destination: dest.id_terminal,
                             terminal_destination_name: dest_name,
+                            destination_system: dest_system,
                             price_origin: origin.price_buy,
                             price_destination: dest.price_sell,
                             profit_per_unit: profit,
@@ -271,7 +287,7 @@ impl CommodityPrice {
     }
 }
 
-/// Price information for a commodity at a terminal (from commodities_prices_all endpoint).
+/// Price information for a commodity at a terminal (from `commodities_prices_all` endpoint).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CommodityPriceAll {
     pub id: i64,
@@ -404,9 +420,13 @@ pub struct TradeRoute {
     pub id_terminal_origin: i64,
     #[serde(default)]
     pub terminal_origin_name: String,
+    #[serde(default)]
+    pub origin_system: String,
     pub id_terminal_destination: i64,
     #[serde(default)]
     pub terminal_destination_name: String,
+    #[serde(default)]
+    pub destination_system: String,
     #[serde(default)]
     pub price_origin: f64,
     #[serde(default)]

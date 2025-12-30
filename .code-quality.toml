@@ -1,0 +1,44 @@
+# Code Quality Rules
+# Custom rules for enforcing code organization standards
+
+[limits]
+# Maximum lines per file (excluding tests and generated code)
+max_file_lines = 500
+
+# Maximum lines per function/method
+max_function_lines = 100
+
+# Maximum number of function parameters
+max_parameters = 7
+
+# Maximum cyclomatic complexity (decision points)
+max_cyclomatic_complexity = 15
+
+# Maximum cognitive complexity (how hard to understand)
+max_cognitive_complexity = 20
+
+[structure]
+# Enforce module organization
+require_mod_file = true
+
+# Maximum nesting depth
+max_nesting_depth = 4
+
+[naming]
+# Enforce naming conventions
+enforce_snake_case = true
+enforce_screaming_snake_case_constants = true
+
+[documentation]
+# Require documentation for public items
+require_public_docs = true
+
+# Require examples in public API docs
+require_examples = false
+
+[testing]
+# Minimum test coverage (aspirational)
+min_coverage_percent = 70
+
+# Require tests for public functions
+require_tests_for_public = false

@@ -64,6 +64,9 @@ redundant_else = "warn"
 semicolon_if_nothing_returned = "warn"
 match_same_arms = "warn"
 manual_let_else = "warn"
+cognitive_complexity = "warn"
+too_many_lines = "warn"
+type_complexity = "warn"
 
 [profile.release]
 lto = true

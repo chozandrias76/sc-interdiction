@@ -6,38 +6,46 @@
 export CARGO_TARGET_DIR ?= /tmp/cargo-target-sc-interdiction
 export CARGO_INCREMENTAL ?= 1
 
-.PHONY: help setup build build-release test clean check fmt clippy doc run serve
+.PHONY: help setup build build-release test test-pkg test-cli clean check fmt clippy doc run serve
 
 # Default target
 help:
 	@echo "SC Interdiction - Development Commands"
 	@echo ""
 	@echo "Setup:"
-	@echo "  make setup          - Initialize build environment"
-	@echo "  direnv allow        - Enable automatic environment loading"
+	@echo "  make setup                    - Initialize build environment"
+	@echo "  direnv allow                  - Enable automatic environment loading"
 	@echo ""
 	@echo "Build:"
-	@echo "  make build          - Build in debug mode"
-	@echo "  make build-release  - Build optimized release"
-	@echo "  make check          - Fast syntax check (no codegen)"
+	@echo "  make build                    - Build in debug mode"
+	@echo "  make build-release            - Build optimized release"
+	@echo "  make check                    - Fast syntax check (no codegen)"
 	@echo ""
 	@echo "Quality:"
-	@echo "  make test           - Run all tests"
-	@echo "  make clippy         - Run linter"
-	@echo "  make fmt            - Format code"
-	@echo "  make doc            - Build and open documentation"
+	@echo "  make test                     - Run all tests"
+	@echo "  make test-cli                 - Run tests in CLI crate"
+	@echo "  make test-pkg PKG=<name>      - Run tests in specific package"
+	@echo "  make test-pkg PKG=<name> TEST=<test> - Run specific test in package"
+	@echo "  make clippy                   - Run linter"
+	@echo "  make fmt                      - Format code"
+	@echo "  make doc                      - Build and open documentation"
 	@echo ""
 	@echo "Run:"
-	@echo "  make run            - Run CLI (debug build)"
-	@echo "  make serve          - Start API server (debug build)"
+	@echo "  make run                      - Run CLI (debug build)"
+	@echo "  make serve                    - Start API server (debug build)"
+	@echo "  make routes                   - Show top 10 trade routes"
+	@echo "  make routes-debug             - Show routes with system info"
+	@echo "  make chokepoints              - Show intra-system chokepoints"
+	@echo "  make chokepoints-cross-system - Show cross-system (jump point) chokepoints"
+	@echo "  make ships                    - List cargo ships"
 	@echo ""
 	@echo "Cleanup:"
-	@echo "  make clean          - Remove build artifacts"
-	@echo "  make clean-tmp      - Remove /tmp build directory"
-	@echo "  make clean-all      - Remove all build artifacts"
+	@echo "  make clean                    - Remove build artifacts"
+	@echo "  make clean-tmp                - Remove /tmp build directory"
+	@echo "  make clean-all                - Remove all build artifacts"
 	@echo ""
 	@echo "Info:"
-	@echo "  make info           - Show build configuration"
+	@echo "  make info                     - Show build configuration"
 	@echo ""
 	@echo "Current build target: $(CARGO_TARGET_DIR)"
 
@@ -65,6 +73,22 @@ check:
 test:
 	cargo test
 
+# Test specific crate: make test-pkg PKG=sc-interdiction
+# Test specific test: make test-pkg PKG=sc-interdiction TEST=scroll_text
+test-pkg:
+	@if [ -z "$(PKG)" ]; then \
+		echo "Error: PKG variable is required. Usage: make test-pkg PKG=sc-interdiction"; \
+		exit 1; \
+	fi; \
+	if [ -n "$(TEST)" ]; then \
+		cargo test -p $(PKG) $(TEST); \
+	else \
+		cargo test -p $(PKG); \
+	fi
+
+test-cli:
+	cargo test -p sc-interdiction
+
 clippy:
 	cargo clippy --all-targets --all-features
 
@@ -86,10 +110,19 @@ serve:
 
 # Convenience targets with arguments
 routes:
-	cargo run -- routes --top 10
+	cargo run -- routes --limit 10
+
+routes-debug:
+	cargo run -- routes --limit 20 --show-systems
 
 chokepoints:
 	cargo run -- chokepoints --top 10
+
+chokepoints-cross-system:
+	cargo run -- chokepoints --top 10 --cross-system
+
+dashboard:
+	touch crates/cli/src/main.rs && cargo build && cargo run -- dashboard
 
 ships:
 	cargo run -- ships

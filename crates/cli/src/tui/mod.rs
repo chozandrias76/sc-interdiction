@@ -3,8 +3,14 @@
 //! Provides an interactive dashboard for analyzing trade routes and targets.
 
 mod app;
+mod data;
 mod event;
+mod handlers;
+mod text;
+mod types;
 mod ui;
+mod views;
+mod widgets;
 
 pub use app::App;
 pub use event::{Event, EventHandler};
