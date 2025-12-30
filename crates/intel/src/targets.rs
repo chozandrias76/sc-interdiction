@@ -102,15 +102,34 @@ impl TargetAnalyzer {
     }
 
     /// Find best interdiction points based on current trade data.
+    /// Find best interdiction points based on current trade data.
+    ///
+    /// If `cross_system` is true, includes routes between different systems.
+    /// If false, only includes routes within the same system.
     pub async fn find_interdiction_points(
         &self,
         graph: &RouteGraph,
         top_n: usize,
+        cross_system: bool,
     ) -> api_client::Result<Vec<Chokepoint>> {
         let routes = self.uex.get_trade_routes().await?;
 
         let trade_routes: Vec<_> = routes
             .iter()
+            .filter(|r| {
+                // Filter based on cross_system flag
+                if cross_system {
+                    // Only include routes where origin and destination are in DIFFERENT systems
+                    !r.origin_system.is_empty()
+                        && !r.destination_system.is_empty()
+                        && !r.origin_system.eq_ignore_ascii_case(&r.destination_system)
+                } else {
+                    // Only include routes where both origin and destination are in the SAME system
+                    !r.origin_system.is_empty()
+                        && !r.destination_system.is_empty()
+                        && r.origin_system.eq_ignore_ascii_case(&r.destination_system)
+                }
+            })
             .map(|r| {
                 (
                     r.terminal_origin_name.clone(),

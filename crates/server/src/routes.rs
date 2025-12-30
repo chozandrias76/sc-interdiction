@@ -70,6 +70,9 @@ async fn get_hot_routes(
 struct ChokepointsQuery {
     #[serde(default = "default_chokepoint_limit")]
     top: usize,
+    /// Include cross-system routes
+    #[serde(default)]
+    cross_system: bool,
 }
 
 fn default_chokepoint_limit() -> usize {
@@ -88,7 +91,11 @@ async fn get_chokepoints(
 
     let graph = state.graph.read().await;
 
-    match state.analyzer.find_interdiction_points(&graph, top).await {
+    match state
+        .analyzer
+        .find_interdiction_points(&graph, top, query.cross_system)
+        .await
+    {
         Ok(chokepoints) => Json(chokepoints).into_response(),
         Err(e) => {
             error!("Failed to find chokepoints: {}", e);

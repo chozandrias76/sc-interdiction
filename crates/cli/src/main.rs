@@ -67,6 +67,10 @@ enum Commands {
         #[arg(short, long, default_value = "10")]
         top: usize,
 
+        /// Include cross-system routes (between different star systems)
+        #[arg(long)]
+        cross_system: bool,
+
         /// Output as JSON
         #[arg(long)]
         json: bool,
@@ -180,7 +184,11 @@ async fn main() -> Result<()> {
         Commands::Serve { addr } => handle_serve(addr, &api_key).await?,
         Commands::Routes { limit, json } => handle_routes(limit, json).await?,
         Commands::Runs { limit, json } => handle_runs(limit, json).await?,
-        Commands::Chokepoints { top, json } => handle_chokepoints(top, json).await?,
+        Commands::Chokepoints {
+            top,
+            cross_system,
+            json,
+        } => handle_chokepoints(top, cross_system, json).await?,
         Commands::Intel { location, json } => handle_intel(&location, json).await?,
         Commands::Ships { json } => handle_ships(json)?,
         Commands::FleetShips {
@@ -236,14 +244,16 @@ async fn handle_runs(limit: usize, json: bool) -> Result<()> {
     Ok(())
 }
 
-async fn handle_chokepoints(top: usize, json: bool) -> Result<()> {
+async fn handle_chokepoints(top: usize, cross_system: bool, json: bool) -> Result<()> {
     const MAX_CHOKEPOINTS: usize = 100;
     let top = top.min(MAX_CHOKEPOINTS);
 
     let uex = UexClient::new();
     let analyzer = TargetAnalyzer::new(uex.clone());
     let graph = build_route_graph(&uex).await?;
-    let chokepoints = analyzer.find_interdiction_points(&graph, top).await?;
+    let chokepoints = analyzer
+        .find_interdiction_points(&graph, top, cross_system)
+        .await?;
 
     if json {
         println!("{}", serde_json::to_string_pretty(&chokepoints)?);
@@ -326,7 +336,7 @@ async fn handle_nearby(location: &str, top: usize, json: bool) -> Result<()> {
     let uex = UexClient::new();
     let analyzer = TargetAnalyzer::new(uex.clone());
     let graph = build_route_graph(&uex).await?;
-    let chokepoints = analyzer.find_interdiction_points(&graph, 50).await?;
+    let chokepoints = analyzer.find_interdiction_points(&graph, 50, false).await?;
 
     let spatial_index = route_graph::SpatialIndex::from_chokepoints(chokepoints);
     let search_point = estimate_location_position(location);
