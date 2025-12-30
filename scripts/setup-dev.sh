@@ -16,6 +16,16 @@ cp scripts/pre-commit.sh .git/hooks/pre-commit
 chmod +x .git/hooks/pre-commit
 echo "    ✓ Pre-commit hook installed"
 
+# Install post-push hook
+echo "  → Installing post-push hook..."
+if [ -f ".git/hooks/post-push" ]; then
+    echo "    Post-push hook already exists. Backing up..."
+    mv .git/hooks/post-push .git/hooks/post-push.backup
+fi
+cp scripts/post-push.sh .git/hooks/post-push
+chmod +x .git/hooks/post-push
+echo "    ✓ Post-push hook installed"
+
 # Create .cargo/config.toml from template if it doesn't exist
 echo "  → Setting up cargo config..."
 if [ ! -f ".cargo/config.toml" ]; then
