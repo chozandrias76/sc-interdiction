@@ -25,3 +25,4 @@ Thumbs.db
 
 # Build artifacts in /tmp (if symlinked or referenced)
 /tmp/
+.envrc
