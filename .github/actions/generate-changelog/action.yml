@@ -32,10 +32,12 @@ runs:
         if [ -z "$PREV_TAG" ]; then
           PR_NUMBERS=$(git log --pretty=format:"%s" --no-merges | grep -oP '#\K[0-9]+' || echo "")
         else
-          # Find merge base between current branch and main at previous tag
-          MERGE_BASE=$(git merge-base HEAD origin/main 2>/dev/null || echo "$PREV_TAG")
-          PR_NUMBERS=$(git log ${MERGE_BASE}..HEAD --pretty=format:"%s" --no-merges | grep -oP '#\K[0-9]+' || echo "")
+          # Get commits since previous tag (not merge-base, to avoid including old commits)
+          PR_NUMBERS=$(git log ${PREV_TAG}..HEAD --pretty=format:"%s" --no-merges | grep -oP '#\K[0-9]+' || echo "")
         fi
+
+        # Deduplicate PR numbers (in case sync commits reference same PRs)
+        PR_NUMBERS=$(echo "$PR_NUMBERS" | sort -u)
 
         # Fetch PR details for each PR number
         MERGED_PRS=""

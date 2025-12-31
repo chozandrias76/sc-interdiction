@@ -39,6 +39,16 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+      - name: Ensure develop is synced with main
+        run: |
+          git fetch origin main
+          # Check if develop has all commits from main
+          if ! git merge-base --is-ancestor origin/main HEAD; then
+            echo "ERROR: develop is behind main. Please sync develop with main first."
+            echo "Run: git checkout develop && git merge --ff-only origin/main && git push"
+            exit 1
+          fi
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
@@ -157,12 +167,10 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "✅ Created release branch: \`${{ steps.branch.outputs.name }}\`" >> $GITHUB_STEP_SUMMARY
           echo "✅ Version bumped: \`${{ steps.current_version.outputs.version }}\` → \`${{ steps.new_version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "✅ PRs created:" >> $GITHUB_STEP_SUMMARY
-          echo "   - develop → ${{ steps.branch.outputs.name }}" >> $GITHUB_STEP_SUMMARY
-          echo "   - ${{ steps.branch.outputs.name }} → main" >> $GITHUB_STEP_SUMMARY
+          echo "✅ PR created: ${{ steps.branch.outputs.name }} → main" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
-          echo "1. Review and merge the PR from develop to ${{ steps.branch.outputs.name }}" >> $GITHUB_STEP_SUMMARY
-          echo "2. Wait for all CI checks to pass" >> $GITHUB_STEP_SUMMARY
-          echo "3. Review and merge the PR from ${{ steps.branch.outputs.name }} to main" >> $GITHUB_STEP_SUMMARY
-          echo "4. The release will be automatically created when merged to main" >> $GITHUB_STEP_SUMMARY
+          echo "1. Wait for all CI checks to pass" >> $GITHUB_STEP_SUMMARY
+          echo "2. Review and merge the PR to main" >> $GITHUB_STEP_SUMMARY
+          echo "3. The release will be automatically published" >> $GITHUB_STEP_SUMMARY
+          echo "4. Changes will be automatically synced back to develop" >> $GITHUB_STEP_SUMMARY
