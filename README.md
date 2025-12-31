@@ -312,3 +312,4 @@ See [docs/RELEASE_PROCESS.md](docs/RELEASE_PROCESS.md) for detailed documentatio
 - **`develop`**: Integration branch (PRs from feature/fix/chore branches)
 - **`release/*`**: Release preparation (auto-created by release workflow)
 - **`feature/*`**, **`fix/*`**, **`chore/*`**: Development branches
+
