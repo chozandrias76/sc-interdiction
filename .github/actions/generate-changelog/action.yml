@@ -19,28 +19,34 @@ runs:
       id: generate
       shell: bash
       run: |
-        # Get the previous tag
+        # Get the previous tag from main branch (releases are tagged on main)
         if [ -n "${{ inputs.previous-version }}" ]; then
           PREV_TAG="v${{ inputs.previous-version }}"
         else
-          PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          PREV_TAG=$(git describe --tags --abbrev=0 origin/main 2>/dev/null || echo "")
         fi
 
         echo "Generating changelog from ${PREV_TAG:-initial commit} to HEAD"
 
-        # Get merged PRs since last tag
+        # Get list of PR numbers from git log between tags
         if [ -z "$PREV_TAG" ]; then
-          SINCE_DATE="1970-01-01"
+          PR_NUMBERS=$(git log --pretty=format:"%s" --no-merges | grep -oP '#\K[0-9]+' || echo "")
         else
-          SINCE_DATE=$(git log -1 --format=%aI $PREV_TAG 2>/dev/null || echo "1970-01-01")
+          # Get commits since previous tag (not merge-base, to avoid including old commits)
+          PR_NUMBERS=$(git log ${PREV_TAG}..HEAD --pretty=format:"%s" --no-merges | grep -oP '#\K[0-9]+' || echo "")
         fi
 
-        MERGED_PRS=$(gh pr list \
-          --state merged \
-          --limit 100 \
-          --json number,title,mergedAt \
-          --jq 'sort_by(.mergedAt) | reverse | map(select(.mergedAt > "'$SINCE_DATE'")) | .[] | "- #\(.number): \(.title)"' \
-          2>/dev/null || echo "")
+        # Deduplicate PR numbers (in case sync commits reference same PRs)
+        PR_NUMBERS=$(echo "$PR_NUMBERS" | sort -u)
+
+        # Fetch PR details for each PR number
+        MERGED_PRS=""
+        for PR_NUM in $PR_NUMBERS; do
+          PR_INFO=$(gh pr view $PR_NUM --json number,title 2>/dev/null | jq -r '"- #\(.number): \(.title)"' || echo "")
+          if [ -n "$PR_INFO" ]; then
+            MERGED_PRS="$MERGED_PRS$PR_INFO"$'\n'
+          fi
+        done
 
         # Categorize changes by conventional commit type
         CI_CHANGES=$(echo "$MERGED_PRS" | grep -E "^- #[0-9]+: (ci|build)" || echo "")

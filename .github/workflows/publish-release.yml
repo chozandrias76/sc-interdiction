@@ -176,12 +176,7 @@ jobs:
         run: |
           git fetch origin develop
           git checkout develop
-          # Fast-forward develop to main since release was already merged
-          git merge --ff-only origin/main || {
-            echo "ERROR: develop has diverged from main - this should never happen!"
-            echo "develop and main must stay in sync between releases"
-            exit 1
-          }
+          git merge --no-ff main -m "chore: merge release v${{ needs.prepare.outputs.version }} back to develop"
           git push origin develop
 
       - name: Delete release branch

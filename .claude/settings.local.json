@@ -43,7 +43,9 @@
       "Bash(git reset:*)",
       "Bash(ls:*)",
       "Bash(grep:*)",
-      "Bash(git pull:*)"
+      "Bash(git pull:*)",
+      "Bash(~/.local/bin/gh pr view 39 --json title,body,baseRefName,headRefName,mergeable,mergeStateStatus,commits,files)",
+      "Bash(~/.local/bin/gh pr diff 39)"
     ]
   }
 }
