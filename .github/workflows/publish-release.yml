@@ -14,24 +14,19 @@ permissions:
   pull-requests: write
 
 jobs:
-  publish:
-    name: Publish Release
+  prepare:
+    name: Prepare Release
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || (github.event.pull_request.merged == true && startsWith(github.head_ref, 'release/'))
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
+      tag_exists: ${{ steps.check_tag.outputs.exists }}
     steps:
       - name: Checkout main
         uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 0
-      
-      - name: Setup Git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-      
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
       
       - name: Get version from Cargo.toml
         id: get_version
@@ -50,61 +45,128 @@ jobs:
             echo "exists=false" >> $GITHUB_OUTPUT
             echo "Tag v${{ steps.get_version.outputs.version }} does not exist"
           fi
+  
+  build:
+    name: Build ${{ matrix.target }}
+    needs: prepare
+    if: needs.prepare.outputs.tag_exists == 'false'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact_name: sc-interdiction
+            asset_name: sc-interdiction-linux-x86_64
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact_name: sc-interdiction.exe
+            asset_name: sc-interdiction-windows-x86_64.exe
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            artifact_name: sc-interdiction
+            asset_name: sc-interdiction-macos-x86_64
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
       
-      - name: Build release artifacts
-        if: steps.check_tag.outputs.exists == 'false'
-        run: cargo build --release --all-features
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      
+      - name: Build release binary
+        run: cargo build --release --all-features --target ${{ matrix.target }}
+      
+      - name: Rename binary
+        shell: bash
+        run: |
+          cd target/${{ matrix.target }}/release
+          if [ -f "${{ matrix.artifact_name }}" ]; then
+            mv "${{ matrix.artifact_name }}" "${{ matrix.asset_name }}"
+          fi
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset_name }}
+          path: target/${{ matrix.target }}/release/${{ matrix.asset_name }}
+          retention-days: 1
+  
+  publish:
+    name: Publish Release
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      
+      - name: Setup Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      
+      - name: Display downloaded artifacts
+        run: ls -R artifacts/
       
       - name: Generate changelog
-        if: steps.check_tag.outputs.exists == 'false'
         id: changelog
         uses: ./.github/actions/generate-changelog
         with:
           github-token: ${{ github.token }}
       
       - name: Create Git tag
-        if: steps.check_tag.outputs.exists == 'false'
         run: |
-          git tag -a "v${{ steps.get_version.outputs.version }}" -m "Release version ${{ steps.get_version.outputs.version }}"
-          git push origin "v${{ steps.get_version.outputs.version }}"
+          git tag -a "v${{ needs.prepare.outputs.version }}" -m "Release version ${{ needs.prepare.outputs.version }}"
+          git push origin "v${{ needs.prepare.outputs.version }}"
       
       - name: Create GitHub Release
-        if: steps.check_tag.outputs.exists == 'false'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           CHANGELOG="${{ steps.changelog.outputs.changelog }}"
           PRERELEASE_FLAG=""
           
-          if [[ "${{ steps.get_version.outputs.version }}" =~ -rc\. ]] || [[ "${{ steps.get_version.outputs.version }}" =~ -beta\. ]] || [[ "${{ steps.get_version.outputs.version }}" =~ -alpha\. ]]; then
+          if [[ "${{ needs.prepare.outputs.version }}" =~ -rc\. ]] || [[ "${{ needs.prepare.outputs.version }}" =~ -beta\. ]] || [[ "${{ needs.prepare.outputs.version }}" =~ -alpha\. ]]; then
             PRERELEASE_FLAG="--prerelease"
           fi
           
-          gh release create "v${{ steps.get_version.outputs.version }}" \
-            --title "Release v${{ steps.get_version.outputs.version }}" \
-            --notes "## What's Changed
+          gh release create "v${{ needs.prepare.outputs.version }}" \
+            --title "Release v${{ needs.prepare.outputs.version }}" \
+            --notes "$CHANGELOG
 
-          $CHANGELOG
+## 📦 Installation
 
-          ## Installation
+Download the appropriate binary for your platform from the assets below:
 
-          Download the appropriate binary for your platform from the assets below.
+- **Linux**: \`sc-interdiction-linux-x86_64\`
+- **Windows**: \`sc-interdiction-windows-x86_64.exe\`
+- **macOS**: \`sc-interdiction-macos-x86_64\`
 
-          ## Full Changelog
-          See all changes at: https://github.com/${{ github.repository }}/compare/v${{ steps.get_version.outputs.version }}...HEAD" \
+## 📝 Full Changelog
+https://github.com/${{ github.repository }}/compare/v${{ needs.prepare.outputs.version }}...HEAD" \
             $PRERELEASE_FLAG \
-            target/release/sc-interdiction* || true
+            artifacts/*/* || true
       
       - name: Merge back to develop
-        if: steps.check_tag.outputs.exists == 'false'
         run: |
           git fetch origin develop
           git checkout develop
-          git merge --no-ff main -m "chore: merge release v${{ steps.get_version.outputs.version }} back to develop"
+          git merge --no-ff main -m "chore: merge release v${{ needs.prepare.outputs.version }} back to develop"
           git push origin develop
       
       - name: Delete release branch
-        if: steps.check_tag.outputs.exists == 'false' && github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
