@@ -27,14 +27,14 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-      
+
       - name: Get version from Cargo.toml
         id: get_version
         run: |
           VERSION=$(grep -m1 '^version = ' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Version: $VERSION"
-      
+
       - name: Check if tag exists
         id: check_tag
         run: |
@@ -45,7 +45,7 @@ jobs:
             echo "exists=false" >> $GITHUB_OUTPUT
             echo "Tag v${{ steps.get_version.outputs.version }} does not exist"
           fi
-  
+
   build:
     name: Build ${{ matrix.target }}
     needs: prepare
@@ -71,15 +71,15 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: main
-      
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
-      
+
       - name: Build release binary
         run: cargo build --release --all-features --target ${{ matrix.target }}
-      
+
       - name: Rename binary
         shell: bash
         run: |
@@ -87,14 +87,14 @@ jobs:
           if [ -f "${{ matrix.artifact_name }}" ]; then
             mv "${{ matrix.artifact_name }}" "${{ matrix.asset_name }}"
           fi
-      
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.asset_name }}
           path: target/${{ matrix.target }}/release/${{ matrix.asset_name }}
           retention-days: 1
-  
+
   publish:
     name: Publish Release
     needs: [prepare, build]
@@ -105,31 +105,31 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-      
+
       - name: Setup Git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-      
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
-      
+
       - name: Display downloaded artifacts
         run: ls -R artifacts/
-      
+
       - name: Generate changelog
         id: changelog
         uses: ./.github/actions/generate-changelog
         with:
           github-token: ${{ github.token }}
-      
+
       - name: Create Git tag
         run: |
           git tag -a "v${{ needs.prepare.outputs.version }}" -m "Release version ${{ needs.prepare.outputs.version }}"
           git push origin "v${{ needs.prepare.outputs.version }}"
-      
+
       - name: Get previous release tag
         id: prev_tag
         run: |
@@ -139,42 +139,46 @@ jobs:
           fi
           echo "prev_tag=$PREV_TAG" >> $GITHUB_OUTPUT
           echo "Previous tag: $PREV_TAG"
-      
+
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           CHANGELOG="${{ steps.changelog.outputs.changelog }}"
           PRERELEASE_FLAG=""
-          
+
           if [[ "${{ needs.prepare.outputs.version }}" =~ -rc\. ]] || [[ "${{ needs.prepare.outputs.version }}" =~ -beta\. ]] || [[ "${{ needs.prepare.outputs.version }}" =~ -alpha\. ]]; then
             PRERELEASE_FLAG="--prerelease"
           fi
-          
+
+          cat > /tmp/release-notes.md <<EOF
+          $CHANGELOG
+
+          ## 📦 Installation
+
+          Download the appropriate binary for your platform from the assets below:
+
+          - **Linux**: \`sc-interdiction-linux-x86_64\`
+          - **Windows**: \`sc-interdiction-windows-x86_64.exe\`
+          - **macOS**: \`sc-interdiction-macos-x86_64\`
+
+          ## 📝 Full Changelog
+          https://github.com/${{ github.repository }}/compare/${{ steps.prev_tag.outputs.prev_tag }}...v${{ needs.prepare.outputs.version }}
+          EOF
+
           gh release create "v${{ needs.prepare.outputs.version }}" \
             --title "Release v${{ needs.prepare.outputs.version }}" \
-            --notes "$CHANGELOG
-
-## 📦 Installation
-
-Download the appropriate binary for your platform from the assets below:
-
-- **Linux**: \`sc-interdiction-linux-x86_64\`
-- **Windows**: \`sc-interdiction-windows-x86_64.exe\`
-- **macOS**: \`sc-interdiction-macos-x86_64\`
-
-## 📝 Full Changelog
-https://github.com/${{ github.repository }}/compare/${{ steps.prev_tag.outputs.prev_tag }}...v${{ needs.prepare.outputs.version }}" \
+            --notes-file /tmp/release-notes.md \
             $PRERELEASE_FLAG \
             artifacts/*/* || true
-      
+
       - name: Merge back to develop
         run: |
           git fetch origin develop
           git checkout develop
           git merge --no-ff main -m "chore: merge release v${{ needs.prepare.outputs.version }} back to develop"
           git push origin develop
-      
+
       - name: Delete release branch
         if: github.event_name == 'pull_request'
         env:
@@ -185,7 +189,7 @@ https://github.com/${{ github.repository }}/compare/${{ steps.prev_tag.outputs.p
             git push origin --delete "$BRANCH_NAME" || true
             echo "Deleted release branch: $BRANCH_NAME"
           fi
-      
+
       - name: Output summary
         if: steps.check_tag.outputs.exists == 'false'
         run: |
