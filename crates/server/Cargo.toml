@@ -20,5 +20,10 @@ api-client.workspace = true
 route-graph.workspace = true
 intel.workspace = true
 
+[dev-dependencies]
+mockito = "1.2"
+tower = { workspace = true, features = ["util"] }
+http-body-util = "0.1"
+
 [lints]
 workspace = true
