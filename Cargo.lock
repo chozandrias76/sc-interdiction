@@ -69,7 +69,7 @@ dependencies = [
 
 [[package]]
 name = "api-client"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "dashmap",
  "mockito",
@@ -885,7 +885,7 @@ dependencies = [
 
 [[package]]
 name = "intel"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "api-client",
  "mockito",
@@ -1431,7 +1431,7 @@ dependencies = [
 
 [[package]]
 name = "route-graph"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "api-client",
  "ordered-float",
@@ -1522,7 +1522,7 @@ checksum = "62049b2877bf12821e8f9ad256ee38fdc31db7387ec2d3b3f403024de2034aea"
 
 [[package]]
 name = "sc-interdiction"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "api-client",
  "clap",
@@ -1617,7 +1617,7 @@ dependencies = [
 
 [[package]]
 name = "server"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "api-client",
  "axum",
