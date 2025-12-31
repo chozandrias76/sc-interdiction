@@ -1,5 +1,27 @@
 # TODO
 
+## Summary & Priorities
+
+**Current Version**: 0.1.4
+
+### High Priority (Core Functionality Gaps)
+1. **Mining & Refinery Route Support** - Major feature, completely unimplemented
+2. **Test Coverage** - Server crate at 0%, need 80% overall coverage
+3. **Refueling Cost Integration** - Fuel system mostly done, needs cost calculation
+
+### Medium Priority (UX & Polish)
+4. **CLI Display for Multi-Hop Routes** - Make fuel system user-facing
+5. **TUI Dashboard Interactive Controls** - Logic exists, needs UI
+6. **Visual Indicators for Fuel Stations** - Better user experience
+
+### Low Priority (Nice to Have)
+7. **Performance Optimizations** - Profile and optimize hot paths
+8. **Better Caching Strategies** - TTL-based expiration
+9. **Documentation Improvements** - Architecture diagrams, schemas
+10. **Build System Optimization** - Faster linker integration
+
+---
+
 ## Features
 
 ### UI/Visualization Improvements
@@ -132,24 +154,69 @@
 
 ## Technical Debt
 
+### Error Handling
 - [ ] **Improve error handling in API client**
   - Add retry logic with exponential backoff in `api-client/src/`
   - Better error messages for rate limits, network failures
-  
+
+### Testing & Coverage
+**Current Status**: 46 tests total (api-client: 9, intel: 13, route-graph: 11, cli: 13, server: 0)
+**Coverage Requirement**: 80% minimum (run `make coverage` to check)
+
+- [ ] **Server crate tests (PRIORITY - currently 0% coverage)**
+  - Add route handler tests
+  - Test API endpoint responses
+  - Integration tests for server functionality
+
+- [ ] **TargetAnalyzer tests**
+  - See note in `crates/intel/tests/target_analyzer_integration.rs:43`
+  - Test target identification logic
+  - Test profitability calculations
+
+- [ ] **FleetYardsClient tests**
+  - Test API integration
+  - Mock responses for deterministic tests
+
 - [ ] **Add more comprehensive unit tests**
   - Test route calculation accuracy
   - Test fuel consumption formulas
   - Mock API responses for deterministic tests
-  
+
+### Performance
 - [ ] **Optimize graph traversal algorithms**
   - Profile `find_chokepoints()` for large graphs
   - Consider caching route calculations
   - Use parallel iterators where applicable
-  
+
 - [ ] **Better caching strategies for API responses**
   - Implement TTL-based cache expiration
   - Add cache warming on server startup
   - Cache invalidation based on data freshness
+
+---
+
+## Known Issues & Limitations
+
+### Route Realism
+- [ ] **Round-trip validation**
+  - Currently treats inbound/outbound as separate routes
+  - Should link them as complete trade runs
+  - Need to validate profitability of full round-trip cycles
+
+- [ ] **Distance calculation accuracy**
+  - Need accurate terminal coordinates
+  - Currently using approximate positions for major locations
+  - Affects fuel consumption and travel time estimates
+
+### Ship Docking Restrictions
+- [x] **Hull C restrictions implemented**
+  - Requires freight elevators (large pads)
+  - Properly filtered in route analysis
+
+- [ ] **Other Hull series ships**
+  - Hull A, B, D, E restrictions not yet implemented
+  - Need to add size-based docking constraints
+  - Some stations cannot accommodate very large ships
 
 ---
 

@@ -317,3 +317,268 @@ impl Default for RouteGraph {
         Self::new()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn create_test_terminal(
+        id: i64,
+        name: &str,
+        code: &str,
+        terminal_type: &str,
+        system: &str,
+        is_refuel: bool,
+    ) -> Terminal {
+        Terminal {
+            id,
+            name: Some(name.to_string()),
+            code: Some(code.to_string()),
+            nickname: None,
+            terminal_type: Some(terminal_type.to_string()),
+            star_system_name: Some(system.to_string()),
+            planet_name: Some("TestPlanet".to_string()),
+            moon_name: None,
+            space_station_name: None,
+            outpost_name: None,
+            city_name: None,
+            has_freight_elevator: false,
+            has_loading_dock: false,
+            has_docking_port: false,
+            is_refuel,
+            is_refinery: false,
+        }
+    }
+
+    #[test]
+    fn test_new_graph_is_empty() {
+        let graph = RouteGraph::new();
+        assert_eq!(graph.node_count(), 0);
+        assert_eq!(graph.edge_count(), 0);
+    }
+
+    #[test]
+    fn test_add_terminal() {
+        let mut graph = RouteGraph::new();
+        let terminal = create_test_terminal(1, "Port Olisar", "PO", "STATION", "Stanton", true);
+
+        graph.add_terminal(&terminal);
+
+        assert_eq!(graph.node_count(), 1);
+        let node = graph.get_node("PO").unwrap();
+        assert_eq!(node.name, "Port Olisar");
+        assert_eq!(node.system, "Stanton");
+        assert!(node.is_fuel_station);
+    }
+
+    #[test]
+    fn test_add_terminal_idempotent() {
+        let mut graph = RouteGraph::new();
+        let terminal = create_test_terminal(1, "Port Olisar", "PO", "STATION", "Stanton", true);
+
+        graph.add_terminal(&terminal);
+        graph.add_terminal(&terminal);
+
+        assert_eq!(graph.node_count(), 1);
+    }
+
+    #[test]
+    fn test_node_type_parse() {
+        assert_eq!(NodeType::parse("STATION"), NodeType::Station);
+        assert_eq!(NodeType::parse("OUTPOST"), NodeType::Outpost);
+        assert_eq!(NodeType::parse("LANDING_ZONE"), NodeType::LandingZone);
+        assert_eq!(NodeType::parse("CITY"), NodeType::City);
+        assert_eq!(NodeType::parse("UNKNOWN"), NodeType::OrbitalMarker);
+    }
+
+    #[test]
+    fn test_connect_nodes() {
+        let mut graph = RouteGraph::new();
+        let terminal1 = create_test_terminal(1, "Port Olisar", "PO", "STATION", "Stanton", true);
+        let terminal2 = create_test_terminal(2, "Area18", "A18", "CITY", "Stanton", false);
+
+        graph.add_terminal(&terminal1);
+        graph.add_terminal(&terminal2);
+
+        let result = graph.connect("PO", "A18", 1000.0);
+        assert!(result.is_ok());
+
+        // Should create bidirectional edge
+        assert_eq!(graph.edge_count(), 2);
+    }
+
+    #[test]
+    fn test_connect_nonexistent_node() {
+        let mut graph = RouteGraph::new();
+        let result = graph.connect("INVALID", "ALSO_INVALID", 1000.0);
+
+        assert!(result.is_err());
+        match result {
+            Err(GraphError::NodeNotFound(code)) => assert_eq!(code, "INVALID"),
+            _ => panic!("Expected NodeNotFound error"),
+        }
+    }
+
+    #[test]
+    fn test_connect_system() {
+        let mut graph = RouteGraph::new();
+        let terminal1 = create_test_terminal(1, "Port Olisar", "PO", "STATION", "Stanton", true);
+        let terminal2 = create_test_terminal(2, "Area18", "A18", "CITY", "Stanton", false);
+        let terminal3 =
+            create_test_terminal(3, "Lorville", "LOR", "CITY", "Stanton", false);
+
+        graph.add_terminal(&terminal1);
+        graph.add_terminal(&terminal2);
+        graph.add_terminal(&terminal3);
+
+        graph.connect_system("Stanton");
+
+        // 3 nodes should create 6 edges (3 pairs × 2 directions)
+        assert_eq!(graph.edge_count(), 6);
+    }
+
+    #[test]
+    fn test_connect_system_with_different_systems() {
+        let mut graph = RouteGraph::new();
+        let terminal1 = create_test_terminal(1, "Port Olisar", "PO", "STATION", "Stanton", true);
+        let terminal2 = create_test_terminal(2, "Pyro Station", "PYRO", "STATION", "Pyro", false);
+
+        graph.add_terminal(&terminal1);
+        graph.add_terminal(&terminal2);
+
+        graph.connect_system("Stanton");
+
+        // Only Stanton nodes should be connected (0 edges since only 1 Stanton node)
+        assert_eq!(graph.edge_count(), 0);
+    }
+
+    #[test]
+    fn test_find_path() {
+        let mut graph = RouteGraph::new();
+        let terminal1 = create_test_terminal(1, "Port Olisar", "PO", "STATION", "Stanton", true);
+        let terminal2 = create_test_terminal(2, "Area18", "A18", "CITY", "Stanton", false);
+
+        graph.add_terminal(&terminal1);
+        graph.add_terminal(&terminal2);
+        graph.connect("PO", "A18", 1000.0).unwrap();
+
+        let path = graph.find_path("PO", "A18").unwrap();
+
+        assert_eq!(path.len(), 2);
+        assert_eq!(path[0], "1");
+        assert_eq!(path[1], "2");
+    }
+
+    #[test]
+    fn test_find_path_no_connection() {
+        let mut graph = RouteGraph::new();
+        let terminal1 = create_test_terminal(1, "Port Olisar", "PO", "STATION", "Stanton", true);
+        let terminal2 = create_test_terminal(2, "Area18", "A18", "CITY", "Stanton", false);
+
+        graph.add_terminal(&terminal1);
+        graph.add_terminal(&terminal2);
+
+        let result = graph.find_path("PO", "A18");
+
+        assert!(result.is_err());
+        match result {
+            Err(GraphError::NoPath { from, to }) => {
+                assert_eq!(from, "PO");
+                assert_eq!(to, "A18");
+            }
+            _ => panic!("Expected NoPath error"),
+        }
+    }
+
+    #[test]
+    fn test_get_node() {
+        let mut graph = RouteGraph::new();
+        let terminal = create_test_terminal(1, "Port Olisar", "PO", "STATION", "Stanton", true);
+
+        graph.add_terminal(&terminal);
+
+        let node = graph.get_node("PO");
+        assert!(node.is_some());
+        assert_eq!(node.unwrap().name, "Port Olisar");
+    }
+
+    #[test]
+    fn test_get_node_not_found() {
+        let graph = RouteGraph::new();
+        let node = graph.get_node("INVALID");
+        assert!(node.is_none());
+    }
+
+    #[test]
+    fn test_node_degree() {
+        let mut graph = RouteGraph::new();
+        let terminal1 = create_test_terminal(1, "Port Olisar", "PO", "STATION", "Stanton", true);
+        let terminal2 = create_test_terminal(2, "Area18", "A18", "CITY", "Stanton", false);
+        let terminal3 =
+            create_test_terminal(3, "Lorville", "LOR", "CITY", "Stanton", false);
+
+        graph.add_terminal(&terminal1);
+        graph.add_terminal(&terminal2);
+        graph.add_terminal(&terminal3);
+
+        graph.connect_system("Stanton");
+
+        // Each node should be connected to 2 others
+        assert_eq!(graph.node_degree("PO"), 2);
+        assert_eq!(graph.node_degree("A18"), 2);
+        assert_eq!(graph.node_degree("LOR"), 2);
+    }
+
+    #[test]
+    fn test_edges_from() {
+        let mut graph = RouteGraph::new();
+        let terminal1 = create_test_terminal(1, "Port Olisar", "PO", "STATION", "Stanton", true);
+        let terminal2 = create_test_terminal(2, "Area18", "A18", "CITY", "Stanton", false);
+
+        graph.add_terminal(&terminal1);
+        graph.add_terminal(&terminal2);
+        graph.connect("PO", "A18", 1000.0).unwrap();
+
+        let edges = graph.edges_from("PO");
+
+        assert_eq!(edges.len(), 1);
+        assert_eq!(edges[0].0.name, "Area18");
+        assert_eq!(edges[0].1.distance, 1000.0);
+    }
+
+    #[test]
+    fn test_edges_from_nonexistent() {
+        let graph = RouteGraph::new();
+        let edges = graph.edges_from("INVALID");
+        assert_eq!(edges.len(), 0);
+    }
+
+    #[test]
+    fn test_nodes_iterator() {
+        let mut graph = RouteGraph::new();
+        let terminal1 = create_test_terminal(1, "Port Olisar", "PO", "STATION", "Stanton", true);
+        let terminal2 = create_test_terminal(2, "Area18", "A18", "CITY", "Stanton", false);
+
+        graph.add_terminal(&terminal1);
+        graph.add_terminal(&terminal2);
+
+        let nodes: Vec<_> = graph.nodes().collect();
+        assert_eq!(nodes.len(), 2);
+    }
+
+    #[test]
+    fn test_travel_time_calculation() {
+        let mut graph = RouteGraph::new();
+        let terminal1 = create_test_terminal(1, "Port Olisar", "PO", "STATION", "Stanton", true);
+        let terminal2 = create_test_terminal(2, "Area18", "A18", "CITY", "Stanton", false);
+
+        graph.add_terminal(&terminal1);
+        graph.add_terminal(&terminal2);
+        graph.connect("PO", "A18", 6000000.0).unwrap(); // 6M km
+
+        let edges = graph.edges_from("PO");
+
+        // Travel time should be (6000000 / 60000) + 10 = 110 seconds
+        assert!((edges[0].1.travel_time - 110.0).abs() < 0.01);
+    }
+}
