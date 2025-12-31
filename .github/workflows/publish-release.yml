@@ -130,6 +130,16 @@ jobs:
           git tag -a "v${{ needs.prepare.outputs.version }}" -m "Release version ${{ needs.prepare.outputs.version }}"
           git push origin "v${{ needs.prepare.outputs.version }}"
       
+      - name: Get previous release tag
+        id: prev_tag
+        run: |
+          PREV_TAG=$(git tag --sort=-v:refname | grep -v "v${{ needs.prepare.outputs.version }}" | head -1)
+          if [ -z "$PREV_TAG" ]; then
+            PREV_TAG="v0.1.0"
+          fi
+          echo "prev_tag=$PREV_TAG" >> $GITHUB_OUTPUT
+          echo "Previous tag: $PREV_TAG"
+      
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -154,7 +164,7 @@ Download the appropriate binary for your platform from the assets below:
 - **macOS**: \`sc-interdiction-macos-x86_64\`
 
 ## 📝 Full Changelog
-https://github.com/${{ github.repository }}/compare/v${{ needs.prepare.outputs.version }}...HEAD" \
+https://github.com/${{ github.repository }}/compare/${{ steps.prev_tag.outputs.prev_tag }}...v${{ needs.prepare.outputs.version }}" \
             $PRERELEASE_FLAG \
             artifacts/*/* || true
       
