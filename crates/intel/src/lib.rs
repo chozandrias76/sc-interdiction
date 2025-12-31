@@ -8,7 +8,7 @@ mod targets;
 #[cfg(test)]
 mod ships_tests;
 
-pub use ships::{CargoShip, LootEstimate, CARGO_SHIPS};
+pub use ships::{CargoShip, LootEstimate, ShipRole, CARGO_SHIPS};
 pub use targets::{
     CommodityValue, HotRoute, InterdictionHotspot, RouteLeg, ShipFrequency, TargetAnalyzer,
     TargetPrediction, TradeActivity, TradeRun, TrafficDirection,

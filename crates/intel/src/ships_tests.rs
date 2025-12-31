@@ -5,7 +5,7 @@
 #![allow(clippy::panic)]
 #![allow(clippy::indexing_slicing)]
 
-use crate::ships::{estimate_ship_for_route, CargoShip, LootEstimate, CARGO_SHIPS};
+use crate::ships::{estimate_ship_for_route, CargoShip, LootEstimate, ShipRole, CARGO_SHIPS};
 use api_client::TradeRoute;
 
 #[test]
@@ -21,6 +21,8 @@ fn test_loot_estimate_disable_scenario() {
         quantum_fuel_capacity: 1250.0,
         hydrogen_fuel_capacity: 288.0,
         qt_drive_size: 1,
+        role: ShipRole::Cargo,
+        mining_capacity_scu: None,
     };
 
     let cargo_value = 100_000.0;
@@ -53,6 +55,8 @@ fn test_loot_estimate_destroy_scenario() {
         quantum_fuel_capacity: 6000.0,
         hydrogen_fuel_capacity: 1200.0,
         qt_drive_size: 2,
+        role: ShipRole::Cargo,
+        mining_capacity_scu: None,
     };
 
     let cargo_value = 200_000.0;
@@ -83,6 +87,8 @@ fn test_loot_estimate_moderate_destruction() {
         quantum_fuel_capacity: 2500.0,
         hydrogen_fuel_capacity: 500.0,
         qt_drive_size: 2,
+        role: ShipRole::Cargo,
+        mining_capacity_scu: None,
     };
 
     let cargo_value = 150_000.0;
@@ -110,6 +116,8 @@ fn test_loot_estimate_custom_destruction_level() {
         quantum_fuel_capacity: 583.0,
         hydrogen_fuel_capacity: 209.0,
         qt_drive_size: 1,
+        role: ShipRole::Cargo,
+        mining_capacity_scu: None,
     };
 
     let cargo_value = 80_000.0;
@@ -140,6 +148,8 @@ fn test_loot_estimate_destruction_level_clamping() {
         quantum_fuel_capacity: 583.0,
         hydrogen_fuel_capacity: 105.0,
         qt_drive_size: 1,
+        role: ShipRole::Cargo,
+        mining_capacity_scu: None,
     };
 
     let cargo_value = 10_000.0;
@@ -174,6 +184,8 @@ fn test_loot_estimate_ship_size_affects_salvage() {
         quantum_fuel_capacity: 583.0,
         hydrogen_fuel_capacity: 105.0,
         qt_drive_size: 1,
+        role: ShipRole::Cargo,
+        mining_capacity_scu: None,
     };
 
     // Medium ship
@@ -188,6 +200,8 @@ fn test_loot_estimate_ship_size_affects_salvage() {
         quantum_fuel_capacity: 1250.0,
         hydrogen_fuel_capacity: 288.0,
         qt_drive_size: 1,
+        role: ShipRole::Cargo,
+        mining_capacity_scu: None,
     };
 
     // Large ship
@@ -202,6 +216,8 @@ fn test_loot_estimate_ship_size_affects_salvage() {
         quantum_fuel_capacity: 7000.0,
         hydrogen_fuel_capacity: 2000.0,
         qt_drive_size: 3,
+        role: ShipRole::Cargo,
+        mining_capacity_scu: None,
     };
 
     let small_estimate = LootEstimate::calculate(cargo_value, &small_ship, destruction);
@@ -226,6 +242,8 @@ fn test_interdiction_value_calculation() {
         quantum_fuel_capacity: 1250.0,
         hydrogen_fuel_capacity: 288.0,
         qt_drive_size: 1,
+        role: ShipRole::Cargo,
+        mining_capacity_scu: None,
     };
 
     let cargo_value = 100_000.0;
@@ -262,6 +280,8 @@ fn test_qt_drive_efficiency() {
         quantum_fuel_capacity: 583.0,
         hydrogen_fuel_capacity: 105.0,
         qt_drive_size: 1,
+        role: ShipRole::Cargo,
+        mining_capacity_scu: None,
     };
 
     // S2 drive ship
@@ -276,6 +296,8 @@ fn test_qt_drive_efficiency() {
         quantum_fuel_capacity: 1250.0,
         hydrogen_fuel_capacity: 288.0,
         qt_drive_size: 2,
+        role: ShipRole::Cargo,
+        mining_capacity_scu: None,
     };
 
     let s1_eff = s1_ship.qt_drive_efficiency();
@@ -298,6 +320,8 @@ fn test_can_complete_route() {
         quantum_fuel_capacity: 1250.0,
         hydrogen_fuel_capacity: 288.0,
         qt_drive_size: 1,
+        role: ShipRole::Cargo,
+        mining_capacity_scu: None,
     };
 
     // Short distance - should be able to complete
@@ -324,6 +348,8 @@ fn test_max_range() {
         quantum_fuel_capacity: 1250.0,
         hydrogen_fuel_capacity: 288.0,
         qt_drive_size: 1,
+        role: ShipRole::Cargo,
+        mining_capacity_scu: None,
     };
 
     let max_range = ship.max_range_mkm();

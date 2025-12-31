@@ -3,6 +3,17 @@
 use api_client::TradeRoute;
 use serde::{Deserialize, Serialize};
 
+/// Ship role indicating what types of cargo it can carry.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ShipRole {
+    /// Standard cargo ships - can carry refined materials only
+    Cargo,
+    /// Can extract ore AND carry raw ore to refineries
+    Mining,
+    /// Can salvage and carry RMC/CMATs to refineries
+    Salvage,
+}
+
 /// A cargo ship with relevant stats.
 #[derive(Debug, Clone, Copy, Serialize)]
 pub struct CargoShip {
@@ -25,6 +36,10 @@ pub struct CargoShip {
     pub hydrogen_fuel_capacity: f64,
     /// Quantum drive size class (1=S1/small, 2=S2/medium, 3=S3/large).
     pub qt_drive_size: u8,
+    /// Ship role (Cargo, Mining, or Salvage).
+    pub role: ShipRole,
+    /// Mining/salvage capacity in SCU (for mining and salvage ships).
+    pub mining_capacity_scu: Option<u32>,
 }
 
 impl CargoShip {
@@ -82,6 +97,8 @@ pub static CARGO_SHIPS: &[CargoShip] = &[
         quantum_fuel_capacity: 583.0,
         hydrogen_fuel_capacity: 105.0,
         qt_drive_size: 1,
+        role: ShipRole::Cargo,
+        mining_capacity_scu: None,
     },
     CargoShip {
         name: "Avenger Titan",
@@ -94,6 +111,8 @@ pub static CARGO_SHIPS: &[CargoShip] = &[
         quantum_fuel_capacity: 700.0,
         hydrogen_fuel_capacity: 140.0,
         qt_drive_size: 1,
+        role: ShipRole::Cargo,
+        mining_capacity_scu: None,
     },
     CargoShip {
         name: "Nomad",
@@ -106,6 +125,8 @@ pub static CARGO_SHIPS: &[CargoShip] = &[
         quantum_fuel_capacity: 1250.0,
         hydrogen_fuel_capacity: 200.0,
         qt_drive_size: 1,
+        role: ShipRole::Cargo,
+        mining_capacity_scu: None,
     },
     CargoShip {
         name: "Cutlass Black",
@@ -118,6 +139,8 @@ pub static CARGO_SHIPS: &[CargoShip] = &[
         quantum_fuel_capacity: 2500.0,
         hydrogen_fuel_capacity: 450.0,
         qt_drive_size: 2,
+        role: ShipRole::Cargo,
+        mining_capacity_scu: None,
     },
     // Medium haulers
     // S2 drives: ~2500-5000 QT fuel, ~400-800 H fuel
@@ -132,6 +155,8 @@ pub static CARGO_SHIPS: &[CargoShip] = &[
         quantum_fuel_capacity: 2500.0,
         hydrogen_fuel_capacity: 500.0,
         qt_drive_size: 2,
+        role: ShipRole::Cargo,
+        mining_capacity_scu: None,
     },
     CargoShip {
         name: "Freelancer MAX",
@@ -144,6 +169,8 @@ pub static CARGO_SHIPS: &[CargoShip] = &[
         quantum_fuel_capacity: 3500.0,
         hydrogen_fuel_capacity: 600.0,
         qt_drive_size: 2,
+        role: ShipRole::Cargo,
+        mining_capacity_scu: None,
     },
     CargoShip {
         name: "Constellation Taurus",
@@ -156,6 +183,8 @@ pub static CARGO_SHIPS: &[CargoShip] = &[
         quantum_fuel_capacity: 5000.0,
         hydrogen_fuel_capacity: 800.0,
         qt_drive_size: 2,
+        role: ShipRole::Cargo,
+        mining_capacity_scu: None,
     },
     CargoShip {
         name: "Constellation Andromeda",
@@ -168,6 +197,8 @@ pub static CARGO_SHIPS: &[CargoShip] = &[
         quantum_fuel_capacity: 5000.0,
         hydrogen_fuel_capacity: 800.0,
         qt_drive_size: 2,
+        role: ShipRole::Cargo,
+        mining_capacity_scu: None,
     },
     // Large haulers - high value, variable threat
     // S3 drives: ~10000-20000 QT fuel, ~1500-2500 H fuel
@@ -182,6 +213,8 @@ pub static CARGO_SHIPS: &[CargoShip] = &[
         quantum_fuel_capacity: 10000.0,
         hydrogen_fuel_capacity: 1800.0,
         qt_drive_size: 3,
+        role: ShipRole::Cargo,
+        mining_capacity_scu: None,
     },
     CargoShip {
         name: "C2 Hercules",
@@ -194,6 +227,8 @@ pub static CARGO_SHIPS: &[CargoShip] = &[
         quantum_fuel_capacity: 10000.0,
         hydrogen_fuel_capacity: 2500.0,
         qt_drive_size: 3,
+        role: ShipRole::Cargo,
+        mining_capacity_scu: None,
     },
     CargoShip {
         name: "Hull C",
@@ -206,6 +241,8 @@ pub static CARGO_SHIPS: &[CargoShip] = &[
         quantum_fuel_capacity: 20000.0,
         hydrogen_fuel_capacity: 2000.0,
         qt_drive_size: 3,
+        role: ShipRole::Cargo,
+        mining_capacity_scu: None,
     },
     // Industrial/Mining (sometimes haul refined)
     CargoShip {
@@ -219,6 +256,8 @@ pub static CARGO_SHIPS: &[CargoShip] = &[
         quantum_fuel_capacity: 2500.0,
         hydrogen_fuel_capacity: 400.0,
         qt_drive_size: 2,
+        role: ShipRole::Cargo,
+        mining_capacity_scu: None,
     },
     CargoShip {
         name: "MOLE",
@@ -231,6 +270,66 @@ pub static CARGO_SHIPS: &[CargoShip] = &[
         quantum_fuel_capacity: 3500.0,
         hydrogen_fuel_capacity: 600.0,
         qt_drive_size: 2,
+        role: ShipRole::Mining,
+        mining_capacity_scu: Some(96),
+    },
+    // Mining ships - extract ore, deliver to refineries
+    CargoShip {
+        name: "Prospector",
+        manufacturer: "MISC",
+        cargo_scu: 32,
+        crew_size: 1,
+        threat_level: 1,
+        ship_value_uec: 155_000,
+        requires_freight_elevator: false,
+        quantum_fuel_capacity: 1250.0,
+        hydrogen_fuel_capacity: 200.0,
+        qt_drive_size: 1,
+        role: ShipRole::Mining,
+        mining_capacity_scu: Some(32),
+    },
+    CargoShip {
+        name: "Golem",
+        manufacturer: "Greycat",
+        cargo_scu: 128,
+        crew_size: 1,
+        threat_level: 1,
+        ship_value_uec: 850_000,
+        requires_freight_elevator: false,
+        quantum_fuel_capacity: 5000.0,
+        hydrogen_fuel_capacity: 1000.0,
+        qt_drive_size: 2,
+        role: ShipRole::Mining,
+        mining_capacity_scu: Some(128),
+    },
+    // Salvage ships - produce RMC/CMATs, deliver to refineries
+    CargoShip {
+        name: "Reclaimer",
+        manufacturer: "Aegis",
+        cargo_scu: 180,
+        crew_size: 4,
+        threat_level: 2,
+        ship_value_uec: 2_000_000,
+        requires_freight_elevator: false,
+        quantum_fuel_capacity: 15000.0,
+        hydrogen_fuel_capacity: 2000.0,
+        qt_drive_size: 3,
+        role: ShipRole::Salvage,
+        mining_capacity_scu: None,
+    },
+    CargoShip {
+        name: "Vulture",
+        manufacturer: "Drake",
+        cargo_scu: 12,
+        crew_size: 1,
+        threat_level: 2,
+        ship_value_uec: 140_000,
+        requires_freight_elevator: false,
+        quantum_fuel_capacity: 1250.0,
+        hydrogen_fuel_capacity: 300.0,
+        qt_drive_size: 1,
+        role: ShipRole::Salvage,
+        mining_capacity_scu: None,
     },
 ];
 
@@ -307,6 +406,8 @@ pub fn estimate_ship_for_route(route: &TradeRoute) -> CargoShip {
         quantum_fuel_capacity: 2500.0,
         hydrogen_fuel_capacity: 500.0,
         qt_drive_size: 2,
+        role: ShipRole::Cargo,
+        mining_capacity_scu: None,
     }
 }
 
@@ -325,6 +426,8 @@ pub fn estimate_ship_for_routes(routes: &[&TradeRoute]) -> CargoShip {
             quantum_fuel_capacity: 2500.0,
             hydrogen_fuel_capacity: 500.0,
             qt_drive_size: 2,
+            role: ShipRole::Cargo,
+            mining_capacity_scu: None,
         };
     }
 
@@ -371,6 +474,8 @@ pub fn estimate_ship_for_routes(routes: &[&TradeRoute]) -> CargoShip {
         quantum_fuel_capacity: 2500.0,
         hydrogen_fuel_capacity: 500.0,
         qt_drive_size: 2,
+        role: ShipRole::Cargo,
+        mining_capacity_scu: None,
     }
 }
 
