@@ -57,10 +57,8 @@ pub struct App {
     /// Scroll state for text display.
     pub scroll: ScrollState,
     /// Detail view expanded (for map view).
-    #[allow(dead_code)]
     pub detail_expanded: bool,
     /// Selected route index in expanded detail view.
-    #[allow(dead_code)]
     pub detail_selected: usize,
 }
 

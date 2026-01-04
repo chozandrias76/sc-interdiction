@@ -294,7 +294,6 @@ impl LootEstimate {
 /// Estimate the value of a cargo ship based on its characteristics.
 ///
 /// This is a rough approximation based on cargo capacity, role, and typical ship prices.
-#[allow(dead_code)]
 fn estimate_ship_value(ship: &CargoShip) -> f64 {
     // Base value on cargo capacity (aUEC per SCU)
     let base_value_per_scu = match ship.cargo_scu {
