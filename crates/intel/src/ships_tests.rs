@@ -486,7 +486,7 @@ fn test_role_and_crew_size_multipliers() {
 
     // Multi-crew combat should have significantly higher component value
     assert!(multi_salvage.component_value > solo_salvage.component_value);
-    
+
     // The difference should be substantial due to both role and crew multipliers
     let ratio = multi_salvage.component_value as f64 / solo_salvage.component_value as f64;
     assert!(ratio > 2.0); // Combat (1.4) vs Cargo (0.7) plus crew multiplier
@@ -523,7 +523,7 @@ fn test_mining_role_characteristics() {
 
     // Mining ship should have higher component value (1.3x vs 0.7x role multiplier)
     assert!(mining_salvage.component_value > cargo_salvage.component_value);
-    
+
     // Verify mining capacity is set correctly
     assert_eq!(mining_ship.mining_capacity_scu, Some(32));
     assert_eq!(cargo_ship.mining_capacity_scu, None);
@@ -581,7 +581,7 @@ fn test_support_role_characteristics() {
 
     // Support role has 1.0x multiplier (neutral)
     assert!(salvage.component_value > 0);
-    
+
     // Component value should be reasonable for a medium support ship
     assert!(salvage.component_value > 15_000);
     assert!(salvage.component_value < 30_000);

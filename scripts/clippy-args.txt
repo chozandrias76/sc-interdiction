@@ -1,4 +1,5 @@
 -D warnings
+-D dead_code
 -D clippy::cognitive_complexity
 -D clippy::too_many_lines
 -W clippy::unwrap_used
