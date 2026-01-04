@@ -98,6 +98,8 @@ mod tests {
             commodity_code: "QUAN".to_string(),
             origin: "HDMS-Bezdek".to_string(),
             destination: "Area18 TDD".to_string(),
+            origin_system: Some("Stanton".to_string()),
+            destination_system: Some("Stanton".to_string()),
             profit_per_scu: 88.5,
             available_scu: 576.0,
             likely_ship: ship,
