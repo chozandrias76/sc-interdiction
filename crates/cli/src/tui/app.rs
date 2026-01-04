@@ -54,6 +54,9 @@ pub struct App {
     pub status: String,
     /// Scroll state for text display.
     pub scroll: ScrollState,
+    /// Detail view expanded (for map view).
+    #[allow(dead_code)]
+    pub detail_expanded: bool,
 }
 
 impl App {
@@ -92,6 +95,7 @@ impl App {
             error: None,
             status: "Loading data...".to_string(),
             scroll: ScrollState::new(),
+            detail_expanded: false,
         };
 
         // Load data

@@ -522,7 +522,7 @@ fn generate_intersection_name(routes: &[&RouteSegment]) -> String {
     // Check if routes are cross-system
     let mut origin_systems = std::collections::HashSet::new();
     let mut dest_systems = std::collections::HashSet::new();
-    
+
     for route in routes {
         // Extract system from format "(SystemName > ...)"
         if let Some(sys) = extract_system_name(&route.origin_name) {
@@ -532,7 +532,7 @@ fn generate_intersection_name(routes: &[&RouteSegment]) -> String {
             dest_systems.insert(sys);
         }
     }
-    
+
     // If cross-system, use "System Gateway" naming
     let all_systems: std::collections::HashSet<_> = origin_systems.union(&dest_systems).collect();
     if all_systems.len() > 1 {
@@ -542,7 +542,7 @@ fn generate_intersection_name(routes: &[&RouteSegment]) -> String {
             return format!("{} Jump Gate", dest_sys);
         }
     }
-    
+
     // Find common location names in route terminals
     let mut locations: Vec<&str> = Vec::new();
     for route in routes {
@@ -572,7 +572,7 @@ fn extract_system_name(terminal_name: &str) -> Option<String> {
     // Terminal format: "Name (System > Planet > ...)"
     if let Some(start) = terminal_name.find('(') {
         if let Some(end) = terminal_name.find('>') {
-            let system = terminal_name[start+1..end].trim();
+            let system = terminal_name[start + 1..end].trim();
             if !system.is_empty() {
                 return Some(system.to_string());
             }
@@ -616,7 +616,7 @@ fn check_if_cross_system(routes: &[&RouteSegment]) -> bool {
     for route in routes {
         let origin_sys = extract_system_name(&route.origin_name);
         let dest_sys = extract_system_name(&route.destination_name);
-        
+
         if let (Some(orig), Some(dest)) = (origin_sys, dest_sys) {
             if orig != dest {
                 // This route crosses systems
@@ -624,7 +624,7 @@ fn check_if_cross_system(routes: &[&RouteSegment]) -> bool {
             }
         }
     }
-    
+
     // All routes are within their own systems
     false
 }
@@ -637,7 +637,7 @@ fn infer_system_from_routes(routes: &[&RouteSegment]) -> String {
     let mut has_pyro_dest = false;
     let mut has_nyx_origin = false;
     let mut has_nyx_dest = false;
-    
+
     for route in routes {
         if route.origin_name.contains("Stanton") {
             has_stanton_origin = true;
@@ -658,7 +658,7 @@ fn infer_system_from_routes(routes: &[&RouteSegment]) -> String {
             has_nyx_dest = true;
         }
     }
-    
+
     // If we have cross-system routes, use the destination system as primary
     // (e.g. routes FROM Stanton TO Pyro = hotspot is near Pyro gateway)
     if has_stanton_origin && has_pyro_dest {
@@ -673,7 +673,7 @@ fn infer_system_from_routes(routes: &[&RouteSegment]) -> String {
     if has_nyx_origin && has_stanton_dest {
         return "Stanton".to_string();
     }
-    
+
     // Otherwise, find most common system
     if has_stanton_origin || has_stanton_dest {
         return "Stanton".to_string();
@@ -684,7 +684,7 @@ fn infer_system_from_routes(routes: &[&RouteSegment]) -> String {
     if has_nyx_origin || has_nyx_dest {
         return "Nyx".to_string();
     }
-    
+
     "Unknown".to_string()
 }
 

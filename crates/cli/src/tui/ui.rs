@@ -132,6 +132,7 @@ mod tests {
             error: None,
             status: "Ready".to_string(),
             scroll: ScrollState::new(),
+            detail_expanded: false,
         }
     }
 
