@@ -43,7 +43,7 @@ pub struct CargoShip {
     pub hydrogen_fuel_capacity: f64,
     /// Quantum drive size class (1=S1/small, 2=S2/medium, 3=S3/large).
     pub qt_drive_size: u8,
-    /// Ship role (Cargo, Mining, or Salvage).
+    /// Ship role (Cargo, Combat, Mining, Salvage, Transport, Exploration, or Support).
     pub role: ShipRole,
     /// Mining/salvage capacity in SCU (for mining and salvage ships).
     pub mining_capacity_scu: Option<u32>,
