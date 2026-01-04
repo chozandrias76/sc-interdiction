@@ -15,6 +15,31 @@ Star Citizen interdiction planning tool that analyzes trade routes to predict va
   - `commodities_prices_all` - All commodity prices at all terminals
   - `terminals` - Trade locations with type (commodity, fuel, refinery, etc.)
   - Terminal types: commodity (159), fuel (93), refinery (21), item (451), vehicle_rent (32), commodity_raw (19), vehicle_buy (9)
+- **Fleet Yards API**: https://fleetyards.net/
+  - Ship specifications including cargo capacity and fuel tank sizes
+  
+## Data Gaps & Placeholders
+
+### Fuel Pricing (CRITICAL - NEEDS VERIFICATION)
+**Current Status**: Using placeholder values without real data source
+- `HYDROGEN_FUEL_PRICE_PER_UNIT = 1.0 aUEC` - **UNVERIFIED PLACEHOLDER**
+- `QUANTUM_FUEL_PRICE_PER_UNIT = 1.5 aUEC` - **UNVERIFIED PLACEHOLDER**
+
+**Needed**:
+1. In-game measurement at refueling stations (screenshot with prices)
+2. Check if UEX API has fuel as a commodity with pricing
+3. Community data sources (spectrum forums, star citizen tools, etc.)
+
+**Impact**: Refueling cost calculations are functional but use arbitrary values.
+Route profitability calculations that include refueling costs will be inaccurate
+until real pricing data is added.
+
+**Action Items**:
+- [ ] Measure hydrogen fuel price in-game at major refueling stations
+- [ ] Measure quantum fuel price in-game at major refueling stations
+- [ ] Query UEX API for fuel commodity pricing
+- [ ] Document actual prices with screenshot evidence
+- [ ] Update constants in `crates/route-graph/src/fuel.rs`
 
 ## Current Limitations & Planned Improvements
 
