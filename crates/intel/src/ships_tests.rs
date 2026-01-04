@@ -339,5 +339,254 @@ fn test_max_range() {
     assert!(large_range > max_range);
 }
 
+/// Test that different ShipRole variants produce different component values.
+#[test]
+fn test_role_multipliers_affect_component_value() {
+    // Create base ship configuration
+    let base_ship = CargoShip {
+        name: "Test Ship".to_string(),
+        manufacturer: "RSI".to_string(), // 1.0x multiplier
+        cargo_scu: 100,
+        crew_size: 2,
+        threat_level: 3,
+        ship_value_uec: 1_000_000,
+        requires_freight_elevator: false,
+        quantum_fuel_capacity: 2500.0,
+        hydrogen_fuel_capacity: 500.0,
+        qt_drive_size: 2, // Medium ship, 18_000 base
+        role: ShipRole::Cargo,
+        mining_capacity_scu: None,
+        mass_kg: Some(100_000.0),
+    };
+
+    // Create ships with different roles but same other attributes
+    let cargo_ship = CargoShip {
+        role: ShipRole::Cargo,
+        ..base_ship.clone()
+    };
+    let combat_ship = CargoShip {
+        role: ShipRole::Combat,
+        ..base_ship.clone()
+    };
+    let mining_ship = CargoShip {
+        role: ShipRole::Mining,
+        ..base_ship.clone()
+    };
+    let salvage_ship = CargoShip {
+        role: ShipRole::Salvage,
+        ..base_ship.clone()
+    };
+    let transport_ship = CargoShip {
+        role: ShipRole::Transport,
+        ..base_ship.clone()
+    };
+    let exploration_ship = CargoShip {
+        role: ShipRole::Exploration,
+        ..base_ship.clone()
+    };
+    let support_ship = CargoShip {
+        role: ShipRole::Support,
+        ..base_ship
+    };
+
+    // Get salvage values (which use estimate_component_value internally)
+    let cm_price = 100.0;
+    let cargo_salvage = cargo_ship.salvage_value(cm_price);
+    let combat_salvage = combat_ship.salvage_value(cm_price);
+    let mining_salvage = mining_ship.salvage_value(cm_price);
+    let salvage_salvage = salvage_ship.salvage_value(cm_price);
+    let transport_salvage = transport_ship.salvage_value(cm_price);
+    let exploration_salvage = exploration_ship.salvage_value(cm_price);
+    let support_salvage = support_ship.salvage_value(cm_price);
+
+    // Verify role multipliers produce different component values
+    // Expected multipliers: Cargo=0.7, Transport=0.8, Support=1.0, Exploration=1.1, Salvage=1.2, Mining=1.3, Combat=1.4
+    assert!(cargo_salvage.component_value < transport_salvage.component_value);
+    assert!(transport_salvage.component_value < support_salvage.component_value);
+    assert!(support_salvage.component_value < exploration_salvage.component_value);
+    assert!(exploration_salvage.component_value < salvage_salvage.component_value);
+    assert!(salvage_salvage.component_value < mining_salvage.component_value);
+    assert!(mining_salvage.component_value < combat_salvage.component_value);
+
+    // Verify Combat (1.4x) has ~2x the component value of Cargo (0.7x)
+    let ratio = combat_salvage.component_value as f64 / cargo_salvage.component_value as f64;
+    assert!((ratio - 2.0).abs() < 0.1); // Should be close to 2.0
+}
+
+/// Test that role multipliers interact correctly with manufacturer multipliers.
+#[test]
+fn test_role_and_manufacturer_multipliers() {
+    let cm_price = 100.0;
+
+    // Drake Cargo ship (0.6 mfr * 0.7 role = 0.42x)
+    let drake_cargo = CargoShip {
+        name: "Drake Cargo".to_string(),
+        manufacturer: "Drake".to_string(),
+        cargo_scu: 100,
+        crew_size: 2,
+        threat_level: 3,
+        ship_value_uec: 1_000_000,
+        requires_freight_elevator: false,
+        quantum_fuel_capacity: 2500.0,
+        hydrogen_fuel_capacity: 500.0,
+        qt_drive_size: 2,
+        role: ShipRole::Cargo,
+        mining_capacity_scu: None,
+        mass_kg: Some(100_000.0),
+    };
+
+    // Origin Combat ship (1.5 mfr * 1.4 role = 2.1x)
+    let origin_combat = CargoShip {
+        name: "Origin Combat".to_string(),
+        manufacturer: "Origin".to_string(),
+        role: ShipRole::Combat,
+        ..drake_cargo.clone()
+    };
+
+    let drake_salvage = drake_cargo.salvage_value(cm_price);
+    let origin_salvage = origin_combat.salvage_value(cm_price);
+
+    // Origin Combat should have much higher component value than Drake Cargo
+    // Expected ratio: (1.5 * 1.4) / (0.6 * 0.7) = 2.1 / 0.42 = 5.0
+    let ratio = origin_salvage.component_value as f64 / drake_salvage.component_value as f64;
+    assert!((ratio - 5.0).abs() < 0.3); // Should be close to 5.0
+}
+
+/// Test that role multipliers interact correctly with crew size multipliers.
+#[test]
+fn test_role_and_crew_size_multipliers() {
+    let cm_price = 100.0;
+
+    // Single-crew cargo ship
+    let solo_cargo = CargoShip {
+        name: "Solo Cargo".to_string(),
+        manufacturer: "RSI".to_string(),
+        cargo_scu: 50,
+        crew_size: 1,
+        threat_level: 2,
+        ship_value_uec: 500_000,
+        requires_freight_elevator: false,
+        quantum_fuel_capacity: 1250.0,
+        hydrogen_fuel_capacity: 250.0,
+        qt_drive_size: 1,
+        role: ShipRole::Cargo,
+        mining_capacity_scu: None,
+        mass_kg: Some(50_000.0),
+    };
+
+    // Multi-crew combat ship
+    let multi_combat = CargoShip {
+        name: "Multi Combat".to_string(),
+        crew_size: 6, // More crew = more components
+        role: ShipRole::Combat,
+        ..solo_cargo.clone()
+    };
+
+    let solo_salvage = solo_cargo.salvage_value(cm_price);
+    let multi_salvage = multi_combat.salvage_value(cm_price);
+
+    // Multi-crew combat should have significantly higher component value
+    assert!(multi_salvage.component_value > solo_salvage.component_value);
+    
+    // The difference should be substantial due to both role and crew multipliers
+    let ratio = multi_salvage.component_value as f64 / solo_salvage.component_value as f64;
+    assert!(ratio > 2.0); // Combat (1.4) vs Cargo (0.7) plus crew multiplier
+}
+
+/// Test Mining role with mining_capacity_scu set.
+#[test]
+fn test_mining_role_characteristics() {
+    let mining_ship = CargoShip {
+        name: "Prospector".to_string(),
+        manufacturer: "MISC".to_string(),
+        cargo_scu: 32,
+        crew_size: 1,
+        threat_level: 2,
+        ship_value_uec: 1_500_000,
+        requires_freight_elevator: false,
+        quantum_fuel_capacity: 1000.0,
+        hydrogen_fuel_capacity: 200.0,
+        qt_drive_size: 1,
+        role: ShipRole::Mining,
+        mining_capacity_scu: Some(32), // Mining ships have capacity
+        mass_kg: Some(40_000.0),
+    };
+
+    let cargo_ship = CargoShip {
+        role: ShipRole::Cargo,
+        mining_capacity_scu: None, // Cargo ships don't
+        ..mining_ship.clone()
+    };
+
+    let cm_price = 100.0;
+    let mining_salvage = mining_ship.salvage_value(cm_price);
+    let cargo_salvage = cargo_ship.salvage_value(cm_price);
+
+    // Mining ship should have higher component value (1.3x vs 0.7x role multiplier)
+    assert!(mining_salvage.component_value > cargo_salvage.component_value);
+    
+    // Verify mining capacity is set correctly
+    assert_eq!(mining_ship.mining_capacity_scu, Some(32));
+    assert_eq!(cargo_ship.mining_capacity_scu, None);
+}
+
+/// Test Exploration role characteristics.
+#[test]
+fn test_exploration_role_characteristics() {
+    let exploration_ship = CargoShip {
+        name: "Terrapin".to_string(),
+        manufacturer: "Anvil".to_string(), // Military-grade (1.2x)
+        cargo_scu: 6,
+        crew_size: 1,
+        threat_level: 5,
+        ship_value_uec: 2_200_000,
+        requires_freight_elevator: false,
+        quantum_fuel_capacity: 1200.0,
+        hydrogen_fuel_capacity: 250.0,
+        qt_drive_size: 1,
+        role: ShipRole::Exploration,
+        mining_capacity_scu: None,
+        mass_kg: Some(35_000.0),
+    };
+
+    let cm_price = 100.0;
+    let salvage = exploration_ship.salvage_value(cm_price);
+
+    // Exploration role has 1.1x multiplier, Anvil has 1.2x
+    // Expected: base=5000, mfr=1.2, role=1.1, crew=1.0 -> 5000*1.2*1.1*1.0 = 6600
+    assert!(salvage.component_value > 6000);
+    assert!(salvage.component_value < 7000);
+}
+
+/// Test Support role characteristics.
+#[test]
+fn test_support_role_characteristics() {
+    let support_ship = CargoShip {
+        name: "Vulcan".to_string(),
+        manufacturer: "Aegis".to_string(), // Military-grade (1.2x)
+        cargo_scu: 12,
+        crew_size: 3,
+        threat_level: 4,
+        ship_value_uec: 2_500_000,
+        requires_freight_elevator: false,
+        quantum_fuel_capacity: 2000.0,
+        hydrogen_fuel_capacity: 400.0,
+        qt_drive_size: 2,
+        role: ShipRole::Support,
+        mining_capacity_scu: None,
+        mass_kg: Some(80_000.0),
+    };
+
+    let cm_price = 100.0;
+    let salvage = support_ship.salvage_value(cm_price);
+
+    // Support role has 1.0x multiplier (neutral)
+    assert!(salvage.component_value > 0);
+    
+    // Component value should be reasonable for a medium support ship
+    assert!(salvage.component_value > 15_000);
+    assert!(salvage.component_value < 30_000);
+}
+
 // Tests for ShipRegistry would require async runtime or mock data
 // They are tested via integration tests instead
