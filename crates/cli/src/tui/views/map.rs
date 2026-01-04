@@ -312,9 +312,7 @@ fn render_hotspot_details_compact(frame: &mut Frame, app: &App, area: Rect) {
                 if hotspot.jump_to.exit_at_mm < 100 {
                     Span::styled(
                         " ⚠ ARMISTICE ZONE!",
-                        Style::default()
-                            .fg(Color::Red)
-                            .add_modifier(Modifier::BOLD),
+                        Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
                     )
                 } else if hotspot.jump_to.exit_at_mm < 500 {
                     Span::styled(" (⚠ UEE monitored)", Style::default().fg(Color::Yellow))
@@ -445,7 +443,12 @@ fn render_hotspot_details_expanded(frame: &mut Frame, app: &App, area: Rect) {
             Line::from(""),
             Line::from(vec![
                 Span::styled("Press ", Style::default().fg(Color::DarkGray)),
-                Span::styled("Enter", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+                Span::styled(
+                    "Enter",
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
+                ),
                 Span::styled(" to collapse", Style::default().fg(Color::DarkGray)),
             ]),
         ];
@@ -454,7 +457,11 @@ fn render_hotspot_details_expanded(frame: &mut Frame, app: &App, area: Rect) {
             Block::default()
                 .borders(Borders::ALL)
                 .title(" Hotspot Details (EXPANDED) ")
-                .title_style(Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)),
+                .title_style(
+                    Style::default()
+                        .fg(Color::Green)
+                        .add_modifier(Modifier::BOLD),
+                ),
         );
         frame.render_widget(info, chunks[0]);
 
@@ -517,15 +524,11 @@ fn render_hotspot_details_expanded(frame: &mut Frame, app: &App, area: Rect) {
             .style(Style::default().fg(Color::Yellow))
             .bottom_margin(1),
         )
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title(format!(
-                    " All Routes ({}/{}) - j/k to scroll ",
-                    app.detail_selected + 1,
-                    routes.len()
-                )),
-        );
+        .block(Block::default().borders(Borders::ALL).title(format!(
+            " All Routes ({}/{}) - j/k to scroll ",
+            app.detail_selected + 1,
+            routes.len()
+        )));
 
         frame.render_widget(table, chunks[1]);
     } else {
