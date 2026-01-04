@@ -125,9 +125,26 @@ fn render_system_canvas(frame: &mut Frame, app: &App, area: Rect) {
             Block::default()
                 .borders(Borders::ALL)
                 .title(format!(
-                    " {} System Map | {} | {}% zoom | n/N:limit z/Z:zoom a:all ",
+                    " {} System Map | {} | {}% zoom ",
                     app.map_system, hotspot_info, zoom_pct
                 ))
+                .title_bottom(Line::from(vec![
+                    Span::raw(" "),
+                    Span::styled("n", Style::default().fg(Color::Yellow)),
+                    Span::raw("/"),
+                    Span::styled("N", Style::default().fg(Color::Yellow)),
+                    Span::raw(":limit │ "),
+                    Span::styled("z", Style::default().fg(Color::Yellow)),
+                    Span::raw("/"),
+                    Span::styled("Z", Style::default().fg(Color::Yellow)),
+                    Span::raw(":zoom │ "),
+                    Span::styled("a", Style::default().fg(Color::Yellow)),
+                    Span::raw(":toggle all │ "),
+                    Span::styled("h", Style::default().fg(Color::Yellow)),
+                    Span::raw("/"),
+                    Span::styled("l", Style::default().fg(Color::Yellow)),
+                    Span::raw(":navigate "),
+                ]))
                 .title_style(Style::default().fg(Color::Cyan).bold()),
         )
         .x_bounds([center_x - range, center_x + range])
@@ -234,6 +251,18 @@ fn render_system_canvas(frame: &mut Frame, app: &App, area: Rect) {
 
 #[allow(clippy::too_many_lines)]
 fn render_hotspot_details(frame: &mut Frame, app: &App, area: Rect) {
+    if app.detail_expanded {
+        // Expanded view - show full route list
+        render_hotspot_details_expanded(frame, app, area);
+    } else {
+        // Compact view - show summary info
+        render_hotspot_details_compact(frame, app, area);
+    }
+}
+
+/// Render compact hotspot details (original view)
+#[allow(clippy::too_many_lines)]
+fn render_hotspot_details_compact(frame: &mut Frame, app: &App, area: Rect) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Length(12), Constraint::Min(0)])
@@ -245,6 +274,12 @@ fn render_hotspot_details(frame: &mut Frame, app: &App, area: Rect) {
             Line::from(vec![
                 Span::styled("Zone: ", Style::default().fg(Color::Yellow)),
                 Span::raw(&hotspot.name),
+                // Indicator if this is a cross-system corridor
+                if hotspot.is_cross_system {
+                    Span::styled(" (cross-system)", Style::default().fg(Color::DarkGray))
+                } else {
+                    Span::raw("")
+                },
             ]),
             Line::from(vec![
                 Span::styled("Position: ", Style::default().fg(Color::Yellow)),
@@ -273,6 +308,17 @@ fn render_hotspot_details(frame: &mut Frame, app: &App, area: Rect) {
             Line::from(vec![
                 Span::styled("Exit at: ", Style::default().fg(Color::Cyan)),
                 Span::raw(format!("{} Mm", hotspot.jump_to.exit_at_mm)),
+                // Warning for armistice zones
+                if hotspot.jump_to.exit_at_mm < 100 {
+                    Span::styled(
+                        " ⚠ ARMISTICE ZONE!",
+                        Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
+                    )
+                } else if hotspot.jump_to.exit_at_mm < 500 {
+                    Span::styled(" (⚠ UEE monitored)", Style::default().fg(Color::Yellow))
+                } else {
+                    Span::raw("")
+                },
             ]),
             Line::from(vec![
                 Span::styled("Lateral: ", Style::default().fg(Color::Cyan)),
@@ -301,6 +347,7 @@ fn render_hotspot_details(frame: &mut Frame, app: &App, area: Rect) {
                     app.map_selected + 1,
                     visible_count
                 ))
+                .title_bottom(" ⓘ Exit distances are approximate ")
                 .title_style(Style::default().fg(Color::Cyan)),
         );
         frame.render_widget(info, chunks[0]);
@@ -356,5 +403,140 @@ fn render_hotspot_details(frame: &mut Frame, app: &App, area: Rect) {
         );
 
         frame.render_widget(table, chunks[1]);
+    }
+}
+
+/// Render expanded hotspot details with full scrollable route list
+#[allow(clippy::too_many_lines)]
+fn render_hotspot_details_expanded(frame: &mut Frame, app: &App, area: Rect) {
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Length(8), Constraint::Min(0)])
+        .split(area);
+
+    // Hotspot summary (condensed)
+    if let Some(hotspot) = app.hotspots.get(app.map_selected) {
+        let info_text = vec![
+            Line::from(vec![
+                Span::styled("Zone: ", Style::default().fg(Color::Yellow)),
+                Span::raw(&hotspot.name),
+            ]),
+            Line::from(vec![
+                Span::styled("Routes: ", Style::default().fg(Color::Yellow)),
+                Span::raw(format!("{}", hotspot.route_pair_count)),
+            ]),
+            Line::from(vec![
+                Span::styled("Value: ", Style::default().fg(Color::Yellow)),
+                Span::styled(
+                    format_value(hotspot.interdiction_value),
+                    Style::default().fg(Color::Green),
+                ),
+                Span::raw("/catch"),
+            ]),
+            Line::from(vec![
+                Span::styled("Jump: ", Style::default().fg(Color::Cyan)),
+                Span::raw(format!(
+                    "{} @ {} Mm",
+                    hotspot.jump_to.destination, hotspot.jump_to.exit_at_mm
+                )),
+            ]),
+            Line::from(""),
+            Line::from(vec![
+                Span::styled("Press ", Style::default().fg(Color::DarkGray)),
+                Span::styled(
+                    "Enter",
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::styled(" to collapse", Style::default().fg(Color::DarkGray)),
+            ]),
+        ];
+
+        let info = Paragraph::new(info_text).block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title(" Hotspot Details (EXPANDED) ")
+                .title_style(
+                    Style::default()
+                        .fg(Color::Green)
+                        .add_modifier(Modifier::BOLD),
+                ),
+        );
+        frame.render_widget(info, chunks[0]);
+
+        // Full scrollable route list
+        let routes = &hotspot.intersecting_routes;
+        let rows: Vec<Row> = routes
+            .iter()
+            .enumerate()
+            .map(|(i, route)| {
+                let threat_color = match route.threat_level {
+                    0..=2 => Color::Green,
+                    3..=5 => Color::Yellow,
+                    _ => Color::Red,
+                };
+
+                let style = if i == app.detail_selected {
+                    Style::default().bg(Color::DarkGray)
+                } else {
+                    Style::default()
+                };
+
+                Row::new(vec![
+                    Cell::from(truncate(&route.origin, 20)),
+                    Cell::from(truncate(&route.destination, 20)),
+                    Cell::from(truncate(&route.commodity, 12)),
+                    Cell::from(truncate(&route.ship_name, 15)),
+                    Cell::from(format_value(route.cargo_value))
+                        .style(Style::default().fg(Color::Green)),
+                    Cell::from(format!("{}", route.threat_level))
+                        .style(Style::default().fg(threat_color)),
+                    Cell::from(format_value(route.interdiction_value))
+                        .style(Style::default().fg(Color::Cyan)),
+                ])
+                .style(style)
+            })
+            .collect();
+
+        let table = Table::new(
+            rows,
+            [
+                Constraint::Length(20), // Origin
+                Constraint::Length(20), // Destination
+                Constraint::Length(12), // Commodity
+                Constraint::Length(15), // Ship
+                Constraint::Length(10), // Value
+                Constraint::Length(6),  // Threat
+                Constraint::Length(10), // Interdict Value
+            ],
+        )
+        .header(
+            Row::new(vec![
+                "Origin",
+                "Destination",
+                "Cargo",
+                "Ship",
+                "Value",
+                "Thr",
+                "Int Value",
+            ])
+            .style(Style::default().fg(Color::Yellow))
+            .bottom_margin(1),
+        )
+        .block(Block::default().borders(Borders::ALL).title(format!(
+            " All Routes ({}/{}) - j/k to scroll ",
+            app.detail_selected + 1,
+            routes.len()
+        )));
+
+        frame.render_widget(table, chunks[1]);
+    } else {
+        let empty = Paragraph::new("No hotspot selected").block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title(" Hotspot Details "),
+        );
+        frame.render_widget(empty, area);
     }
 }

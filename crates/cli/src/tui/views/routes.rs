@@ -42,7 +42,7 @@ pub fn render_routes(frame: &mut Frame, app: &mut App, area: Rect) {
                 Cell::from(format!("{:.0}", route.profit_per_scu))
                     .style(Style::default().fg(Color::Green)),
                 Cell::from(format_value(route.estimated_haul_value)),
-                Cell::from(route.likely_ship.name),
+                Cell::from(route.likely_ship.name.clone()),
             ];
 
             let style = if i == app.selected {
