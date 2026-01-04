@@ -520,26 +520,24 @@ pub fn find_route_intersections(
 
 fn generate_intersection_name(routes: &[&RouteSegment]) -> String {
     // Check if routes are cross-system
-    let mut origin_systems = std::collections::HashSet::new();
-    let mut dest_systems = std::collections::HashSet::new();
+    let mut all_systems = std::collections::HashSet::new();
 
     for route in routes {
         // Extract system from format "(SystemName > ...)"
         if let Some(sys) = extract_system_name(&route.origin_name) {
-            origin_systems.insert(sys);
+            all_systems.insert(sys);
         }
         if let Some(sys) = extract_system_name(&route.destination_name) {
-            dest_systems.insert(sys);
+            all_systems.insert(sys);
         }
     }
 
     // If cross-system, use "System Gateway" naming
-    let all_systems: std::collections::HashSet<_> = origin_systems.union(&dest_systems).collect();
     if all_systems.len() > 1 {
         // This is a cross-system hotspot - likely near a jump gate
-        // Use the destination system as the location
-        if let Some(dest_sys) = dest_systems.iter().next() {
-            return format!("{} Jump Gate", dest_sys);
+        // Use any system as the location (arbitrary choice for naming)
+        if let Some(sys) = all_systems.iter().next() {
+            return format!("{} Jump Gate", sys);
         }
     }
 
