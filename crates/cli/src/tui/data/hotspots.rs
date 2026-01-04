@@ -77,6 +77,10 @@ pub fn filter_hotspots_for_location(
 }
 
 /// Filter hotspots with optional cross-system routes.
+///
+/// TODO: This feature and its related methods need to be updated to have a better
+/// source of truth that doesn't require partial string matching anywhere. There is
+/// a lot wrong with this module but it's worth it for the first pass.
 pub fn filter_hotspots_for_location_with_cross_system(
     hotspots: &[RouteIntersection],
     location: &str,
@@ -145,8 +149,9 @@ fn infer_system_from_location(location: &str) -> String {
     // FALLBACK: Keyword matching for simple location names
     let loc_lower = location.to_lowercase();
 
-    // Stanton system locations
-    let stanton_locations = [
+    // Partial Stanton location examples - we don't want to hard code Stanton locations.
+    // We will have a better way to get these names later.
+    let partial_stanton_location_examples = [
         "hurston",
         "crusader",
         "arccorp",
@@ -177,7 +182,7 @@ fn infer_system_from_location(location: &str) -> String {
         "euterpe",
     ];
 
-    for loc in stanton_locations {
+    for loc in partial_stanton_location_examples {
         if loc_lower.contains(loc) {
             return "Stanton".to_string();
         }

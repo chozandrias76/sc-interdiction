@@ -7,10 +7,18 @@ use serde::{Deserialize, Serialize};
 pub enum ShipRole {
     /// Standard cargo ships - can carry refined materials only
     Cargo,
+    /// Combat vessels - fighters and military ships
+    Combat,
     /// Can extract ore AND carry raw ore to refineries
     Mining,
     /// Can salvage and carry RMC/CMATs to refineries
     Salvage,
+    /// Cargo transport and hauling
+    Transport,
+    /// Exploration and scanning vessels
+    Exploration,
+    /// Support ships - refueling, repair, medical
+    Support,
 }
 
 /// A cargo ship with relevant stats.
@@ -110,9 +118,13 @@ impl CargoShip {
 
         // Role multiplier (affects stock loadout quality)
         let role_mult = match self.role {
-            ShipRole::Cargo => 0.7,   // Barebones cargo haulers
-            ShipRole::Mining => 1.3,  // Industrial-grade equipment
-            ShipRole::Salvage => 1.2, // Specialized salvage gear
+            ShipRole::Cargo => 0.7,       // Barebones cargo haulers
+            ShipRole::Transport => 0.8,   // Transport haulers
+            ShipRole::Mining => 1.3,      // Industrial-grade equipment
+            ShipRole::Salvage => 1.2,     // Specialized salvage gear
+            ShipRole::Combat => 1.4,      // Military-grade weapons and systems
+            ShipRole::Exploration => 1.1, // Advanced scanners and systems
+            ShipRole::Support => 1.0,     // Standard support equipment
         };
 
         // Crew size multiplier (more crew = more life support, more components)
