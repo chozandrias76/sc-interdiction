@@ -9,6 +9,10 @@ use api_client::ShipModel;
 /// - 1 = Easy kill (no weapons, slow, fragile)
 /// - 5 = Moderate (some weapons, tanky, or fast)
 /// - 10 = Very difficult (heavy weapons, escorts, etc.)
+///
+/// TODO: Build a more robust system based on ship stats and module potential.
+/// Stock modules can be looked up somehow, and we will figure that out, and then
+/// we can look at the potential for best modules, and what that means later.
 pub fn estimate_threat_level(ship: &ShipModel) -> u8 {
     let name_lower = ship.name.to_lowercase();
 
@@ -60,6 +64,10 @@ pub fn estimate_threat_level(ship: &ShipModel) -> u8 {
 }
 
 /// Classify ship role based on type and capabilities.
+///
+/// TODO: We will want a better way to infer this without string matching.
+/// Use stats about the ship to infer if it's mining, salvage, or something
+/// else not in the enum yet.
 pub fn classify_role(ship: &ShipModel) -> ShipRole {
     let name_lower = ship.name.to_lowercase();
     let classification = ship.classification.as_ref().map(|s| s.to_lowercase());
@@ -124,6 +132,9 @@ pub fn requires_freight_elevator(ship: &ShipModel) -> bool {
 }
 
 /// Estimate fuel capacities from ship size if not in API.
+///
+/// TODO: This implementation sucks, but does return the expected type.
+/// Get this information from the real source or fail if it's not possible.
 pub fn estimate_fuel_capacity(ship: &ShipModel) -> (f64, f64) {
     let cargo_scu = ship.cargo_capacity().unwrap_or(0);
 

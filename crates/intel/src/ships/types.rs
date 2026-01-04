@@ -2,15 +2,23 @@
 
 use serde::{Deserialize, Serialize};
 
-/// Ship role indicating what types of cargo it can carry.
+/// Ship role indicating primary function and cargo capabilities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ShipRole {
-    /// Standard cargo ships - can carry refined materials only
+    /// Standard commodity haulers - carry refined materials and trade goods
     Cargo,
+    /// Combat vessels - fighters and military ships
+    Combat,
     /// Can extract ore AND carry raw ore to refineries
     Mining,
     /// Can salvage and carry RMC/CMATs to refineries
     Salvage,
+    /// Personnel/vehicle transport - passenger ships, dropships, troop carriers
+    Transport,
+    /// Exploration and scanning vessels
+    Exploration,
+    /// Support ships - refueling, repair, medical
+    Support,
 }
 
 /// A cargo ship with relevant stats.
@@ -35,7 +43,7 @@ pub struct CargoShip {
     pub hydrogen_fuel_capacity: f64,
     /// Quantum drive size class (1=S1/small, 2=S2/medium, 3=S3/large).
     pub qt_drive_size: u8,
-    /// Ship role (Cargo, Mining, or Salvage).
+    /// Ship role (Cargo, Combat, Mining, Salvage, Transport, Exploration, or Support).
     pub role: ShipRole,
     /// Mining/salvage capacity in SCU (for mining and salvage ships).
     pub mining_capacity_scu: Option<u32>,
@@ -110,9 +118,13 @@ impl CargoShip {
 
         // Role multiplier (affects stock loadout quality)
         let role_mult = match self.role {
-            ShipRole::Cargo => 0.7,   // Barebones cargo haulers
-            ShipRole::Mining => 1.3,  // Industrial-grade equipment
-            ShipRole::Salvage => 1.2, // Specialized salvage gear
+            ShipRole::Cargo => 0.7,       // Barebones cargo haulers
+            ShipRole::Transport => 0.8,   // Transport haulers
+            ShipRole::Mining => 1.3,      // Industrial-grade equipment
+            ShipRole::Salvage => 1.2,     // Specialized salvage gear
+            ShipRole::Combat => 1.4,      // Military-grade weapons and systems
+            ShipRole::Exploration => 1.1, // Advanced scanners and systems
+            ShipRole::Support => 1.0,     // Standard support equipment
         };
 
         // Crew size multiplier (more crew = more life support, more components)
