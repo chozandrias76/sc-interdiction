@@ -133,6 +133,7 @@ mod tests {
             status: "Ready".to_string(),
             scroll: ScrollState::new(),
             detail_expanded: false,
+            detail_selected: 0,
         }
     }
 

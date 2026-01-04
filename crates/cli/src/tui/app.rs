@@ -57,6 +57,9 @@ pub struct App {
     /// Detail view expanded (for map view).
     #[allow(dead_code)]
     pub detail_expanded: bool,
+    /// Selected route index in expanded detail view.
+    #[allow(dead_code)]
+    pub detail_selected: usize,
 }
 
 impl App {
@@ -96,6 +99,7 @@ impl App {
             status: "Loading data...".to_string(),
             scroll: ScrollState::new(),
             detail_expanded: false,
+            detail_selected: 0,
         };
 
         // Load data
