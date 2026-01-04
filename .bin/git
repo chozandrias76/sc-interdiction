@@ -1,0 +1,20 @@
+#!/bin/bash
+# Repository-specific git wrapper
+# Enforces pre-commit hooks - blocks --no-verify flag
+
+if [[ "$1" == "commit" ]]; then
+    for arg in "$@"; do
+        if [[ "$arg" == "--no-verify" ]] || [[ "$arg" == "-n" ]]; then
+            echo ""
+            echo "❌ ERROR: --no-verify is not allowed in this repository!"
+            echo ""
+            echo "Pre-commit hooks must run to enforce code quality standards."
+            echo "Fix the issues reported by the hooks before committing."
+            echo ""
+            exit 1
+        fi
+    done
+fi
+
+# Call the real system git explicitly
+exec /usr/bin/git "$@"

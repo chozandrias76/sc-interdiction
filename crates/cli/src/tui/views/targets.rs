@@ -57,7 +57,7 @@ pub fn render_targets(frame: &mut Frame, app: &mut App, area: Rect) {
 
             let cells = vec![
                 Cell::from(dir).style(Style::default().fg(dir_color)),
-                Cell::from(target.likely_ship.name),
+                Cell::from(target.likely_ship.name.clone()),
                 Cell::from(target.commodity.clone()),
                 Cell::from(dest),
                 Cell::from(format_value(target.estimated_cargo_value)),

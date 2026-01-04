@@ -1,6 +1,6 @@
 //! Target prediction based on trade route analysis.
 
-use crate::ships::{estimate_ship_for_route, estimate_ship_for_routes, CargoShip};
+use crate::ships::{CargoShip, ShipRegistry};
 use api_client::{TradeRoute, UexClient};
 use ordered_float::OrderedFloat;
 use route_graph::{
@@ -13,12 +13,13 @@ use std::collections::HashMap;
 /// Analyzes trade data to predict targets.
 pub struct TargetAnalyzer {
     uex: UexClient,
+    registry: ShipRegistry,
 }
 
 impl TargetAnalyzer {
-    /// Create a new target analyzer.
-    pub fn new(uex: UexClient) -> Self {
-        Self { uex }
+    /// Create a new target analyzer with a ship registry.
+    pub fn new(uex: UexClient, registry: ShipRegistry) -> Self {
+        Self { uex, registry }
     }
 
     /// Get hot trade routes sorted by profitability.
@@ -29,7 +30,7 @@ impl TargetAnalyzer {
             .into_iter()
             .filter(|r| r.profit_per_unit > 0.0 && r.scu_origin > 0.0)
             .map(|r| {
-                let likely_ship = estimate_ship_for_route(&r);
+                let likely_ship = self.registry.estimate_for_route(&r);
                 let estimated_value = r.profit_for_scu(likely_ship.cargo_scu as f64);
 
                 // Calculate route distance
@@ -90,7 +91,7 @@ impl TargetAnalyzer {
                     .terminal_origin_name
                     .to_lowercase()
                     .contains(&location_lower);
-                let likely_ship = estimate_ship_for_route(&r);
+                let likely_ship = self.registry.estimate_for_route(&r);
                 let estimated_cargo_value = r.profit_for_scu(likely_ship.cargo_scu as f64)
                     + (r.price_origin * likely_ship.cargo_scu as f64);
 
@@ -213,9 +214,9 @@ impl TargetAnalyzer {
 
             // Estimate ship for both legs
             let likely_ship = if let Some(ret) = best_return {
-                estimate_ship_for_routes(&[outbound, ret])
+                self.registry.estimate_for_routes(&[outbound, ret])
             } else {
-                estimate_ship_for_route(outbound)
+                self.registry.estimate_for_route(outbound)
             };
 
             let cargo_scu = likely_ship.cargo_scu as f64;
@@ -418,7 +419,7 @@ impl TargetAnalyzer {
                 continue;
             }
 
-            let ship = estimate_ship_for_route(route);
+            let ship = self.registry.estimate_for_route(route);
             let cargo_value = route.profit_for_scu(ship.cargo_scu as f64)
                 + (route.price_origin * ship.cargo_scu as f64);
 
@@ -474,7 +475,7 @@ impl TargetAnalyzer {
                 let origin_pos = estimate_position(&r.terminal_origin_name)?;
                 let dest_pos = estimate_position(&r.terminal_destination_name)?;
 
-                let ship = estimate_ship_for_route(r);
+                let ship = self.registry.estimate_for_route(r);
                 let cargo_value = r.profit_for_scu(ship.cargo_scu as f64)
                     + (r.price_origin * ship.cargo_scu as f64);
 

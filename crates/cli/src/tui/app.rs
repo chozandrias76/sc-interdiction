@@ -61,7 +61,10 @@ impl App {
     pub async fn new(location: Option<String>) -> Result<Self> {
         let location = location.unwrap_or_else(|| "Crusader".to_string());
         let uex = UexClient::new();
-        let analyzer = TargetAnalyzer::new(uex.clone());
+        let registry = intel::ShipRegistry::load()
+            .await
+            .map_err(|e| eyre::eyre!("Failed to load ship registry: {}", e))?;
+        let analyzer = TargetAnalyzer::new(uex.clone(), registry);
 
         // Determine system from location
         let map_system = infer_system(&location);

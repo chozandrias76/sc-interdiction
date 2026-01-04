@@ -14,6 +14,6 @@ mod uex;
 mod uex_tests;
 
 pub use error::{ApiError, Result};
-pub use fleetyards::{FleetYardsClient, Manufacturer, ShipCache, ShipMetrics, ShipModel};
+pub use fleetyards::{CrewInfo, FleetYardsClient, Manufacturer, ShipCache, ShipMetrics, ShipModel};
 pub use sc_api::{ScApiClient, StarSystem, StarmapObject, Station};
 pub use uex::{Commodity, CommodityPrice, Terminal, TradeRoute, UexClient};

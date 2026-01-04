@@ -10,8 +10,15 @@ use std::net::SocketAddr;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use api_client::{FleetYardsClient, UexClient};
-use intel::TargetAnalyzer;
+use intel::{ShipRegistry, TargetAnalyzer};
 use server::AppState;
+
+/// Load ship registry (with caching).
+async fn load_registry() -> Result<ShipRegistry> {
+    ShipRegistry::load()
+        .await
+        .map_err(|e| eyre::eyre!("Failed to load ship registry: {}", e))
+}
 
 #[derive(Parser)]
 #[command(name = "sc-interdiction")]
@@ -194,7 +201,7 @@ async fn main() -> Result<()> {
             json,
         } => handle_chokepoints(top, cross_system, json).await?,
         Commands::Intel { location, json } => handle_intel(&location, json).await?,
-        Commands::Ships { json } => handle_ships(json)?,
+        Commands::Ships { json } => handle_ships(json).await?,
         Commands::FleetShips {
             name,
             manufacturer,
@@ -221,14 +228,15 @@ async fn main() -> Result<()> {
 }
 
 async fn handle_serve(addr: SocketAddr, api_key: &str) -> Result<()> {
-    let state = AppState::new(api_key);
+    let state = AppState::new(api_key).await?;
     state.init_graph().await?;
     server::run(addr, state).await
 }
 
 async fn handle_routes(limit: usize, json: bool) -> Result<()> {
     let uex = UexClient::new();
-    let analyzer = TargetAnalyzer::new(uex);
+    let registry = load_registry().await?;
+    let analyzer = TargetAnalyzer::new(uex, registry);
     let routes = analyzer.get_hot_routes(limit).await?;
 
     if json {
@@ -241,7 +249,8 @@ async fn handle_routes(limit: usize, json: bool) -> Result<()> {
 
 async fn handle_runs(limit: usize, json: bool) -> Result<()> {
     let uex = UexClient::new();
-    let analyzer = TargetAnalyzer::new(uex);
+    let registry = load_registry().await?;
+    let analyzer = TargetAnalyzer::new(uex, registry);
     let runs = analyzer.get_trade_runs(limit).await?;
 
     if json {
@@ -257,7 +266,8 @@ async fn handle_chokepoints(top: usize, cross_system: bool, json: bool) -> Resul
     let top = top.min(MAX_CHOKEPOINTS);
 
     let uex = UexClient::new();
-    let analyzer = TargetAnalyzer::new(uex.clone());
+    let registry = load_registry().await?;
+    let analyzer = TargetAnalyzer::new(uex.clone(), registry);
     let graph = build_route_graph(&uex).await?;
     let chokepoints = analyzer
         .find_interdiction_points(&graph, top, cross_system)
@@ -273,7 +283,8 @@ async fn handle_chokepoints(top: usize, cross_system: bool, json: bool) -> Resul
 
 async fn handle_intel(location: &str, json: bool) -> Result<()> {
     let uex = UexClient::new();
-    let analyzer = TargetAnalyzer::new(uex);
+    let registry = load_registry().await?;
+    let analyzer = TargetAnalyzer::new(uex, registry);
     let targets = analyzer.predict_targets_at(location).await?;
 
     if json {
@@ -284,11 +295,14 @@ async fn handle_intel(location: &str, json: bool) -> Result<()> {
     Ok(())
 }
 
-fn handle_ships(json: bool) -> Result<()> {
+async fn handle_ships(json: bool) -> Result<()> {
+    let registry = load_registry().await?;
+    let ships = registry.all_ships();
+
     if json {
-        println!("{}", serde_json::to_string_pretty(&intel::CARGO_SHIPS)?);
+        println!("{}", serde_json::to_string_pretty(ships)?);
     } else {
-        print_ships_table();
+        print_ships_table(ships);
     }
     Ok(())
 }
@@ -362,7 +376,8 @@ async fn handle_nearby(location: &str, top: usize, json: bool) -> Result<()> {
     let top = top.min(MAX_NEARBY_HOTSPOTS);
 
     let uex = UexClient::new();
-    let analyzer = TargetAnalyzer::new(uex.clone());
+    let registry = load_registry().await?;
+    let analyzer = TargetAnalyzer::new(uex.clone(), registry);
     let graph = build_route_graph(&uex).await?;
     let chokepoints = analyzer.find_interdiction_points(&graph, 50, false).await?;
 
@@ -544,7 +559,7 @@ fn print_intel_table(location: &str, targets: &[intel::TargetPrediction]) {
     }
 }
 
-fn print_ships_table() {
+fn print_ships_table(ships: &[intel::CargoShip]) {
     println!("\n{:=<80}", "");
     println!(" CARGO SHIPS DATABASE");
     println!("{:=<80}\n", "");
@@ -554,7 +569,7 @@ fn print_ships_table() {
     );
     println!("{:-<55}", "");
 
-    for ship in intel::CARGO_SHIPS {
+    for ship in ships {
         println!(
             "{:<25} {:>6} SCU {:>6}/10 {:>10} aUEC",
             ship.name, ship.cargo_scu, ship.threat_level, ship.ship_value_uec
