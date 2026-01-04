@@ -2,10 +2,10 @@
 
 use serde::{Deserialize, Serialize};
 
-/// Ship role indicating what types of cargo it can carry.
+/// Ship role indicating primary function and cargo capabilities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ShipRole {
-    /// Standard cargo ships - can carry refined materials only
+    /// Standard commodity haulers - carry refined materials and trade goods
     Cargo,
     /// Combat vessels - fighters and military ships
     Combat,
@@ -13,7 +13,7 @@ pub enum ShipRole {
     Mining,
     /// Can salvage and carry RMC/CMATs to refineries
     Salvage,
-    /// Cargo transport and hauling
+    /// Personnel/vehicle transport - passenger ships, dropships, troop carriers
     Transport,
     /// Exploration and scanning vessels
     Exploration,
