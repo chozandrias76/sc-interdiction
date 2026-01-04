@@ -69,8 +69,8 @@ pub fn classify_role(ship: &ShipModel) -> ShipRole {
         || name_lower.contains("mole")
         || name_lower.contains("golem")
         || classification
-            .as_ref()
-            .map_or(false, |c| c.contains("mining"))
+            .as_deref()
+            .is_some_and(|c| c.contains("mining"))
     {
         return ShipRole::Mining;
     }
@@ -79,8 +79,8 @@ pub fn classify_role(ship: &ShipModel) -> ShipRole {
     if name_lower.contains("reclaimer")
         || name_lower.contains("vulture")
         || classification
-            .as_ref()
-            .map_or(false, |c| c.contains("salvage"))
+            .as_deref()
+            .is_some_and(|c| c.contains("salvage"))
     {
         return ShipRole::Salvage;
     }

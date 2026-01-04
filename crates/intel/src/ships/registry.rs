@@ -214,8 +214,7 @@ impl ShipRegistry {
 /// - "C2  Hercules" -> "c2 hercules"
 fn normalize_ship_name(name: &str) -> String {
     name.to_lowercase()
-        .replace('-', " ")
-        .replace('_', " ")
+        .replace(['-', '_'], " ")
         .split_whitespace()
         .collect::<Vec<_>>()
         .join(" ")
