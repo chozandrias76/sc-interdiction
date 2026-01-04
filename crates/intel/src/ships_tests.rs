@@ -399,8 +399,7 @@ fn test_role_multipliers_affect_component_value() {
     let exploration_salvage = exploration_ship.salvage_value(cm_price);
     let support_salvage = support_ship.salvage_value(cm_price);
 
-    // Verify role multipliers produce different component values
-    // Expected multipliers: Cargo=0.7, Transport=0.8, Support=1.0, Exploration=1.1, Salvage=1.2, Mining=1.3, Combat=1.4
+    // Verify role multipliers produce different component values in ascending order
     assert!(cargo_salvage.component_value < transport_salvage.component_value);
     assert!(transport_salvage.component_value < support_salvage.component_value);
     assert!(support_salvage.component_value < exploration_salvage.component_value);
@@ -408,7 +407,7 @@ fn test_role_multipliers_affect_component_value() {
     assert!(salvage_salvage.component_value < mining_salvage.component_value);
     assert!(mining_salvage.component_value < combat_salvage.component_value);
 
-    // Verify Combat (1.4x) has ~2x the component value of Cargo (0.7x)
+    // Verify Combat has approximately 2x the component value of Cargo
     let ratio = combat_salvage.component_value as f64 / cargo_salvage.component_value as f64;
     assert!((ratio - 2.0).abs() < 0.1); // Should be close to 2.0
 }
@@ -447,9 +446,9 @@ fn test_role_and_manufacturer_multipliers() {
     let origin_salvage = origin_combat.salvage_value(cm_price);
 
     // Origin Combat should have much higher component value than Drake Cargo
-    // Expected ratio: (1.5 * 1.4) / (0.6 * 0.7) = 2.1 / 0.42 = 5.0
+    // due to combined effect of manufacturer and role multipliers
     let ratio = origin_salvage.component_value as f64 / drake_salvage.component_value as f64;
-    assert!((ratio - 5.0).abs() < 0.3); // Should be close to 5.0
+    assert!((ratio - 5.0).abs() < 0.3); // Should be approximately 5x
 }
 
 /// Test that role multipliers interact correctly with crew size multipliers.
@@ -552,8 +551,8 @@ fn test_exploration_role_characteristics() {
     let cm_price = 100.0;
     let salvage = exploration_ship.salvage_value(cm_price);
 
-    // Exploration role has 1.1x multiplier, Anvil has 1.2x
-    // Expected: base=5000, mfr=1.2, role=1.1, crew=1.0 -> 5000*1.2*1.1*1.0 = 6600
+    // Component value should be in expected range for small exploration ship
+    // with military-grade manufacturer
     assert!(salvage.component_value > 6000);
     assert!(salvage.component_value < 7000);
 }
