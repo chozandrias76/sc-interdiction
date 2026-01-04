@@ -34,11 +34,24 @@ fi
 # Run cargo clippy with strict quality checks
 echo "  → Running clippy with cognitive complexity and code quality checks..."
 if ! cargo clippy --all-targets --all-features -- \
+    -D warnings \
     -D clippy::cognitive_complexity \
     -D clippy::too_many_lines \
     -W clippy::unwrap_used \
     -W clippy::expect_used \
-    -W clippy::panic; then
+    -W clippy::panic \
+    -A clippy::must-use-candidate \
+    -A clippy::missing-errors-doc \
+    -A clippy::print-stderr \
+    -A clippy::print-stdout \
+    -A clippy::indexing-slicing \
+    -A clippy::doc-markdown \
+    -A clippy::assertions-on-constants \
+    -A clippy::cloned-ref-to-slice-refs \
+    -A clippy::explicit-iter-loop \
+    -A clippy::too-many-arguments \
+    -A clippy::empty-line-after-doc-comments \
+    -A clippy::empty-line-after-outer-attr; then
     echo "❌ Clippy quality checks failed!"
     echo "   Fix the issues above or use 'git commit --no-verify' to skip checks."
     exit 1
