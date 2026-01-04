@@ -1,7 +1,7 @@
 //! Application state shared across handlers.
 
 use api_client::{ScApiClient, UexClient};
-use intel::TargetAnalyzer;
+use intel::{ShipRegistry, TargetAnalyzer};
 use route_graph::RouteGraph;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -13,22 +13,32 @@ pub struct AppState {
     pub uex: UexClient,
     pub analyzer: Arc<TargetAnalyzer>,
     pub graph: Arc<RwLock<RouteGraph>>,
+    pub registry: Arc<ShipRegistry>,
 }
 
 impl AppState {
     /// Create new application state.
-    pub fn new(sc_api_key: impl Into<String>) -> Self {
+    ///
+    /// # Errors
+    ///
+    /// Returns error if ship registry fails to load.
+    pub async fn new(sc_api_key: impl Into<String>) -> eyre::Result<Self> {
         let sc_api = ScApiClient::new(sc_api_key);
         let uex = UexClient::new();
-        let analyzer = Arc::new(TargetAnalyzer::new(uex.clone()));
+        let registry = ShipRegistry::load()
+            .await
+            .map_err(|e| eyre::eyre!("Failed to load ship registry: {}", e))?;
+        let registry = Arc::new(registry);
+        let analyzer = Arc::new(TargetAnalyzer::new(uex.clone(), Arc::clone(&registry)));
         let graph = Arc::new(RwLock::new(RouteGraph::new()));
 
-        Self {
+        Ok(Self {
             sc_api,
             uex,
             analyzer,
             graph,
-        }
+            registry,
+        })
     }
 
     /// Initialize the route graph with data from APIs.

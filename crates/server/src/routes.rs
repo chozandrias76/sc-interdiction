@@ -117,8 +117,8 @@ async fn get_targets_at(
     }
 }
 
-async fn get_ships() -> Json<&'static [intel::CargoShip]> {
-    Json(intel::CARGO_SHIPS)
+async fn get_ships(State(state): State<AppState>) -> Json<Vec<intel::CargoShip>> {
+    Json(state.registry.all_ships().to_vec())
 }
 
 #[derive(Debug, Deserialize)]
