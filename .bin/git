@@ -16,5 +16,11 @@ if [[ "$1" == "commit" ]]; then
     done
 fi
 
-# Call the real system git explicitly
-exec /usr/bin/git "$@"
+# Call the real system git dynamically
+GIT_BIN="$(command -v git)"
+if [[ -z "$GIT_BIN" ]]; then
+    echo "ERROR: 'git' executable not found on PATH." >&2
+    exit 1
+fi
+
+exec "$GIT_BIN" "$@"

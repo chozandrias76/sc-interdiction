@@ -1,5 +1,7 @@
 //! Application state for the TUI.
 
+use std::sync::Arc;
+
 use api_client::UexClient;
 use eyre::Result;
 use intel::{HotRoute, TargetAnalyzer, TargetPrediction, TrafficDirection};
@@ -70,7 +72,7 @@ impl App {
         let registry = intel::ShipRegistry::load()
             .await
             .map_err(|e| eyre::eyre!("Failed to load ship registry: {}", e))?;
-        let analyzer = TargetAnalyzer::new(uex.clone(), registry);
+        let analyzer = TargetAnalyzer::new(uex.clone(), Arc::new(registry));
 
         // Determine system from location
         let map_system = infer_system(&location);

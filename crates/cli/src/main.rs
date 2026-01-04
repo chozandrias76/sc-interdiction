@@ -7,6 +7,7 @@ mod tui;
 use clap::{Parser, Subcommand};
 use eyre::Result;
 use std::net::SocketAddr;
+use std::sync::Arc;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use api_client::{FleetYardsClient, UexClient};
@@ -235,7 +236,7 @@ async fn handle_serve(addr: SocketAddr, api_key: &str) -> Result<()> {
 
 async fn handle_routes(limit: usize, json: bool) -> Result<()> {
     let uex = UexClient::new();
-    let registry = load_registry().await?;
+    let registry = Arc::new(load_registry().await?);
     let analyzer = TargetAnalyzer::new(uex, registry);
     let routes = analyzer.get_hot_routes(limit).await?;
 
@@ -249,7 +250,7 @@ async fn handle_routes(limit: usize, json: bool) -> Result<()> {
 
 async fn handle_runs(limit: usize, json: bool) -> Result<()> {
     let uex = UexClient::new();
-    let registry = load_registry().await?;
+    let registry = Arc::new(load_registry().await?);
     let analyzer = TargetAnalyzer::new(uex, registry);
     let runs = analyzer.get_trade_runs(limit).await?;
 
@@ -266,7 +267,7 @@ async fn handle_chokepoints(top: usize, cross_system: bool, json: bool) -> Resul
     let top = top.min(MAX_CHOKEPOINTS);
 
     let uex = UexClient::new();
-    let registry = load_registry().await?;
+    let registry = Arc::new(load_registry().await?);
     let analyzer = TargetAnalyzer::new(uex.clone(), registry);
     let graph = build_route_graph(&uex).await?;
     let chokepoints = analyzer
@@ -283,7 +284,7 @@ async fn handle_chokepoints(top: usize, cross_system: bool, json: bool) -> Resul
 
 async fn handle_intel(location: &str, json: bool) -> Result<()> {
     let uex = UexClient::new();
-    let registry = load_registry().await?;
+    let registry = Arc::new(load_registry().await?);
     let analyzer = TargetAnalyzer::new(uex, registry);
     let targets = analyzer.predict_targets_at(location).await?;
 
@@ -376,7 +377,7 @@ async fn handle_nearby(location: &str, top: usize, json: bool) -> Result<()> {
     let top = top.min(MAX_NEARBY_HOTSPOTS);
 
     let uex = UexClient::new();
-    let registry = load_registry().await?;
+    let registry = Arc::new(load_registry().await?);
     let analyzer = TargetAnalyzer::new(uex.clone(), registry);
     let graph = build_route_graph(&uex).await?;
     let chokepoints = analyzer.find_interdiction_points(&graph, 50, false).await?;

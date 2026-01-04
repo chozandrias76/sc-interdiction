@@ -639,23 +639,24 @@ fn infer_system_from_routes(routes: &[&RouteSegment]) -> String {
     let mut has_nyx_dest = false;
 
     for route in routes {
-        if route.origin_name.contains("Stanton") {
-            has_stanton_origin = true;
+        // Use direct system fields instead of parsing from names
+        if let Some(ref sys) = route.origin_system {
+            if sys.contains("Stanton") {
+                has_stanton_origin = true;
+            } else if sys.contains("Pyro") {
+                has_pyro_origin = true;
+            } else if sys.contains("Nyx") {
+                has_nyx_origin = true;
+            }
         }
-        if route.destination_name.contains("Stanton") {
-            has_stanton_dest = true;
-        }
-        if route.origin_name.contains("Pyro") {
-            has_pyro_origin = true;
-        }
-        if route.destination_name.contains("Pyro") {
-            has_pyro_dest = true;
-        }
-        if route.origin_name.contains("Nyx") {
-            has_nyx_origin = true;
-        }
-        if route.destination_name.contains("Nyx") {
-            has_nyx_dest = true;
+        if let Some(ref sys) = route.destination_system {
+            if sys.contains("Stanton") {
+                has_stanton_dest = true;
+            } else if sys.contains("Pyro") {
+                has_pyro_dest = true;
+            } else if sys.contains("Nyx") {
+                has_nyx_dest = true;
+            }
         }
     }
 

@@ -1,5 +1,7 @@
 //! Target prediction based on trade route analysis.
 
+use std::sync::Arc;
+
 use crate::ships::{CargoShip, ShipRegistry};
 use api_client::{TradeRoute, UexClient};
 use ordered_float::OrderedFloat;
@@ -13,12 +15,12 @@ use std::collections::HashMap;
 /// Analyzes trade data to predict targets.
 pub struct TargetAnalyzer {
     uex: UexClient,
-    registry: ShipRegistry,
+    registry: Arc<ShipRegistry>,
 }
 
 impl TargetAnalyzer {
     /// Create a new target analyzer with a ship registry.
-    pub fn new(uex: UexClient, registry: ShipRegistry) -> Self {
+    pub fn new(uex: UexClient, registry: Arc<ShipRegistry>) -> Self {
         Self { uex, registry }
     }
 

@@ -29,7 +29,7 @@ impl AppState {
             .await
             .map_err(|e| eyre::eyre!("Failed to load ship registry: {}", e))?;
         let registry = Arc::new(registry);
-        let analyzer = Arc::new(TargetAnalyzer::new(uex.clone(), (*registry).clone()));
+        let analyzer = Arc::new(TargetAnalyzer::new(uex.clone(), Arc::clone(&registry)));
         let graph = Arc::new(RwLock::new(RouteGraph::new()));
 
         Ok(Self {
