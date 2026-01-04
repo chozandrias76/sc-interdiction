@@ -17,6 +17,8 @@ pub fn load_hotspots(routes: &[HotRoute]) -> Vec<RouteIntersection> {
                 destination: dest_pos,
                 origin_name: route.origin.clone(),
                 destination_name: route.destination.clone(),
+                origin_system: extract_system_from_location(&route.origin),
+                destination_system: extract_system_from_location(&route.destination),
                 cargo_value: route.estimated_haul_value,
                 commodity: route.commodity.clone(),
                 ship_name: route.likely_ship.name.to_string(),
@@ -35,4 +37,18 @@ pub fn load_hotspots(routes: &[HotRoute]) -> Vec<RouteIntersection> {
     intersections.truncate(20);
 
     intersections
+}
+
+/// Extract system name from location string.
+/// Format: "Terminal Name (System > Planet > ...)"
+fn extract_system_from_location(location: &str) -> Option<String> {
+    if let Some(start) = location.find('(') {
+        if let Some(end) = location.find('>') {
+            let system = location[start + 1..end].trim();
+            if !system.is_empty() {
+                return Some(system.to_string());
+            }
+        }
+    }
+    None
 }

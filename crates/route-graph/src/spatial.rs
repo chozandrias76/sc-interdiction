@@ -220,6 +220,8 @@ pub struct RouteSegment {
     pub destination: Point3D,
     pub origin_name: String,
     pub destination_name: String,
+    pub origin_system: Option<String>,
+    pub destination_system: Option<String>,
     pub cargo_value: f64,
     pub commodity: String,
     pub ship_name: String,
@@ -234,6 +236,14 @@ impl RouteSegment {
             (self.origin.y + self.destination.y) / 2.0,
             (self.origin.z + self.destination.z) / 2.0,
         )
+    }
+
+    /// Check if this route crosses system boundaries.
+    pub fn is_cross_system(&self) -> bool {
+        match (&self.origin_system, &self.destination_system) {
+            (Some(origin), Some(dest)) => origin != dest,
+            _ => false, // If we don't know, assume same system
+        }
     }
 
     /// Calculate the closest point on this segment to another segment.
@@ -315,6 +325,8 @@ pub struct RouteIntersection {
     pub name: String,
     /// System this intersection is in.
     pub system: String,
+    /// Whether this hotspot involves cross-system routes (requires jump gates).
+    pub is_cross_system: bool,
     /// Routes that pass through or near this intersection.
     pub intersecting_routes: Vec<IntersectingRoute>,
     /// Total combined cargo value of all intersecting routes.
@@ -465,6 +477,7 @@ pub fn find_route_intersections(
             // Generate a name based on what routes pass through
             let name = generate_intersection_name(&zone_routes);
             let system = infer_system_from_routes(&zone_routes);
+            let is_cross_system = check_if_cross_system(&zone_routes);
 
             let suggested_tactics = if avg_threat < 2.5 {
                 "Easy pickings - solo Mantis can handle most targets".to_string()
@@ -483,6 +496,7 @@ pub fn find_route_intersections(
                 position,
                 name,
                 system,
+                is_cross_system,
                 intersecting_routes,
                 total_cargo_value,
                 route_pair_count: route_count,
@@ -505,7 +519,31 @@ pub fn find_route_intersections(
 }
 
 fn generate_intersection_name(routes: &[&RouteSegment]) -> String {
-    // Find common elements in route names
+    // Check if routes are cross-system
+    let mut origin_systems = std::collections::HashSet::new();
+    let mut dest_systems = std::collections::HashSet::new();
+    
+    for route in routes {
+        // Extract system from format "(SystemName > ...)"
+        if let Some(sys) = extract_system_name(&route.origin_name) {
+            origin_systems.insert(sys);
+        }
+        if let Some(sys) = extract_system_name(&route.destination_name) {
+            dest_systems.insert(sys);
+        }
+    }
+    
+    // If cross-system, use "System Gateway" naming
+    let all_systems: std::collections::HashSet<_> = origin_systems.union(&dest_systems).collect();
+    if all_systems.len() > 1 {
+        // This is a cross-system hotspot - likely near a jump gate
+        // Use the destination system as the location
+        if let Some(dest_sys) = dest_systems.iter().next() {
+            return format!("{} Jump Gate", dest_sys);
+        }
+    }
+    
+    // Find common location names in route terminals
     let mut locations: Vec<&str> = Vec::new();
     for route in routes {
         // Extract short names from terminals
@@ -528,6 +566,19 @@ fn generate_intersection_name(routes: &[&RouteSegment]) -> String {
     } else {
         "Deep Space Intersection".to_string()
     }
+}
+
+fn extract_system_name(terminal_name: &str) -> Option<String> {
+    // Terminal format: "Name (System > Planet > ...)"
+    if let Some(start) = terminal_name.find('(') {
+        if let Some(end) = terminal_name.find('>') {
+            let system = terminal_name[start+1..end].trim();
+            if !system.is_empty() {
+                return Some(system.to_string());
+            }
+        }
+    }
+    None
 }
 
 fn extract_short_location(terminal_name: &str) -> Option<&str> {
@@ -559,20 +610,81 @@ fn extract_short_location(terminal_name: &str) -> Option<&str> {
         .find(|&loc| terminal_name.to_lowercase().contains(&loc.to_lowercase()))
 }
 
-fn infer_system_from_routes(routes: &[&RouteSegment]) -> String {
-    // Look at route names to infer system
+fn check_if_cross_system(routes: &[&RouteSegment]) -> bool {
+    // A hotspot is cross-system only if individual routes cross systems
+    // (not if different routes from different systems happen to intersect)
     for route in routes {
-        let combined = format!("{} {}", route.origin_name, route.destination_name);
-        if combined.contains("Stanton") {
-            return "Stanton".to_string();
-        }
-        if combined.contains("Pyro") {
-            return "Pyro".to_string();
-        }
-        if combined.contains("Nyx") {
-            return "Nyx".to_string();
+        let origin_sys = extract_system_name(&route.origin_name);
+        let dest_sys = extract_system_name(&route.destination_name);
+        
+        if let (Some(orig), Some(dest)) = (origin_sys, dest_sys) {
+            if orig != dest {
+                // This route crosses systems
+                return true;
+            }
         }
     }
+    
+    // All routes are within their own systems
+    false
+}
+
+fn infer_system_from_routes(routes: &[&RouteSegment]) -> String {
+    // Check if routes are cross-system by looking for different systems in origins vs destinations
+    let mut has_stanton_origin = false;
+    let mut has_stanton_dest = false;
+    let mut has_pyro_origin = false;
+    let mut has_pyro_dest = false;
+    let mut has_nyx_origin = false;
+    let mut has_nyx_dest = false;
+    
+    for route in routes {
+        if route.origin_name.contains("Stanton") {
+            has_stanton_origin = true;
+        }
+        if route.destination_name.contains("Stanton") {
+            has_stanton_dest = true;
+        }
+        if route.origin_name.contains("Pyro") {
+            has_pyro_origin = true;
+        }
+        if route.destination_name.contains("Pyro") {
+            has_pyro_dest = true;
+        }
+        if route.origin_name.contains("Nyx") {
+            has_nyx_origin = true;
+        }
+        if route.destination_name.contains("Nyx") {
+            has_nyx_dest = true;
+        }
+    }
+    
+    // If we have cross-system routes, use the destination system as primary
+    // (e.g. routes FROM Stanton TO Pyro = hotspot is near Pyro gateway)
+    if has_stanton_origin && has_pyro_dest {
+        return "Pyro".to_string();
+    }
+    if has_pyro_origin && has_stanton_dest {
+        return "Stanton".to_string();
+    }
+    if has_stanton_origin && has_nyx_dest {
+        return "Nyx".to_string();
+    }
+    if has_nyx_origin && has_stanton_dest {
+        return "Stanton".to_string();
+    }
+    
+    // Otherwise, find most common system
+    if has_stanton_origin || has_stanton_dest {
+        return "Stanton".to_string();
+    }
+    if has_pyro_origin || has_pyro_dest {
+        return "Pyro".to_string();
+    }
+    if has_nyx_origin || has_nyx_dest {
+        return "Nyx".to_string();
+    }
+    
     "Unknown".to_string()
 }
 
@@ -956,6 +1068,8 @@ mod tests {
             destination: Point3D::new(10.0, 10.0, 0.0),
             origin_name: "A".to_string(),
             destination_name: "B".to_string(),
+            origin_system: Some("Stanton".to_string()),
+            destination_system: Some("Stanton".to_string()),
             cargo_value: 100000.0,
             commodity: "Gold".to_string(),
             ship_name: "Caterpillar".to_string(),
@@ -967,6 +1081,8 @@ mod tests {
             destination: Point3D::new(10.0, 0.0, 0.0),
             origin_name: "C".to_string(),
             destination_name: "D".to_string(),
+            origin_system: Some("Stanton".to_string()),
+            destination_system: Some("Stanton".to_string()),
             cargo_value: 150000.0,
             commodity: "Silver".to_string(),
             ship_name: "C2 Hercules".to_string(),

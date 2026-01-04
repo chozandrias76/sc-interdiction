@@ -484,6 +484,8 @@ impl TargetAnalyzer {
                     destination: dest_pos,
                     origin_name: r.terminal_origin_name.clone(),
                     destination_name: r.terminal_destination_name.clone(),
+                    origin_system: Some(extract_system(&r.terminal_origin_name)),
+                    destination_system: Some(extract_system(&r.terminal_destination_name)),
                     cargo_value,
                     commodity: r.commodity_name.clone(),
                     ship_name: ship.name.to_string(),
