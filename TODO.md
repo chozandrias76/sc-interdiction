@@ -45,10 +45,14 @@
   - ✅ Uses `fuel_sufficient` field to determine when refueling needed
   - ✅ Returns direct route if possible, multi-hop with refuel stops otherwise
   
-- [ ] **Refueling cost calculation**
-  - Add hydrogen fuel pricing to commodity data
-  - Calculate refuel cost per stop: `refuel_cost = (fuel_needed * fuel_price_per_unit)`
-  - Subtract from route profitability
+- [x] **Refueling cost calculation**
+  - ✅ Added hydrogen fuel pricing constants (1.0 aUEC/unit) - **PLACEHOLDER, NEEDS VERIFICATION**
+  - ✅ Added quantum fuel pricing constants (1.5 aUEC/unit) - **PLACEHOLDER, NEEDS VERIFICATION**
+  - ✅ Implemented `calculate_refuel_cost(fuel_needed, price_per_unit)`
+  - ✅ Implemented `calculate_route_refuel_cost()` for multi-hop routes
+  - ✅ Comprehensive tests for refueling cost calculations
+  - ⚠️  **CRITICAL**: Fuel prices are unverified placeholders - see `docs/DATA_SOURCES.md`
+  - [ ] **TODO**: Verify actual fuel prices in-game or via UEX API
   
 - [ ] **CLI display for multi-hop routes**
   - Show waypoints in route output when refueling required
@@ -68,23 +72,29 @@
   - ✅ Case-insensitive matching on terminal_type field
   - ✅ Works with existing `--system` filter
   
-- [ ] **Visual indicators**
-  - CLI: Add `[⛽]` icon next to fuel stations in output
-  - API: Include `is_fuel_station` in node JSON responses
+- [x] **Visual indicators**
+  - ✅ CLI: Added `⛽` icon to routes/runs that need refueling
+  - ✅ Display fuel requirements (distance, fuel needed) on routes
+  - ✅ Show refueling warnings on trade runs
+  - [ ] API: Include `is_fuel_station` in node JSON responses
 
 ---
 
 ### Mining & Refinery Route Support
 
 #### Asteroid/Mining Location Database
-- [ ] **Add mining locations to position database**
-  - Extend `crates/route-graph/src/locations.rs`
-  - Add known asteroid belts (Aaron Halo, Yela belt, etc.)
-  - Include approximate coordinates for mining hotspots
+- [x] **Add mining locations to position database**
+  - ✅ Extended `crates/route-graph/src/locations.rs`
+  - ✅ Added known asteroid belts (Aaron Halo, Yela belt, AMA045, AMA141)
+  - ✅ Added surface mining sites (Aberdeen Caves, Daymar Caves, Lyria)
+  - ✅ Included approximate coordinates for all mining hotspots
   
-- [ ] **Create mining site data structure**
-  - New struct: `MiningSite { name, location, resource_types, avg_yield }`
-  - Support resources: Quantainium, Bexalite, Taranite, Gold, etc.
+- [x] **Create mining site data structure**
+  - ✅ New module: `crates/route-graph/src/mining.rs`
+  - ✅ Struct: `MiningSite { name, location, resource_types, avg_yield, is_surface }`
+  - ✅ Enum: `ResourceType` - Quantainium, Bexalite, Taranite, Gold, etc.
+  - ✅ Helper functions: `sites_with_resource()`, `nearest_mining_site()`
+  - ✅ Typical value ranges for each resource type
 
 #### Refinery Terminal Integration
 - [ ] **Index refinery locations**
@@ -165,6 +175,12 @@
   - `.envrc` with CARGO_TARGET_DIR
   - `.cargo/config.toml.template` with optimized build profiles
   - `scripts/setup-build-env.sh` for environment setup
+
+- [x] **Prevent local release builds**
+  - ✅ Created `.bin/cargo` wrapper script to block `--release` flag
+  - ✅ Updated Makefile to prevent `make build-release`
+  - ✅ Forces use of CI/CD for consistent release artifacts
+  - ✅ Prevents confusion about which binary to use
 
 - [ ] **Optional: Faster linker integration**
   - Install and configure `mold` or `lld` linker

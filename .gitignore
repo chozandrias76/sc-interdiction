@@ -18,6 +18,8 @@ Thumbs.db
 # Project
 /data/cache/*
 !data/cache/.gitkeep
+/data/*.db
+/data/*.db-*
 
 # Environment
 .env

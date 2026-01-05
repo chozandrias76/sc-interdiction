@@ -38,6 +38,20 @@ The analysis is based on live commodity pricing from the UEX (Universal Exchange
 - Exposes all analysis capabilities via HTTP endpoints
 - Suitable for integration with other tools or overlays
 
+## ⚠️ Data Accuracy Notice
+
+**This tool uses a combination of verified and estimated data.** Some features rely on placeholder values or heuristic models that have not been verified against actual in-game measurements.
+
+**Critical unverified data:**
+- Fuel prices (placeholder values)
+- Quantum drive efficiency rates (estimated)
+- Salvage yield rates (community estimates)
+- Component value calculations (heuristic model)
+
+For full details on data sources and verification status, see **[docs/DATA_SOURCES.md](docs/DATA_SOURCES.md)**.
+
+Contributions of verified in-game data are welcome! See the data sources document for what needs verification.
+
 ## Installation
 
 ### Prerequisites

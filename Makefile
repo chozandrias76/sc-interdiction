@@ -71,7 +71,15 @@ build:
 	cargo build
 
 build-release:
-	cargo build --release
+	@echo "❌ ERROR: Local release builds are disabled!"
+	@echo ""
+	@echo "Release builds should only be created by CI/CD."
+	@echo "Use 'make build' for local development (debug mode)."
+	@echo ""
+	@echo "If you really need a release build for testing:"
+	@echo "  cargo build --release"
+	@echo ""
+	@exit 1
 
 check:
 	cargo check --all

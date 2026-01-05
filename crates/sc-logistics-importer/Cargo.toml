@@ -1,0 +1,19 @@
+[package]
+name = "sc-logistics-importer"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+# CLI
+clap.workspace = true
+
+# Internal crates
+sc-data-extractor = { path = "../sc-data-extractor" }
+
+# Error handling
+eyre.workspace = true
+
+[lints]
+workspace = true

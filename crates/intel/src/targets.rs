@@ -501,7 +501,9 @@ impl TargetAnalyzer {
             .collect();
 
         // Find intersections with 2.0 Mkm proximity threshold
+        // STATUS: Gameplay assumption - needs verification
         // This is roughly the effective range for QT interdiction positioning
+        // See: docs/DATA_SOURCES.md - QT Interdiction Range
         let mut intersections = find_route_intersections(&segments, 2.0, min_routes);
         intersections.truncate(limit);
 
