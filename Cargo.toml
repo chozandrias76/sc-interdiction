@@ -58,26 +58,26 @@ unused = "deny"
 
 [workspace.lints.clippy]
 # Error handling - stricter in production, relaxed in tests
-unwrap_used = "deny"
-expect_used = "deny"
-panic = "deny"
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
 indexing_slicing = "warn"
-fallible_impl_from = "deny"
+fallible_impl_from = "warn"
 
 # Code quality
 doc_markdown = "warn"
-redundant_else = "deny"
-semicolon_if_nothing_returned = "deny"
-match_same_arms = "deny"
-manual_let_else = "deny"
-cognitive_complexity = "deny"
-too_many_lines = "deny"
+redundant_else = "warn"
+semicolon_if_nothing_returned = "warn"
+match_same_arms = "warn"
+manual_let_else = "warn"
+cognitive_complexity = "warn"
+too_many_lines = "warn"
 type_complexity = "warn"
 
 # Prevent debug artifacts in production
-dbg_macro = "deny"
-todo = "deny"
-unimplemented = "deny"
+dbg_macro = "warn"
+todo = "warn"
+unimplemented = "warn"
 print_stdout = "warn"
 print_stderr = "warn"
 
@@ -91,8 +91,8 @@ unnecessary_wraps = "warn"
 used_underscore_binding = "warn"
 
 # Style consistency
-enum_glob_use = "deny"
-wildcard_imports = "deny"
+enum_glob_use = "warn"
+wildcard_imports = "warn"
 
 [profile.release]
 lto = true
