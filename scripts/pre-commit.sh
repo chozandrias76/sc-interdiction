@@ -31,11 +31,9 @@ if [ -n "$LINES_CHANGED" ] && [ "$LINES_CHANGED" -gt "$MAX_LINES" ]; then
     fi
 fi
 
-# Run cargo clippy with strict quality checks
+# Run cargo clippy (lint config from Cargo.toml workspace.lints)
 echo "  → Running clippy with cognitive complexity and code quality checks..."
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CLIPPY_ARGS=$(cat "$SCRIPT_DIR/clippy-args.txt" | tr '\n' ' ')
-if ! cargo clippy --all-targets --all-features -- $CLIPPY_ARGS; then
+if ! cargo clippy --all-targets --all-features; then
     echo "❌ Clippy quality checks failed!"
     echo "   Fix the issues above or use 'git commit --no-verify' to skip checks."
     exit 1

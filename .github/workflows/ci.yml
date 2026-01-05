@@ -61,9 +61,7 @@ jobs:
           key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Run clippy
-        run: |
-          CLIPPY_ARGS=$(cat scripts/clippy-args.txt | tr '\n' ' ')
-          cargo clippy --all-targets --all-features -- $CLIPPY_ARGS
+        run: cargo clippy --all-targets --all-features
 
   test:
     name: Test Suite

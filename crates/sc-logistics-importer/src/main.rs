@@ -71,7 +71,10 @@ fn import_all(sclogistics_path: &PathBuf, output: &PathBuf) -> Result<()> {
         std::fs::create_dir_all(parent)?;
     }
 
-    let db = Database::new(output.to_str().unwrap())?;
+    let output_str = output
+        .to_str()
+        .ok_or_else(|| eyre::eyre!("Invalid UTF-8 in output path"))?;
+    let db = Database::new(output_str)?;
     let mut builder = DatabaseBuilder::new(db);
     builder.init_schema()?;
 
@@ -103,7 +106,10 @@ fn import_starmap(sclogistics_path: &PathBuf, output: &PathBuf) -> Result<()> {
         std::fs::create_dir_all(parent)?;
     }
 
-    let db = Database::new(output.to_str().unwrap())?;
+    let output_str = output
+        .to_str()
+        .ok_or_else(|| eyre::eyre!("Invalid UTF-8 in output path"))?;
+    let db = Database::new(output_str)?;
     let mut builder = DatabaseBuilder::new(db);
     builder.init_schema()?;
 
@@ -124,7 +130,10 @@ fn import_shops(sclogistics_path: &PathBuf, output: &PathBuf) -> Result<()> {
         std::fs::create_dir_all(parent)?;
     }
 
-    let db = Database::new(output.to_str().unwrap())?;
+    let output_str = output
+        .to_str()
+        .ok_or_else(|| eyre::eyre!("Invalid UTF-8 in output path"))?;
+    let db = Database::new(output_str)?;
     let mut builder = DatabaseBuilder::new(db);
     builder.init_schema()?;
 
@@ -141,7 +150,10 @@ fn import_shops(sclogistics_path: &PathBuf, output: &PathBuf) -> Result<()> {
 }
 
 fn show_stats(db_path: &PathBuf) -> Result<()> {
-    let db = Database::new(db_path.to_str().unwrap())?;
+    let db_path_str = db_path
+        .to_str()
+        .ok_or_else(|| eyre::eyre!("Invalid UTF-8 in database path"))?;
+    let db = Database::new(db_path_str)?;
     let conn = db.connection();
 
     let location_count: i64 =
