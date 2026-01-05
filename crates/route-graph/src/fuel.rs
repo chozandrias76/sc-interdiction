@@ -700,8 +700,8 @@ pub fn calculate_refuel_cost(fuel_needed: f64, price_per_unit: Option<f64>) -> f
 /// let fuel_capacity = 2500.0;
 ///
 /// // Mock fuel index for example
-/// let stations = vec![];
-/// let index = FuelStationIndex::new(stations);
+/// let terminals = vec![];
+/// let index = FuelStationIndex::from_terminals(&terminals);
 ///
 /// // In real usage, you'd get waypoints from find_route_with_refueling
 /// // let waypoints = find_route_with_refueling("Hurston", "microTech", fuel_capacity, efficiency, &index)?;
