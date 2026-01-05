@@ -127,6 +127,7 @@ pub fn max_range_mkm(fuel_capacity: f64, efficiency: &QtDriveEfficiency) -> f64 
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::assertions_on_constants)]
 mod tests {
     use super::*;
 
@@ -361,6 +362,7 @@ fn perpendicular_distance_to_line(
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod fuel_station_tests {
     use super::*;
 
@@ -732,6 +734,7 @@ pub fn calculate_route_refuel_cost(
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod refuel_cost_tests {
     use super::*;
 

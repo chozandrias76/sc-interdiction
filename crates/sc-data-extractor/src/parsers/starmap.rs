@@ -1,7 +1,7 @@
 //! Starmap XML parser
 
 use crate::error::{Error, Result};
-use crate::models::starmap::*;
+use crate::models::starmap::{StarmapLocation, QuantumTravelData};
 use quick_xml::de::from_str;
 use serde::Deserialize;
 use std::fs;
@@ -123,6 +123,7 @@ struct RawQuantumTravelParams {
 }
 
 #[cfg(test)]
+#[allow(clippy::expect_used)]
 mod tests {
     use super::*;
 

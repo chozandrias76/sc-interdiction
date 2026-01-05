@@ -1,7 +1,7 @@
 //! Shop inventory JSON parser
 
 use crate::error::Result;
-use crate::models::shops::*;
+use crate::models::shops::ShopInventory;
 use std::fs;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
@@ -66,6 +66,7 @@ impl ShopsParser {
 }
 
 #[cfg(test)]
+#[allow(clippy::expect_used)]
 mod tests {
     use super::*;
 
