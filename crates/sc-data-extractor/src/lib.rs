@@ -3,10 +3,10 @@
 //! Parses Star Citizen game data from the SCLogistics repository to build
 //! databases for locations, quantum travel routes, and trade terminal information.
 
+pub mod database;
 pub mod error;
 pub mod models;
 pub mod parsers;
-pub mod database;
 
 pub use error::{Error, Result};
 

@@ -165,13 +165,13 @@ pub fn sites_with_resource(resource: ResourceType) -> Vec<&'static MiningSite> {
 
 /// Find the nearest mining site to a given position.
 pub fn nearest_mining_site(position: &Point3D) -> Option<&'static MiningSite> {
-    MINING_SITES
-        .iter()
-        .min_by(|a, b| {
-            let dist_a = a.position.distance_to(position);
-            let dist_b = b.position.distance_to(position);
-            dist_a.partial_cmp(&dist_b).unwrap_or(std::cmp::Ordering::Equal)
-        })
+    MINING_SITES.iter().min_by(|a, b| {
+        let dist_a = a.position.distance_to(position);
+        let dist_b = b.position.distance_to(position);
+        dist_a
+            .partial_cmp(&dist_b)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    })
 }
 
 #[cfg(test)]

@@ -353,7 +353,7 @@ pub static LOCATION_POSITIONS: LazyLock<HashMap<&'static str, LocationPosition>>
 
         // === MINING LOCATIONS ===
         // Asteroid belts and mining hotspots with approximate positions
-        
+
         // Aaron Halo - massive asteroid belt surrounding Stanton system
         // Position: outer system, ~30 Mkm from star
         add_location(
@@ -363,7 +363,7 @@ pub static LOCATION_POSITIONS: LazyLock<HashMap<&'static str, LocationPosition>>
             orbital_pos(30.0, 90.0),
             None,
         );
-        
+
         // Yela Asteroid Belt - around Crusader's moon Yela
         add_location(
             &mut map,
@@ -372,7 +372,7 @@ pub static LOCATION_POSITIONS: LazyLock<HashMap<&'static str, LocationPosition>>
             moon_pos(crusader_pos, 0.42, 240.0),
             Some("Yela"),
         );
-        
+
         // ArcCorp Mining Area 045 (AMA045) - near Lyria
         add_location(
             &mut map,
@@ -381,7 +381,7 @@ pub static LOCATION_POSITIONS: LazyLock<HashMap<&'static str, LocationPosition>>
             moon_pos(arccorp_pos, 0.28, 60.0),
             Some("Lyria"),
         );
-        
+
         // ArcCorp Mining Area 141 (AMA141) - near Wala
         add_location(
             &mut map,
@@ -390,7 +390,7 @@ pub static LOCATION_POSITIONS: LazyLock<HashMap<&'static str, LocationPosition>>
             moon_pos(arccorp_pos, 0.32, 180.0),
             Some("Wala"),
         );
-        
+
         // Daymar surface mining sites (near Shubin Mining facilities)
         add_location(
             &mut map,
@@ -399,7 +399,7 @@ pub static LOCATION_POSITIONS: LazyLock<HashMap<&'static str, LocationPosition>>
             moon_pos(crusader_pos, 0.45, 118.0),
             Some("Daymar"),
         );
-        
+
         // Aberdeen surface mining (quantainium hotspot)
         add_location(
             &mut map,

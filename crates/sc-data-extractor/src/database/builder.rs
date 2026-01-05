@@ -2,8 +2,8 @@
 
 use crate::database::schema::Database;
 use crate::error::Result;
-use crate::models::starmap::StarmapLocation;
 use crate::models::shops::ShopInventory;
+use crate::models::starmap::StarmapLocation;
 use rusqlite::params;
 
 /// Builder for populating database from parsed data
@@ -117,8 +117,8 @@ impl DatabaseBuilder {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::models::starmap::*;
     use crate::models::shops::*;
+    use crate::models::starmap::*;
 
     #[test]
     fn test_insert_locations() {
