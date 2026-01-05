@@ -37,11 +37,10 @@ impl ResourceType {
         match self {
             Self::Quantainium => (88.0, 110.0),
             Self::Bexalite => (40.0, 50.0),
-            Self::Taranite => (25.0, 35.0),
+            Self::Taranite | Self::Agricium => (25.0, 35.0),
             Self::Gold => (20.0, 30.0),
             Self::Copper => (5.0, 10.0),
             Self::Diamond => (6.0, 9.0),
-            Self::Agricium => (25.0, 35.0),
             Self::Laranite => (28.0, 40.0),
             Self::Borase => (18.0, 26.0),
             Self::Hephaestanite => (45.0, 60.0),
