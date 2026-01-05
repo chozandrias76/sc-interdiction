@@ -42,11 +42,7 @@ impl ShopsParser {
             match self.parse_file(entry.path()) {
                 Ok(inventory) => inventories.push(inventory),
                 Err(e) => {
-                    eprintln!(
-                        "Warning: Failed to parse {}: {}",
-                        entry.path().display(),
-                        e
-                    );
+                    eprintln!("Warning: Failed to parse {}: {}", entry.path().display(), e);
                 }
             }
         }

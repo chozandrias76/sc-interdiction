@@ -40,11 +40,7 @@ impl StarmapParser {
             match self.parse_file(entry.path()) {
                 Ok(mut locs) => locations.append(&mut locs),
                 Err(e) => {
-                    eprintln!(
-                        "Warning: Failed to parse {}: {}",
-                        entry.path().display(),
-                        e
-                    );
+                    eprintln!("Warning: Failed to parse {}: {}", entry.path().display(), e);
                 }
             }
         }

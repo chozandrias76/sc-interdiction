@@ -1,7 +1,7 @@
 //! Database creation and population
 
-pub mod schema;
 pub mod builder;
+pub mod schema;
 
-pub use schema::Database;
 pub use builder::DatabaseBuilder;
+pub use schema::Database;

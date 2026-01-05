@@ -45,11 +45,17 @@ fn main() -> Result<()> {
             import_all(&cli.sclogistics_path, &cli.output)?;
         }
         Commands::Starmap => {
-            println!("Importing starmap data from {}", cli.sclogistics_path.display());
+            println!(
+                "Importing starmap data from {}",
+                cli.sclogistics_path.display()
+            );
             import_starmap(&cli.sclogistics_path, &cli.output)?;
         }
         Commands::Shops => {
-            println!("Importing shop data from {}", cli.sclogistics_path.display());
+            println!(
+                "Importing shop data from {}",
+                cli.sclogistics_path.display()
+            );
             import_shops(&cli.sclogistics_path, &cli.output)?;
         }
         Commands::Stats => {

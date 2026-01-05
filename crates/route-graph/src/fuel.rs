@@ -633,29 +633,29 @@ pub fn find_route_with_refueling(
 }
 
 /// Typical hydrogen fuel price per unit (aUEC).
-/// 
+///
 /// **WARNING: PLACEHOLDER VALUE - NEEDS REAL DATA SOURCE**
-/// 
+///
 /// This is an estimated value pending:
 /// - In-game measurement at refueling stations
 /// - UEX API commodity data for hydrogen fuel (if available)
 /// - Community data sources for fuel pricing
-/// 
+///
 /// TODO: Document actual source once verified
 pub const HYDROGEN_FUEL_PRICE_PER_UNIT: f64 = 1.0;
 
 /// Typical quantum fuel price per unit (aUEC).
-/// 
+///
 /// **WARNING: PLACEHOLDER VALUE - NEEDS REAL DATA SOURCE**
-/// 
+///
 /// This is an estimated value pending:
 /// - In-game measurement at refueling stations  
 /// - UEX API commodity data for quantum fuel (if available)
 /// - Community data sources for fuel pricing
-/// 
+///
 /// Quantum fuel is assumed more expensive than hydrogen based on in-game
 /// scarcity and usage patterns, but the multiplier is not verified.
-/// 
+///
 /// TODO: Document actual source once verified
 pub const QUANTUM_FUEL_PRICE_PER_UNIT: f64 = 1.5;
 
@@ -700,8 +700,8 @@ pub fn calculate_refuel_cost(fuel_needed: f64, price_per_unit: Option<f64>) -> f
 /// let fuel_capacity = 2500.0;
 ///
 /// // Mock fuel index for example
-/// let stations = vec![];
-/// let index = FuelStationIndex::new(stations);
+/// let terminals = vec![];
+/// let index = FuelStationIndex::from_terminals(&terminals);
 ///
 /// // In real usage, you'd get waypoints from find_route_with_refueling
 /// // let waypoints = find_route_with_refueling("Hurston", "microTech", fuel_capacity, efficiency, &index)?;
