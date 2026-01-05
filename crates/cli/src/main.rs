@@ -468,12 +468,23 @@ fn print_routes_table(routes: &[intel::HotRoute], limit: usize) {
             route.commodity,
             route.profit_per_scu
         );
-        println!("   {} -> {}", route.origin, route.destination);
+
+        let fuel_icon = if !route.fuel_sufficient { " ⛽" } else { "" };
+        println!("   {} -> {}{}", route.origin, route.destination, fuel_icon);
+
         println!(
             "   Likely ship: {} ({} SCU)",
             route.likely_ship.name, route.likely_ship.cargo_scu
         );
         println!("   Est. haul value: {:.0} aUEC", route.estimated_haul_value);
+
+        if !route.fuel_sufficient {
+            println!(
+                "   ⚠️  Refueling required ({:.1} Mkm, needs {:.0} QF)",
+                route.distance_mkm, route.fuel_required
+            );
+        }
+
         println!();
     }
 }
@@ -490,11 +501,14 @@ fn print_runs_table(runs: &[intel::TradeRun], limit: usize) {
             "✗ deadhead return"
         };
 
+        let fuel_icon = if !run.fuel_sufficient { " ⛽" } else { "" };
+
         println!(
-            "{}. {} ({}) - Total profit: {:.0} aUEC",
+            "{}. {} ({}{}) - Total profit: {:.0} aUEC",
             i + 1,
             run.likely_ship.name,
             return_info,
+            fuel_icon,
             run.total_profit
         );
         println!(
@@ -512,6 +526,13 @@ fn print_runs_table(runs: &[intel::TradeRun], limit: usize) {
                 ret.commodity, ret.profit_per_scu
             );
             println!("      {} -> {}", ret.origin, ret.destination);
+        }
+
+        if !run.fuel_sufficient {
+            println!(
+                "   ⚠️  Refueling required ({:.1} Mkm total distance)",
+                run.total_distance_mkm
+            );
         }
 
         println!();

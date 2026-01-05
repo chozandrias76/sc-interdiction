@@ -28,8 +28,14 @@ impl QtDriveEfficiency {
 
 /// Default quantum drive efficiency ratings by size class.
 ///
-/// These are estimated values based on typical ship quantum drives.
-/// Actual values may vary based on specific drive models.
+/// **STATUS: ESTIMATED VALUES - NEEDS VERIFICATION**
+/// See: docs/DATA_SOURCES.md - Quantum Drive Efficiency section
+///
+/// These are estimated values based on observed quantum travel fuel consumption patterns.
+/// Actual values may vary based on specific drive models and game balance changes.
+///
+/// Source: Estimated from in-game observations
+/// Verification needed: Controlled test flights measuring fuel over known distances
 ///
 /// Reference: A cross-system trip (e.g., Hurston to microTech) is ~25 Mkm.
 pub static QT_DRIVE_EFFICIENCY: &[QtDriveEfficiency] = &[
@@ -121,6 +127,7 @@ pub fn max_range_mkm(fuel_capacity: f64, efficiency: &QtDriveEfficiency) -> f64 
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::assertions_on_constants)]
 mod tests {
     use super::*;
 
@@ -355,6 +362,7 @@ fn perpendicular_distance_to_line(
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod fuel_station_tests {
     use super::*;
 
@@ -624,4 +632,158 @@ pub fn find_route_with_refueling(
         "Could not find route to {} - exceeded maximum refueling stops",
         dest
     ))
+}
+
+/// Typical hydrogen fuel price per unit (aUEC).
+///
+/// **WARNING: PLACEHOLDER VALUE - NEEDS REAL DATA SOURCE**
+///
+/// This is an estimated value pending:
+/// - In-game measurement at refueling stations
+/// - UEX API commodity data for hydrogen fuel (if available)
+/// - Community data sources for fuel pricing
+///
+/// TODO: Document actual source once verified
+pub const HYDROGEN_FUEL_PRICE_PER_UNIT: f64 = 1.0;
+
+/// Typical quantum fuel price per unit (aUEC).
+///
+/// **WARNING: PLACEHOLDER VALUE - NEEDS REAL DATA SOURCE**
+///
+/// This is an estimated value pending:
+/// - In-game measurement at refueling stations  
+/// - UEX API commodity data for quantum fuel (if available)
+/// - Community data sources for fuel pricing
+///
+/// Quantum fuel is assumed more expensive than hydrogen based on in-game
+/// scarcity and usage patterns, but the multiplier is not verified.
+///
+/// TODO: Document actual source once verified
+pub const QUANTUM_FUEL_PRICE_PER_UNIT: f64 = 1.5;
+
+/// Calculate the cost to refuel quantum fuel at a station.
+///
+/// # Arguments
+/// * `fuel_needed` - Quantum fuel units needed
+/// * `price_per_unit` - Optional custom price per unit (defaults to standard rate)
+///
+/// # Returns
+/// Cost in aUEC to refuel
+///
+/// # Example
+/// ```
+/// use route_graph::fuel::calculate_refuel_cost;
+///
+/// let cost = calculate_refuel_cost(2000.0, None);
+/// assert_eq!(cost, 3000.0); // 2000 units * 1.5 aUEC/unit
+/// ```
+pub fn calculate_refuel_cost(fuel_needed: f64, price_per_unit: Option<f64>) -> f64 {
+    let price = price_per_unit.unwrap_or(QUANTUM_FUEL_PRICE_PER_UNIT);
+    fuel_needed * price
+}
+
+/// Calculate total refueling cost for a multi-hop route.
+///
+/// # Arguments
+/// * `waypoints` - Route waypoints from `find_route_with_refueling`
+/// * `fuel_capacity` - Ship's quantum fuel tank capacity
+/// * `efficiency` - Ship's quantum drive efficiency
+/// * `price_per_unit` - Optional custom fuel price (defaults to standard rate)
+///
+/// # Returns
+/// Total refueling cost in aUEC
+///
+/// # Example
+/// ```
+/// use route_graph::fuel::{find_route_with_refueling, calculate_route_refuel_cost, efficiency_for_size, FuelStationIndex};
+/// use route_graph::Point3D;
+///
+/// let efficiency = efficiency_for_size(2).unwrap();
+/// let fuel_capacity = 2500.0;
+///
+/// // Mock fuel index for example
+/// let terminals = vec![];
+/// let index = FuelStationIndex::from_terminals(&terminals);
+///
+/// // In real usage, you'd get waypoints from find_route_with_refueling
+/// // let waypoints = find_route_with_refueling("Hurston", "microTech", fuel_capacity, efficiency, &index)?;
+/// // let cost = calculate_route_refuel_cost(&waypoints, fuel_capacity, efficiency, None);
+/// ```
+pub fn calculate_route_refuel_cost(
+    waypoints: &[Waypoint],
+    fuel_capacity: f64,
+    efficiency: &QtDriveEfficiency,
+    price_per_unit: Option<f64>,
+) -> f64 {
+    let mut total_cost = 0.0;
+    let mut current_fuel = fuel_capacity;
+
+    for waypoint in waypoints {
+        let fuel_consumed = calculate_qt_fuel_consumption(waypoint.distance_from_prev, efficiency);
+        current_fuel -= fuel_consumed;
+
+        if waypoint.needs_refuel {
+            // Refuel to full capacity
+            let fuel_needed = fuel_capacity - current_fuel;
+            total_cost += calculate_refuel_cost(fuel_needed, price_per_unit);
+            current_fuel = fuel_capacity;
+        }
+    }
+
+    total_cost
+}
+
+#[cfg(test)]
+#[allow(clippy::unwrap_used)]
+mod refuel_cost_tests {
+    use super::*;
+
+    #[test]
+    fn test_calculate_refuel_cost_default() {
+        let cost = calculate_refuel_cost(2000.0, None);
+        assert_eq!(cost, 3000.0); // 2000 * 1.5
+    }
+
+    #[test]
+    fn test_calculate_refuel_cost_custom() {
+        let cost = calculate_refuel_cost(1000.0, Some(2.0));
+        assert_eq!(cost, 2000.0);
+    }
+
+    #[test]
+    fn test_route_refuel_cost_no_stops() {
+        let efficiency = efficiency_for_size(2).unwrap();
+        let waypoints = vec![Waypoint {
+            location: "Destination".to_string(),
+            needs_refuel: false,
+            distance_from_prev: 10.0,
+            cumulative_distance: 10.0,
+        }];
+
+        let cost = calculate_route_refuel_cost(&waypoints, 5000.0, efficiency, None);
+        assert_eq!(cost, 0.0); // No refueling needed
+    }
+
+    #[test]
+    fn test_route_refuel_cost_one_stop() {
+        let efficiency = efficiency_for_size(2).unwrap();
+        let waypoints = vec![
+            Waypoint {
+                location: "Fuel Station".to_string(),
+                needs_refuel: true,
+                distance_from_prev: 20.0,
+                cumulative_distance: 20.0,
+            },
+            Waypoint {
+                location: "Destination".to_string(),
+                needs_refuel: false,
+                distance_from_prev: 20.0,
+                cumulative_distance: 40.0,
+            },
+        ];
+
+        // Start with 2500, use 1600 (20 * 80), refuel 1600
+        let cost = calculate_route_refuel_cost(&waypoints, 2500.0, efficiency, None);
+        assert_eq!(cost, 2400.0); // 1600 units * 1.5
+    }
 }
