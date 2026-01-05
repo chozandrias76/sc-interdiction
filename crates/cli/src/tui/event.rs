@@ -22,8 +22,6 @@ pub enum Event {
 /// Handles terminal events in a separate thread.
 pub struct EventHandler {
     rx: mpsc::Receiver<Event>,
-    #[allow(dead_code)]
-    tx: mpsc::Sender<Event>,
 }
 
 impl EventHandler {
@@ -78,7 +76,7 @@ impl EventHandler {
             }
         });
 
-        Self { rx, tx }
+        Self { rx }
     }
 
     /// Get the next event, blocking until one is available.

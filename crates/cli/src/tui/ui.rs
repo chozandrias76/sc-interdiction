@@ -47,8 +47,8 @@ mod tests {
         use intel::{CargoShip, HotRoute, TargetPrediction, TrafficDirection};
 
         let ship = CargoShip {
-            name: "Caterpillar",
-            manufacturer: "Drake",
+            name: "Caterpillar".to_string(),
+            manufacturer: "Drake".to_string(),
             cargo_scu: 576,
             crew_size: 4,
             threat_level: 3,
@@ -57,13 +57,16 @@ mod tests {
             quantum_fuel_capacity: 10000.0,
             hydrogen_fuel_capacity: 1800.0,
             qt_drive_size: 3,
+            mass_kg: Some(200_000.0),
+            mining_capacity_scu: None,
+            role: intel::ShipRole::Cargo,
         };
 
         let targets = vec![
             TargetPrediction {
                 commodity: "Quantanium".to_string(),
                 destination: "Area18 TDD".to_string(),
-                likely_ship: ship,
+                likely_ship: ship.clone(),
                 direction: TrafficDirection::Departing,
                 estimated_cargo_value: 1_250_000.0,
             },
@@ -71,8 +74,8 @@ mod tests {
                 commodity: "Laranite".to_string(),
                 destination: "Port Olisar".to_string(),
                 likely_ship: CargoShip {
-                    name: "C2 Hercules",
-                    manufacturer: "Crusader",
+                    name: "C2 Hercules".to_string(),
+                    manufacturer: "Crusader".to_string(),
                     cargo_scu: 696,
                     crew_size: 3,
                     threat_level: 8,
@@ -81,6 +84,9 @@ mod tests {
                     quantum_fuel_capacity: 10000.0,
                     hydrogen_fuel_capacity: 2500.0,
                     qt_drive_size: 3,
+                    mass_kg: Some(300_000.0),
+                    mining_capacity_scu: None,
+                    role: intel::ShipRole::Cargo,
                 },
                 direction: TrafficDirection::Arriving,
                 estimated_cargo_value: 980_000.0,
@@ -92,6 +98,8 @@ mod tests {
             commodity_code: "QUAN".to_string(),
             origin: "HDMS-Bezdek".to_string(),
             destination: "Area18 TDD".to_string(),
+            origin_system: Some("Stanton".to_string()),
+            destination_system: Some("Stanton".to_string()),
             profit_per_scu: 88.5,
             available_scu: 576.0,
             likely_ship: ship,
@@ -124,6 +132,8 @@ mod tests {
             error: None,
             status: "Ready".to_string(),
             scroll: ScrollState::new(),
+            detail_expanded: false,
+            detail_selected: 0,
         }
     }
 

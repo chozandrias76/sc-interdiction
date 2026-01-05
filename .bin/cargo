@@ -1,0 +1,39 @@
+#!/bin/bash
+# Repository-specific cargo wrapper
+# Prevents accidental local release builds - CI should handle releases
+
+# Check if this is a release build command
+if [[ "$*" == *"build --release"* ]] || [[ "$*" == *"build -r"* ]]; then
+    echo ""
+    echo "❌ ERROR: Local release builds are disabled!"
+    echo ""
+    echo "Release builds should only be created by CI/CD."
+    echo "Use 'cargo build' for local development (debug mode)."
+    echo ""
+    echo "Rationale:"
+    echo "  - Prevents confusion about which binary to use"
+    echo "  - Ensures consistent release artifacts from CI"
+    echo "  - Debug builds are faster and good enough for development"
+    echo ""
+    echo "If you absolutely need a release build for performance testing,"
+    echo "bypass this wrapper by using the full cargo path directly."
+    echo ""
+    exit 1
+fi
+
+# Find the real cargo (skip this wrapper)
+REAL_CARGO=$(command -v cargo | grep -v "\.bin/cargo" | head -1)
+if [ -z "$REAL_CARGO" ]; then
+    # Fallback to common locations
+    if [ -x "$HOME/.cargo/bin/cargo" ]; then
+        REAL_CARGO="$HOME/.cargo/bin/cargo"
+    elif [ -x "/usr/bin/cargo" ]; then
+        REAL_CARGO="/usr/bin/cargo"
+    else
+        echo "Error: Could not find real cargo executable"
+        exit 1
+    fi
+fi
+
+# Call the real cargo
+exec "$REAL_CARGO" "$@"

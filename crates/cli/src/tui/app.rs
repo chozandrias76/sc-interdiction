@@ -1,5 +1,7 @@
 //! Application state for the TUI.
 
+use std::sync::Arc;
+
 use api_client::UexClient;
 use eyre::Result;
 use intel::{HotRoute, TargetAnalyzer, TargetPrediction, TrafficDirection};
@@ -54,6 +56,10 @@ pub struct App {
     pub status: String,
     /// Scroll state for text display.
     pub scroll: ScrollState,
+    /// Detail view expanded (for map view).
+    pub detail_expanded: bool,
+    /// Selected route index in expanded detail view.
+    pub detail_selected: usize,
 }
 
 impl App {
@@ -61,7 +67,10 @@ impl App {
     pub async fn new(location: Option<String>) -> Result<Self> {
         let location = location.unwrap_or_else(|| "Crusader".to_string());
         let uex = UexClient::new();
-        let analyzer = TargetAnalyzer::new(uex.clone());
+        let registry = intel::ShipRegistry::load()
+            .await
+            .map_err(|e| eyre::eyre!("Failed to load ship registry: {}", e))?;
+        let analyzer = TargetAnalyzer::new(uex.clone(), Arc::new(registry));
 
         // Determine system from location
         let map_system = infer_system(&location);
@@ -89,6 +98,8 @@ impl App {
             error: None,
             status: "Loading data...".to_string(),
             scroll: ScrollState::new(),
+            detail_expanded: false,
+            detail_selected: 0,
         };
 
         // Load data
