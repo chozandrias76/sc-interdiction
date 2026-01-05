@@ -1,7 +1,7 @@
 //! Starmap XML parser
 
 use crate::error::{Error, Result};
-use crate::models::starmap::{StarmapLocation, QuantumTravelData};
+use crate::models::starmap::{QuantumTravelData, StarmapLocation};
 use quick_xml::de::from_str;
 use serde::Deserialize;
 use std::fs;

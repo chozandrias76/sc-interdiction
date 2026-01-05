@@ -1,0 +1,3 @@
+#!/bin/bash
+# Alias to pre-commit-wrapper for this repo
+exec "$HOME/.local/bin/pre-commit-wrapper" "$@"
