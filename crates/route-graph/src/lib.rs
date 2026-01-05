@@ -8,6 +8,7 @@ pub mod fuel;
 mod graph;
 mod locations;
 pub mod mining;
+pub mod refinery;
 mod spatial;
 
 pub use chokepoint::{find_chokepoints, Chokepoint, InterdictPosition, RoutePair};
@@ -24,6 +25,7 @@ pub use locations::{
 pub use mining::{
     nearest_mining_site, sites_with_resource, MiningSite, ResourceType, MINING_SITES,
 };
+pub use refinery::{Refinery, RefineryIndex, RefineryMethod, REFINERY_METHODS};
 pub use spatial::{
     find_route_intersections, AltJumpInstruction, IndexedHotspot, IntersectingRoute,
     JumpInstruction, NearbyHotspot, Point3D, RouteIntersection, RouteSegment, SpatialIndex,

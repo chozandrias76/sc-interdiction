@@ -14,7 +14,7 @@ pub struct RefineryMethod {
     pub yield_percentage: f64,
     /// Processing time in hours
     pub processing_time_hours: f64,
-    /// Cost per SCU of material processed
+    /// Cost per SCU of material processed (in aUEC)
     pub cost_per_scu: f64,
 }
 
@@ -116,11 +116,18 @@ impl RefineryIndex {
             .iter()
             .filter_map(|r| {
                 r.position.as_ref().map(|pos| {
-                    let distance = position.distance_to(pos);
-                    (r, distance)
+                    // Use distance_squared for comparison (avoids sqrt)
+                    let dist_sq = position.distance_squared(pos);
+                    (r, pos, dist_sq)
                 })
             })
-            .min_by(|(_, d1), (_, d2)| d1.partial_cmp(d2).unwrap_or(std::cmp::Ordering::Equal))
+            .min_by(|(_, _, d1), (_, _, d2)| {
+                d1.partial_cmp(d2).unwrap_or(std::cmp::Ordering::Equal)
+            })
+            .map(|(r, pos, _)| {
+                // Only compute actual distance for the result
+                (r, position.distance_to(pos))
+            })
     }
 
     /// Find the nearest refinery along a route path.
@@ -272,5 +279,142 @@ mod tests {
         let max = &REFINERY_METHODS[2];
         assert_eq!(max.name, "Maximum Yield");
         assert_eq!(max.yield_percentage, 0.90);
+    }
+
+    #[test]
+    fn test_perpendicular_distance_point_on_line() {
+        // Point exactly on the line should have zero distance
+        let start = Point3D::new(0.0, 0.0, 0.0);
+        let end = Point3D::new(10.0, 0.0, 0.0);
+        let point = Point3D::new(5.0, 0.0, 0.0);
+
+        let dist = perpendicular_distance_to_line(&point, &start, &end);
+        assert!(dist < 1e-10, "Point on line should have ~0 distance");
+    }
+
+    #[test]
+    fn test_perpendicular_distance_perpendicular_point() {
+        // Point 5 units perpendicular to the line
+        let start = Point3D::new(0.0, 0.0, 0.0);
+        let end = Point3D::new(10.0, 0.0, 0.0);
+        let point = Point3D::new(5.0, 5.0, 0.0);
+
+        let dist = perpendicular_distance_to_line(&point, &start, &end);
+        assert!(
+            (dist - 5.0).abs() < 1e-10,
+            "Expected distance of 5.0, got {}",
+            dist
+        );
+    }
+
+    #[test]
+    fn test_perpendicular_distance_beyond_segment_start() {
+        // Point beyond the start of the segment
+        let start = Point3D::new(0.0, 0.0, 0.0);
+        let end = Point3D::new(10.0, 0.0, 0.0);
+        let point = Point3D::new(-3.0, 4.0, 0.0); // 5 units from start (3-4-5 triangle)
+
+        let dist = perpendicular_distance_to_line(&point, &start, &end);
+        assert!(
+            (dist - 5.0).abs() < 1e-10,
+            "Expected distance of 5.0, got {}",
+            dist
+        );
+    }
+
+    #[test]
+    fn test_perpendicular_distance_beyond_segment_end() {
+        // Point beyond the end of the segment
+        let start = Point3D::new(0.0, 0.0, 0.0);
+        let end = Point3D::new(10.0, 0.0, 0.0);
+        let point = Point3D::new(13.0, 4.0, 0.0); // 5 units from end (3-4-5 triangle)
+
+        let dist = perpendicular_distance_to_line(&point, &start, &end);
+        assert!(
+            (dist - 5.0).abs() < 1e-10,
+            "Expected distance of 5.0, got {}",
+            dist
+        );
+    }
+
+    #[test]
+    fn test_perpendicular_distance_degenerate_line() {
+        // Line segment is a point (start == end)
+        let start = Point3D::new(5.0, 5.0, 5.0);
+        let end = Point3D::new(5.0, 5.0, 5.0);
+        let point = Point3D::new(8.0, 9.0, 5.0); // 5 units away (3-4-5 triangle)
+
+        let dist = perpendicular_distance_to_line(&point, &start, &end);
+        assert!(
+            (dist - 5.0).abs() < 1e-10,
+            "Expected distance of 5.0, got {}",
+            dist
+        );
+    }
+
+    fn create_refinery_with_position(name: &str, x: f64, y: f64, z: f64) -> Refinery {
+        Refinery {
+            name: name.to_string(),
+            code: Some(format!("{}_CODE", name)),
+            system: Some("Stanton".to_string()),
+            position: Some(Point3D::new(x, y, z)),
+            methods: REFINERY_METHODS.to_vec(),
+        }
+    }
+
+    #[test]
+    fn test_find_nearest_on_route_within_threshold() {
+        // Create an index with a refinery close to the route
+        let index = RefineryIndex {
+            refineries: vec![
+                create_refinery_with_position("Close Refinery", 5.0, 1.0, 0.0), // 1 unit from route
+                create_refinery_with_position("Far Refinery", 5.0, 10.0, 0.0), // 10 units from route
+            ],
+        };
+
+        let start = Point3D::new(0.0, 0.0, 0.0);
+        let end = Point3D::new(10.0, 0.0, 0.0);
+
+        // Max deviation of 2.0 should find the close refinery
+        let result = index.find_nearest_on_route(&start, &end, 2.0);
+        assert!(result.is_some());
+        assert_eq!(result.unwrap().0.name, "Close Refinery");
+    }
+
+    #[test]
+    fn test_find_nearest_on_route_outside_threshold() {
+        let index = RefineryIndex {
+            refineries: vec![create_refinery_with_position(
+                "Far Refinery",
+                5.0,
+                10.0,
+                0.0,
+            )],
+        };
+
+        let start = Point3D::new(0.0, 0.0, 0.0);
+        let end = Point3D::new(10.0, 0.0, 0.0);
+
+        // Max deviation of 5.0 should not find the refinery at 10 units away
+        let result = index.find_nearest_on_route(&start, &end, 5.0);
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_find_nearest_on_route_selects_closest_to_start() {
+        let index = RefineryIndex {
+            refineries: vec![
+                create_refinery_with_position("Near Start", 2.0, 0.5, 0.0),
+                create_refinery_with_position("Near End", 8.0, 0.5, 0.0),
+            ],
+        };
+
+        let start = Point3D::new(0.0, 0.0, 0.0);
+        let end = Point3D::new(10.0, 0.0, 0.0);
+
+        // Both are within threshold, should return the one closest to start
+        let result = index.find_nearest_on_route(&start, &end, 1.0);
+        assert!(result.is_some());
+        assert_eq!(result.unwrap().0.name, "Near Start");
     }
 }
