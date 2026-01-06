@@ -452,6 +452,7 @@ pub fn estimate_position(location: &str) -> Option<Point3D> {
 
 /// Calculate distance between two locations in millions of km.
 /// Returns None if either location is unknown.
+#[must_use]
 pub fn distance_between(from: &str, to: &str) -> Option<f64> {
     let from_pos = estimate_position(from)?;
     let to_pos = estimate_position(to)?;

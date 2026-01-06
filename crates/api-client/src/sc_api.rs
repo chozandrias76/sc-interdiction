@@ -26,6 +26,10 @@ impl ScApiClient {
     }
 
     /// Fetch a star system by code (e.g., "STANTON").
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the API request fails.
     #[instrument(skip(self))]
     pub async fn get_system(&self, code: &str) -> Result<StarSystem> {
         let url = format!(
@@ -36,6 +40,10 @@ impl ScApiClient {
     }
 
     /// Fetch all systems.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the API request fails.
     #[instrument(skip(self))]
     pub async fn get_systems(&self) -> Result<Vec<StarSystem>> {
         let url = format!("{}/{}/cache/starmap/systems", BASE_URL, self.api_key);
@@ -44,6 +52,10 @@ impl ScApiClient {
     }
 
     /// Search starmap objects by name.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the API request fails.
     #[instrument(skip(self))]
     pub async fn search_starmap(&self, query: &str) -> Result<Vec<StarmapObject>> {
         let url = format!(
@@ -57,6 +69,10 @@ impl ScApiClient {
     }
 
     /// Get all stations/landing zones in a system.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the API request fails.
     #[instrument(skip(self))]
     pub async fn get_stations(&self, system_code: &str) -> Result<Vec<Station>> {
         let system = self.get_system(system_code).await?;

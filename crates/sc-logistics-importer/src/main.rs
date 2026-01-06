@@ -1,4 +1,7 @@
-//! CLI tool for importing SCLogistics data into databases
+//! CLI tool for importing `SCLogistics` data into databases
+
+// CLI binaries intentionally use stdout for user output
+#![allow(clippy::print_stdout)]
 
 use clap::{Parser, Subcommand};
 use eyre::Result;
@@ -6,13 +9,13 @@ use sc_data_extractor::{
     database::{Database, DatabaseBuilder},
     parsers::{ShopsParser, StarmapParser},
 };
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 #[derive(Parser)]
 #[command(name = "sc-logistics-importer")]
 #[command(about = "Import Star Citizen game data from SCLogistics repository")]
 struct Cli {
-    /// Path to SCLogistics repository
+    /// Path to `SCLogistics` repository
     #[arg(short, long, default_value = "../SCLogistics")]
     sclogistics_path: PathBuf,
 
@@ -66,7 +69,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn import_all(sclogistics_path: &PathBuf, output: &PathBuf) -> Result<()> {
+fn import_all(sclogistics_path: &Path, output: &Path) -> Result<()> {
     if let Some(parent) = output.parent() {
         std::fs::create_dir_all(parent)?;
     }
@@ -101,7 +104,7 @@ fn import_all(sclogistics_path: &PathBuf, output: &PathBuf) -> Result<()> {
     Ok(())
 }
 
-fn import_starmap(sclogistics_path: &PathBuf, output: &PathBuf) -> Result<()> {
+fn import_starmap(sclogistics_path: &Path, output: &Path) -> Result<()> {
     if let Some(parent) = output.parent() {
         std::fs::create_dir_all(parent)?;
     }
@@ -125,7 +128,7 @@ fn import_starmap(sclogistics_path: &PathBuf, output: &PathBuf) -> Result<()> {
     Ok(())
 }
 
-fn import_shops(sclogistics_path: &PathBuf, output: &PathBuf) -> Result<()> {
+fn import_shops(sclogistics_path: &Path, output: &Path) -> Result<()> {
     if let Some(parent) = output.parent() {
         std::fs::create_dir_all(parent)?;
     }
@@ -149,7 +152,7 @@ fn import_shops(sclogistics_path: &PathBuf, output: &PathBuf) -> Result<()> {
     Ok(())
 }
 
-fn show_stats(db_path: &PathBuf) -> Result<()> {
+fn show_stats(db_path: &Path) -> Result<()> {
     let db_path_str = db_path
         .to_str()
         .ok_or_else(|| eyre::eyre!("Invalid UTF-8 in database path"))?;

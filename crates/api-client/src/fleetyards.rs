@@ -21,6 +21,7 @@ pub struct FleetYardsClient {
 
 impl FleetYardsClient {
     /// Create a new `FleetYards` client.
+    #[must_use]
     pub fn new() -> Self {
         Self {
             client: Client::new(),
@@ -29,6 +30,7 @@ impl FleetYardsClient {
     }
 
     /// Create a new `FleetYards` client with local caching.
+    #[must_use]
     pub fn with_cache(cache_dir: PathBuf) -> Self {
         Self {
             client: Client::new(),
@@ -37,6 +39,10 @@ impl FleetYardsClient {
     }
 
     /// Get all ship models from the API.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the API request fails or returns invalid data.
     #[instrument(skip(self))]
     pub async fn get_ships(&self) -> Result<Vec<ShipModel>> {
         // Try loading from cache first
@@ -96,6 +102,10 @@ impl FleetYardsClient {
     }
 
     /// Get a ship by name (case-insensitive).
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the API request fails.
     #[instrument(skip(self))]
     pub async fn get_ship(&self, name: &str) -> Result<Option<ShipModel>> {
         let ships = self.get_ships().await?;
@@ -106,6 +116,10 @@ impl FleetYardsClient {
     }
 
     /// Get ships by manufacturer.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the API request fails.
     #[instrument(skip(self))]
     pub async fn get_ships_by_manufacturer(&self, manufacturer: &str) -> Result<Vec<ShipModel>> {
         let ships = self.get_ships().await?;
@@ -121,6 +135,10 @@ impl FleetYardsClient {
     }
 
     /// Build a lookup map from ship name to ship data.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the API request fails.
     pub async fn build_ship_lookup(&self) -> Result<HashMap<String, ShipModel>> {
         let ships = self.get_ships().await?;
         let map: HashMap<String, ShipModel> = ships
@@ -182,6 +200,10 @@ impl FleetYardsClient {
     }
 
     /// Force refresh the cache from the API.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the API request fails.
     pub async fn refresh_cache(&self) -> Result<Vec<ShipModel>> {
         let ships = self.fetch_all_ships().await?;
         if let Err(e) = self.save_to_cache(&ships) {
@@ -244,6 +266,7 @@ pub struct ShipModel {
 
 impl ShipModel {
     /// Get hydrogen fuel tank capacity.
+    #[must_use]
     pub fn hydrogen_fuel_capacity(&self) -> Option<u64> {
         self.metrics
             .as_ref()?
@@ -252,6 +275,7 @@ impl ShipModel {
     }
 
     /// Get quantum fuel tank capacity.
+    #[must_use]
     pub fn quantum_fuel_capacity(&self) -> Option<u64> {
         self.metrics
             .as_ref()?
@@ -260,11 +284,13 @@ impl ShipModel {
     }
 
     /// Get cargo capacity in SCU.
+    #[must_use]
     pub fn cargo_capacity(&self) -> Option<u64> {
         self.metrics.as_ref()?.cargo.map(|v| v as u64)
     }
 
     /// Get the manufacturer name.
+    #[must_use]
     pub fn manufacturer_name(&self) -> Option<&str> {
         self.manufacturer.as_ref().map(|m| m.name.as_str())
     }

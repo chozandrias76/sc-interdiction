@@ -3,25 +3,37 @@
 use crate::error::Result;
 use rusqlite::Connection;
 
-/// SQLite database for extracted game data
+/// `SQLite` database for extracted game data
 pub struct Database {
     conn: Connection,
 }
 
 impl Database {
-    /// Creates a new in-memory database
+    /// Creates a new in-memory database.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the database connection fails.
     pub fn new_in_memory() -> Result<Self> {
         let conn = Connection::open_in_memory()?;
         Ok(Self { conn })
     }
 
-    /// Creates a new database at the specified path
+    /// Creates a new database at the specified path.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the database file cannot be opened or created.
     pub fn new(path: &str) -> Result<Self> {
         let conn = Connection::open(path)?;
         Ok(Self { conn })
     }
 
-    /// Initializes the database schema
+    /// Initializes the database schema.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if schema creation fails.
     pub fn init_schema(&self) -> Result<()> {
         self.conn.execute_batch(
             r#"

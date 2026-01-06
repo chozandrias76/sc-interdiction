@@ -20,11 +20,16 @@ pub struct TargetAnalyzer {
 
 impl TargetAnalyzer {
     /// Create a new target analyzer with a ship registry.
+    #[must_use]
     pub fn new(uex: UexClient, registry: Arc<ShipRegistry>) -> Self {
         Self { uex, registry }
     }
 
     /// Get hot trade routes sorted by profitability.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the trade routes API request fails.
     pub async fn get_hot_routes(&self, limit: usize) -> api_client::Result<Vec<HotRoute>> {
         let routes = self.uex.get_trade_routes().await?;
 
@@ -73,6 +78,10 @@ impl TargetAnalyzer {
     }
 
     /// Predict likely targets at a specific location.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the trade routes API request fails.
     pub async fn predict_targets_at(
         &self,
         location: &str,
@@ -121,10 +130,13 @@ impl TargetAnalyzer {
     }
 
     /// Find best interdiction points based on current trade data.
-    /// Find best interdiction points based on current trade data.
     ///
     /// If `cross_system` is true, includes routes between different systems.
     /// If false, only includes routes within the same system.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the trade routes API request fails.
     pub async fn find_interdiction_points(
         &self,
         graph: &RouteGraph,
@@ -168,6 +180,10 @@ impl TargetAnalyzer {
     ///
     /// This finds routes where a ship can haul cargo outbound, then find return
     /// cargo to bring back, maximizing profit for the entire trip.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the trade routes API request fails.
     pub async fn get_trade_runs(&self, limit: usize) -> api_client::Result<Vec<TradeRun>> {
         let routes = self.uex.get_trade_routes().await?;
 
@@ -411,6 +427,10 @@ pub struct ShipFrequency {
 
 impl TargetAnalyzer {
     /// Get top interdiction hotspots ranked by total cargo value.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the trade routes API request fails.
     pub async fn get_interdiction_hotspots(
         &self,
         limit: usize,
@@ -465,6 +485,10 @@ impl TargetAnalyzer {
     /// This finds points in space where multiple profitable trade routes cross,
     /// making them ideal interdiction spots where you can catch ships traveling
     /// between different origin/destination pairs.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the trade routes API request fails.
     pub async fn get_route_intersections(
         &self,
         limit: usize,

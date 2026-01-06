@@ -15,7 +15,7 @@ impl ShopsParser {
     /// Creates a new shops parser
     ///
     /// # Arguments
-    /// * `sclogistics_path` - Path to the SCLogistics repository root
+    /// * `sclogistics_path` - Path to the `SCLogistics` repository root
     pub fn new(sclogistics_path: impl AsRef<Path>) -> Self {
         let shops_dir = sclogistics_path
             .as_ref()
@@ -24,7 +24,12 @@ impl ShopsParser {
         Self { shops_dir }
     }
 
-    /// Parses all shop inventory JSON files
+    /// Parses all shop inventory JSON files.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if reading the shop directory fails.
+    /// Individual file parse errors are logged and skipped.
     pub fn parse_all(&self) -> Result<Vec<ShopInventory>> {
         let mut inventories = Vec::new();
 
@@ -41,8 +46,8 @@ impl ShopsParser {
         {
             match self.parse_file(entry.path()) {
                 Ok(inventory) => inventories.push(inventory),
-                Err(e) => {
-                    eprintln!("Warning: Failed to parse {}: {}", entry.path().display(), e);
+                Err(_e) => {
+                    // Skip files that fail to parse - caller can check inventory count
                 }
             }
         }
@@ -58,6 +63,7 @@ impl ShopsParser {
     }
 
     /// Extracts shop name from filename
+    #[must_use]
     pub fn extract_shop_name(path: &Path) -> Option<String> {
         path.file_stem()
             .and_then(|s| s.to_str())

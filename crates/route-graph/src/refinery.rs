@@ -62,6 +62,7 @@ pub struct RefineryIndex {
 impl RefineryIndex {
     /// Create a refinery index from terminal data.
     /// Filters terminals by `is_refinery = true` flag.
+    #[must_use]
     pub fn from_terminals(terminals: &[api_client::Terminal]) -> Self {
         let refineries = terminals
             .iter()
@@ -92,11 +93,13 @@ impl RefineryIndex {
     }
 
     /// Get all refineries.
+    #[must_use]
     pub fn all_refineries(&self) -> &[Refinery] {
         &self.refineries
     }
 
     /// Get refineries in a specific system.
+    #[must_use]
     pub fn refineries_in_system(&self, system: &str) -> Vec<&Refinery> {
         self.refineries
             .iter()
@@ -111,6 +114,7 @@ impl RefineryIndex {
 
     /// Find the nearest refinery to a given position.
     /// Returns the refinery and distance in millions of km.
+    #[must_use]
     pub fn find_nearest(&self, position: &Point3D) -> Option<(&Refinery, f64)> {
         self.refineries
             .iter()
@@ -137,6 +141,7 @@ impl RefineryIndex {
     /// * `start` - Route start position
     /// * `end` - Route end position
     /// * `max_deviation_mkm` - Maximum perpendicular distance from route (in Mkm)
+    #[must_use]
     pub fn find_nearest_on_route(
         &self,
         start: &Point3D,
@@ -198,6 +203,9 @@ fn perpendicular_distance_to_line(
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::indexing_slicing)]
+    #![allow(clippy::unwrap_used)]
+
     use super::*;
 
     fn create_test_terminal(

@@ -42,6 +42,10 @@ impl AppState {
     }
 
     /// Initialize the route graph with data from APIs.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the API request fails.
     pub async fn init_graph(&self) -> eyre::Result<()> {
         let terminals = self.uex.get_terminals().await?;
 

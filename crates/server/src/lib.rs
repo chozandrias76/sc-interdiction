@@ -13,6 +13,10 @@ use tokio::net::TcpListener;
 use tracing::info;
 
 /// Run the server on the specified address.
+///
+/// # Errors
+///
+/// Returns an error if the server fails to bind or serve.
 pub async fn run(addr: SocketAddr, state: AppState) -> eyre::Result<()> {
     let app = create_router(state);
 

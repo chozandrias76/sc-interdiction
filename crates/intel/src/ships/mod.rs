@@ -1,6 +1,6 @@
 //! Cargo ship data for target estimation.
 //!
-//! Only ships with `production_status: "flight-ready"` from the FleetYards API
+//! Only ships with `production_status: "flight-ready"` from the `FleetYards` API
 //! are included in the registry. This ensures that only ships available in the
 //! PTU (Public Test Universe) are used for route estimation and target analysis.
 

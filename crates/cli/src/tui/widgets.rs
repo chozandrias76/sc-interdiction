@@ -32,6 +32,7 @@ pub fn render_header(frame: &mut Frame, app: &App, area: Rect) {
 }
 
 /// Render the status bar at the bottom.
+#[allow(clippy::indexing_slicing)] // Layout guarantees required indices exist
 pub fn render_status_bar(frame: &mut Frame, app: &App, area: Rect) {
     let status = if let Some(ref error) = app.error {
         Paragraph::new(error.as_str()).style(Style::default().fg(Color::Red))
