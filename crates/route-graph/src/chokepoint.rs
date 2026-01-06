@@ -44,6 +44,7 @@ pub struct InterdictPosition {
 /// Find chokepoints in the route graph.
 ///
 /// Analyzes which nodes are crossed by the most profitable trade routes.
+#[must_use]
 pub fn find_chokepoints(
     graph: &RouteGraph,
     trade_routes: &[(String, String, f64)], // (origin, dest, profit_per_scu)

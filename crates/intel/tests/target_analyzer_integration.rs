@@ -1,7 +1,7 @@
-//! Integration tests for TargetAnalyzer
+//! Integration tests for `TargetAnalyzer`
 //!
 //! These tests require complex API mocking and are better suited as integration tests.
-//! They test the full behavior of TargetAnalyzer methods that depend on UexClient.
+//! They test the full behavior of `TargetAnalyzer` methods that depend on `UexClient`.
 
 #![allow(unused_imports)]
 #![allow(dead_code)]
@@ -11,6 +11,7 @@ use intel::TargetAnalyzer;
 use mockito::Server;
 
 /// Helper to create a mock trade route for testing
+#[allow(clippy::too_many_arguments)]
 fn mock_trade_route(
     commodity: &str,
     commodity_code: &str,

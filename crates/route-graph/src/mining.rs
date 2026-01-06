@@ -33,6 +33,7 @@ pub enum ResourceType {
 
 impl ResourceType {
     /// Get the typical market value range for this resource (aUEC per unit)
+    #[must_use]
     pub fn typical_value_range(&self) -> (f64, f64) {
         match self {
             Self::Quantainium => (88.0, 110.0),
@@ -48,6 +49,7 @@ impl ResourceType {
     }
 
     /// Returns true if this resource is unstable/time-sensitive
+    #[must_use]
     pub fn is_unstable(&self) -> bool {
         matches!(self, Self::Quantainium)
     }
@@ -156,6 +158,7 @@ pub static MINING_SITES: &[MiningSite] = &[
 ];
 
 /// Find mining sites that contain a specific resource type.
+#[must_use]
 pub fn sites_with_resource(resource: ResourceType) -> Vec<&'static MiningSite> {
     MINING_SITES
         .iter()
@@ -164,6 +167,7 @@ pub fn sites_with_resource(resource: ResourceType) -> Vec<&'static MiningSite> {
 }
 
 /// Find the nearest mining site to a given position.
+#[must_use]
 pub fn nearest_mining_site(position: &Point3D) -> Option<&'static MiningSite> {
     MINING_SITES.iter().min_by(|a, b| {
         let dist_a = a.position.distance_to(position);

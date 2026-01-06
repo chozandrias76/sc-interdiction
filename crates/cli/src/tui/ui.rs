@@ -7,6 +7,7 @@ use super::widgets::{render_header, render_status_bar};
 use ratatui::prelude::*;
 
 /// Render the application.
+#[allow(clippy::indexing_slicing)] // Layout guarantees chunks has required indices
 pub fn render(frame: &mut Frame, app: &mut App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)

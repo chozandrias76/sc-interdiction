@@ -18,6 +18,10 @@ pub struct ShipRegistry {
 
 impl ShipRegistry {
     /// Load ships from API (with caching).
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the API request or cache operations fail.
     pub async fn load() -> anyhow::Result<Self> {
         let cache_dir = PathBuf::from("data/cache");
         std::fs::create_dir_all(&cache_dir)?;
@@ -31,6 +35,10 @@ impl ShipRegistry {
     }
 
     /// Create registry from API ship models.
+    ///
+    /// # Errors
+    ///
+    /// This function is infallible but returns Result for API consistency.
     #[allow(clippy::cognitive_complexity)]
     pub fn from_api_ships(api_ships: Vec<ShipModel>) -> anyhow::Result<Self> {
         let mut ships = Vec::new();
@@ -55,11 +63,13 @@ impl ShipRegistry {
     }
 
     /// Get all ships in the registry.
+    #[must_use]
     pub fn all_ships(&self) -> &[CargoShip] {
         &self.ships
     }
 
     /// Find a ship by name (case-insensitive, flexible matching).
+    #[must_use]
     pub fn find_by_name(&self, name: &str) -> Option<&CargoShip> {
         let normalized = normalize_ship_name(name);
         let idx = self.by_name.get(&normalized)?;
@@ -67,6 +77,7 @@ impl ShipRegistry {
     }
 
     /// Find ships with at least the given cargo capacity.
+    #[must_use]
     pub fn find_by_min_cargo(&self, min_scu: u32) -> Vec<&CargoShip> {
         self.ships
             .iter()
@@ -75,6 +86,7 @@ impl ShipRegistry {
     }
 
     /// Find the smallest ship that can carry the given cargo.
+    #[must_use]
     pub fn smallest_for_cargo(&self, scu: u32) -> Option<&CargoShip> {
         self.ships
             .iter()
@@ -83,6 +95,7 @@ impl ShipRegistry {
     }
 
     /// Estimate likely ship for a trade route based on cargo volume and docking restrictions.
+    #[must_use]
     pub fn estimate_for_route(&self, route: &api_client::TradeRoute) -> CargoShip {
         let scu_needed = route.max_profitable_scu();
 
@@ -113,6 +126,7 @@ impl ShipRegistry {
     }
 
     /// Estimate a ship that can service multiple routes (for round-trips).
+    #[must_use]
     pub fn estimate_for_routes(&self, routes: &[&api_client::TradeRoute]) -> CargoShip {
         if routes.is_empty() {
             return self.create_fallback_ship(0);

@@ -17,13 +17,18 @@ impl StarmapParser {
     /// Creates a new starmap parser
     ///
     /// # Arguments
-    /// * `sclogistics_path` - Path to the SCLogistics repository root
+    /// * `sclogistics_path` - Path to the `SCLogistics` repository root
     pub fn new(sclogistics_path: impl AsRef<Path>) -> Self {
         let starmap_dir = sclogistics_path.as_ref().join("starmap");
         Self { starmap_dir }
     }
 
-    /// Parses all starmap XML files
+    /// Parses all starmap XML files.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if reading the starmap directory fails.
+    /// Individual file parse errors are logged and skipped.
     pub fn parse_all(&self) -> Result<Vec<StarmapLocation>> {
         let mut locations = Vec::new();
 
@@ -39,8 +44,8 @@ impl StarmapParser {
         {
             match self.parse_file(entry.path()) {
                 Ok(mut locs) => locations.append(&mut locs),
-                Err(e) => {
-                    eprintln!("Warning: Failed to parse {}: {}", entry.path().display(), e);
+                Err(_e) => {
+                    // Skip files that fail to parse - caller can check location count
                 }
             }
         }

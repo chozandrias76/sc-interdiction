@@ -139,8 +139,6 @@ impl App {
         self.scroll.on_tick();
     }
 
-    /// Handle key events. Returns true if the app should exit.
-
     /// Get the number of visible hotspots (limited by `hotspot_limit`).
     pub fn visible_hotspot_count(&self) -> usize {
         self.hotspot_limit.min(self.hotspots.len())

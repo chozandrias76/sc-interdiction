@@ -1,4 +1,4 @@
-//! Parsers for extracting data from SCLogistics files
+//! Parsers for extracting data from `SCLogistics` files
 
 pub mod shops;
 pub mod starmap;

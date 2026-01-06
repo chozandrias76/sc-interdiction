@@ -13,6 +13,7 @@ use ratatui::{
 };
 
 /// Render the map view with system visualization and hotspot details.
+#[allow(clippy::indexing_slicing)] // Layout guarantees required indices exist
 pub fn render_map(frame: &mut Frame, app: &App, area: Rect) {
     // Split the area into map canvas (left) and hotspot details (right)
     let chunks = Layout::default()
@@ -41,8 +42,8 @@ fn location_to_xy(
     let y = base_y + loc.orbital_radius * loc.angle.sin();
     (x, y)
 }
-#[allow(clippy::too_many_lines)]
 
+#[allow(clippy::too_many_lines)]
 fn render_system_canvas(frame: &mut Frame, app: &App, area: Rect) {
     // First pass: calculate planet positions (they orbit the star)
     let mut planet_positions: std::collections::HashMap<String, (f64, f64)> =
@@ -262,6 +263,7 @@ fn render_hotspot_details(frame: &mut Frame, app: &App, area: Rect) {
 
 /// Render compact hotspot details (original view)
 #[allow(clippy::too_many_lines)]
+#[allow(clippy::indexing_slicing)] // Layout guarantees required indices exist
 fn render_hotspot_details_compact(frame: &mut Frame, app: &App, area: Rect) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -408,6 +410,7 @@ fn render_hotspot_details_compact(frame: &mut Frame, app: &App, area: Rect) {
 
 /// Render expanded hotspot details with full scrollable route list
 #[allow(clippy::too_many_lines)]
+#[allow(clippy::indexing_slicing)] // Layout guarantees required indices exist
 fn render_hotspot_details_expanded(frame: &mut Frame, app: &App, area: Rect) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)

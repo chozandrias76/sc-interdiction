@@ -5,7 +5,7 @@
 use crate::{ApiError, Result};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use tracing::instrument;
+use tracing::{instrument, warn};
 
 const BASE_URL: &str = "https://uexcorp.space/api/2.0";
 
@@ -18,6 +18,7 @@ pub struct UexClient {
 
 impl UexClient {
     /// Create a new UEX client.
+    #[must_use]
     pub fn new() -> Self {
         Self {
             client: Client::new(),
@@ -28,6 +29,7 @@ impl UexClient {
     /// Create a new UEX client with a custom base URL (for testing).
     ///
     /// This is available in all test builds to allow other crates to mock the API.
+    #[must_use]
     pub fn new_with_base_url(base_url: &str) -> Self {
         Self {
             client: Client::new(),
@@ -38,6 +40,10 @@ impl UexClient {
     /// Get all commodities.
     ///
     /// See: <https://uexcorp.space/api/documentation/id/get_commodities/>
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the API request fails.
     #[instrument(skip(self))]
     pub async fn get_commodities(&self) -> Result<Vec<Commodity>> {
         let url = format!("{}/commodities", self.base_url);
@@ -48,6 +54,10 @@ impl UexClient {
     /// Get commodity prices at all terminals.
     ///
     /// See: <https://uexcorp.space/api/documentation/id/get_commodities_prices/>
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the API request fails.
     #[instrument(skip(self))]
     pub async fn get_commodity_prices(&self, commodity_code: &str) -> Result<Vec<CommodityPrice>> {
         let url = format!(
@@ -61,6 +71,10 @@ impl UexClient {
     /// Get all terminals (trade locations).
     ///
     /// See: <https://uexcorp.space/api/documentation/id/get_terminals/>
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the API request fails.
     #[instrument(skip(self))]
     pub async fn get_terminals(&self) -> Result<Vec<Terminal>> {
         let url = format!("{}/terminals", self.base_url);
@@ -71,6 +85,10 @@ impl UexClient {
     /// Get terminals in a specific system.
     ///
     /// See: <https://uexcorp.space/api/documentation/id/get_terminals/>
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the API request fails.
     #[instrument(skip(self))]
     pub async fn get_terminals_in_system(&self, system: &str) -> Result<Vec<Terminal>> {
         let url = format!(
@@ -85,6 +103,10 @@ impl UexClient {
     /// Get all commodity prices across all terminals.
     ///
     /// See: <https://uexcorp.space/api/documentation/id/get_commodities_prices_all/>
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the API request fails.
     #[instrument(skip(self))]
     pub async fn get_all_commodity_prices(&self) -> Result<Vec<CommodityPriceAll>> {
         let url = format!("{}/commodities_prices_all", self.base_url);
@@ -101,6 +123,10 @@ impl UexClient {
     ///
     /// See: <https://uexcorp.space/api/documentation/id/get_commodities_prices_all/>
     /// See: <https://uexcorp.space/api/documentation/id/get_terminals/>
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the API request fails.
     #[instrument(skip(self))]
     pub async fn get_trade_routes(&self) -> Result<Vec<TradeRoute>> {
         // Fetch both prices and terminals concurrently
@@ -225,12 +251,12 @@ impl UexClient {
 
         let body = response.text().await?;
         let parsed: T = serde_json::from_str(&body).map_err(|e| {
-            eprintln!("Failed to parse JSON response from {}", url);
-            eprintln!(
-                "Response body (first 500 chars): {}",
-                &body.chars().take(500).collect::<String>()
+            warn!(
+                url = %url,
+                body_preview = %body.chars().take(500).collect::<String>(),
+                error = %e,
+                "Failed to parse JSON response"
             );
-            eprintln!("Parse error: {}", e);
             e
         })?;
         Ok(parsed)
@@ -292,11 +318,13 @@ pub struct CommodityPrice {
 
 impl CommodityPrice {
     /// Returns true if this terminal buys the commodity.
+    #[must_use]
     pub fn can_buy(&self) -> bool {
         self.price_buy > 0.0 && self.scu_buy > 0.0
     }
 
     /// Returns true if this terminal sells the commodity.
+    #[must_use]
     pub fn can_sell(&self) -> bool {
         self.price_sell > 0.0 && self.scu_sell > 0.0
     }
@@ -380,6 +408,7 @@ where
 
 impl Terminal {
     /// Get a human-readable location string.
+    #[must_use]
     pub fn location_string(&self) -> String {
         let mut parts = Vec::new();
 
@@ -413,6 +442,7 @@ impl Terminal {
     }
 
     /// Get a full display name including location.
+    #[must_use]
     pub fn full_name(&self) -> String {
         let name = self.name.clone().unwrap_or_default();
         let location = self.location_string();
@@ -456,12 +486,14 @@ pub struct TradeRoute {
 
 impl TradeRoute {
     /// Calculate profit for a given cargo capacity.
+    #[must_use]
     pub fn profit_for_scu(&self, scu: f64) -> f64 {
         let available = self.scu_origin.min(self.scu_destination).min(scu);
         available * self.profit_per_unit
     }
 
     /// Calculate maximum profitable cargo.
+    #[must_use]
     pub fn max_profitable_scu(&self) -> f64 {
         self.scu_origin.min(self.scu_destination)
     }

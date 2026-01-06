@@ -339,7 +339,7 @@ fn test_max_range() {
     assert!(large_range > max_range);
 }
 
-/// Test that different ShipRole variants produce different component values.
+/// Test that different `ShipRole` variants produce different component values.
 #[test]
 fn test_role_multipliers_affect_component_value() {
     // Create base ship configuration
@@ -492,7 +492,7 @@ fn test_role_and_crew_size_multipliers() {
     assert!(ratio > 2.0); // Combat (1.4) vs Cargo (0.7) plus crew multiplier
 }
 
-/// Test Mining role with mining_capacity_scu set.
+/// Test Mining role with `mining_capacity_scu` set.
 #[test]
 fn test_mining_role_characteristics() {
     let mining_ship = CargoShip {

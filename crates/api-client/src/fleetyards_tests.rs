@@ -1,4 +1,4 @@
-//! Tests for FleetYardsClient
+//! Tests for `FleetYardsClient`
 
 #![allow(clippy::unwrap_used)]
 #![allow(clippy::expect_used)]
@@ -282,7 +282,7 @@ async fn test_cache_save_and_load() {
     let client = FleetYardsClient::with_cache(cache_dir.clone());
 
     // Save to cache
-    client.save_to_cache(&[ship.clone()]).unwrap();
+    client.save_to_cache(std::slice::from_ref(&ship)).unwrap();
 
     // Verify file exists
     let cache_path = cache_dir.join("ships.json");
@@ -482,7 +482,7 @@ fn create_test_client_with_cache(base_url: &str, cache_dir: PathBuf) -> TestFlee
     }
 }
 
-/// Test version of FleetYardsClient that allows base URL override
+/// Test version of `FleetYardsClient` that allows base URL override
 #[derive(Clone)]
 struct TestFleetYardsClient {
     client: reqwest::Client,

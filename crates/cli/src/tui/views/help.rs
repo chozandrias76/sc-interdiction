@@ -59,6 +59,7 @@ pub fn render_help(frame: &mut Frame, area: Rect) {
 }
 
 /// Create a centered rectangle for popups.
+#[allow(clippy::indexing_slicing)] // Layout guarantees required indices exist
 fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
     let popup_layout = Layout::default()
         .direction(Direction::Vertical)

@@ -54,7 +54,8 @@ pub struct CargoShip {
 impl CargoShip {
     /// Calculate salvage value breakdown for this ship.
     ///
-    /// Returns (component_value, hull_salvage_min, hull_salvage_max, total_min, total_max)
+    /// Returns (`component_value`, `hull_salvage_min`, `hull_salvage_max`, `total_min`, `total_max`)
+    #[must_use]
     pub fn salvage_value(&self, cm_price_per_scu: f64) -> SalvageValue {
         // Improved component value estimation
         let component_value = self.estimate_component_value();
@@ -153,6 +154,7 @@ impl CargoShip {
     /// Calculate interdiction value score for this ship carrying given cargo value.
     /// Higher = more attractive target (better value-to-risk ratio).
     /// Formula: `cargo_value` / (`threat_level` * `crew_factor`)
+    #[must_use]
     pub fn interdiction_value(&self, cargo_value: f64) -> f64 {
         let threat_factor = self.threat_level.max(1) as f64;
         let crew_factor = 1.0 + (self.crew_size.saturating_sub(1) as f64 * 0.2); // Each extra crew adds 20% difficulty
@@ -160,6 +162,7 @@ impl CargoShip {
     }
 
     /// Get the quantum drive efficiency for this ship.
+    #[must_use]
     pub fn qt_drive_efficiency(&self) -> Option<&'static route_graph::QtDriveEfficiency> {
         route_graph::efficiency_for_size(self.qt_drive_size)
     }
@@ -167,6 +170,7 @@ impl CargoShip {
     /// Check if this ship can complete a route of given distance (Mkm).
     ///
     /// Returns (`can_complete`, `fuel_required`, `fuel_remaining`).
+    #[must_use]
     pub fn can_complete_route(&self, distance_mkm: f64) -> (bool, f64, f64) {
         if let Some(efficiency) = self.qt_drive_efficiency() {
             route_graph::can_complete_route(distance_mkm, self.quantum_fuel_capacity, efficiency)
@@ -176,6 +180,7 @@ impl CargoShip {
     }
 
     /// Calculate maximum quantum travel range in Mkm.
+    #[must_use]
     pub fn max_range_mkm(&self) -> f64 {
         if let Some(efficiency) = self.qt_drive_efficiency() {
             route_graph::max_range_mkm(self.quantum_fuel_capacity, efficiency)
@@ -248,6 +253,7 @@ impl LootEstimate {
     /// - Cargo recovery rate: 70% for disable (`destruction_level` = 0.0), decreases with destruction
     /// - Salvage value: ~5-15% of ship price based on ship size and destruction level
     /// - Larger ships have more salvageable components but are harder to fully recover
+    #[must_use]
     pub fn calculate(cargo_value: f64, ship: &CargoShip, destruction_level: f64) -> Self {
         // Clamp destruction level to [0.0, 1.0]
         let destruction = destruction_level.clamp(0.0, 1.0);
@@ -288,16 +294,19 @@ impl LootEstimate {
     }
 
     /// Calculate loot estimation assuming non-destructive interdiction (disable).
+    #[must_use]
     pub fn calculate_disable(cargo_value: f64, ship: &CargoShip) -> Self {
         Self::calculate(cargo_value, ship, 0.0)
     }
 
     /// Calculate loot estimation assuming moderate destruction.
+    #[must_use]
     pub fn calculate_moderate(cargo_value: f64, ship: &CargoShip) -> Self {
         Self::calculate(cargo_value, ship, 0.5)
     }
 
     /// Calculate loot estimation assuming complete destruction.
+    #[must_use]
     pub fn calculate_destroy(cargo_value: f64, ship: &CargoShip) -> Self {
         Self::calculate(cargo_value, ship, 1.0)
     }

@@ -46,6 +46,7 @@ pub enum NodeType {
 
 impl NodeType {
     /// Parse a node type from a string.
+    #[must_use]
     pub fn parse(s: &str) -> Self {
         match s.to_uppercase().as_str() {
             "STATION" => Self::Station,
@@ -76,6 +77,7 @@ pub struct RouteGraph {
 
 impl RouteGraph {
     /// Create an empty route graph.
+    #[must_use]
     pub fn new() -> Self {
         Self {
             graph: DiGraph::new(),
@@ -132,6 +134,10 @@ impl RouteGraph {
     }
 
     /// Connect two nodes with a route.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if either node code is not found in the graph.
     pub fn connect(&mut self, from_code: &str, to_code: &str, distance: f64) -> Result<()> {
         let from_idx = self
             .node_indices
@@ -162,6 +168,7 @@ impl RouteGraph {
     }
 
     /// Connect all nodes within the same system (full mesh within system).
+    #[allow(clippy::indexing_slicing)] // Loop bounds guarantee valid indices
     pub fn connect_system(&mut self, system: &str) {
         let system_nodes: Vec<_> = self
             .node_indices
@@ -213,6 +220,10 @@ impl RouteGraph {
     }
 
     /// Find shortest path between two nodes.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if either node code is not found or no path exists.
     pub fn find_path(&self, from_code: &str, to_code: &str) -> Result<Vec<String>> {
         let from_idx = self
             .node_indices
@@ -258,11 +269,13 @@ impl RouteGraph {
     }
 
     /// Get node by code.
+    #[must_use]
     pub fn get_node(&self, code: &str) -> Option<&Node> {
         self.node_indices.get(code).map(|&idx| &self.graph[idx])
     }
 
     /// Get number of connections for a node (degree).
+    #[must_use]
     pub fn node_degree(&self, code: &str) -> usize {
         self.node_indices
             .get(code)
@@ -271,6 +284,7 @@ impl RouteGraph {
     }
 
     /// Get all edges from a node.
+    #[must_use]
     pub fn edges_from(&self, code: &str) -> Vec<(&Node, &Edge)> {
         let Some(&idx) = self.node_indices.get(code) else {
             return Vec::new();
@@ -286,11 +300,13 @@ impl RouteGraph {
     }
 
     /// Total number of nodes.
+    #[must_use]
     pub fn node_count(&self) -> usize {
         self.graph.node_count()
     }
 
     /// Total number of edges.
+    #[must_use]
     pub fn edge_count(&self) -> usize {
         self.graph.edge_count()
     }

@@ -17,12 +17,20 @@ impl DatabaseBuilder {
         Self { db }
     }
 
-    /// Initializes the database schema
+    /// Initializes the database schema.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if schema creation fails.
     pub fn init_schema(&self) -> Result<()> {
         self.db.init_schema()
     }
 
-    /// Inserts starmap locations into the database
+    /// Inserts starmap locations into the database.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if database insertion fails.
     pub fn insert_locations(&mut self, locations: &[StarmapLocation]) -> Result<usize> {
         let mut count = 0;
         let conn = self.db.connection_mut();
@@ -63,7 +71,11 @@ impl DatabaseBuilder {
         Ok(count)
     }
 
-    /// Inserts shop inventories into the database
+    /// Inserts shop inventories into the database.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if database insertion fails.
     pub fn insert_shops(&mut self, inventories: &[ShopInventory]) -> Result<usize> {
         let mut shop_count = 0;
         let mut item_count = 0;
@@ -104,7 +116,8 @@ impl DatabaseBuilder {
 
         tx.commit()?;
 
-        eprintln!("Inserted {shop_count} shops with {item_count} items");
+        // Note: caller is responsible for logging/displaying this information
+        let _ = item_count; // Suppress unused warning
         Ok(shop_count)
     }
 

@@ -2,6 +2,9 @@
 //!
 //! Command-line interface for route analysis and target intel.
 
+// CLI binaries intentionally use stdout/stderr for user output
+#![allow(clippy::print_stdout, clippy::print_stderr)]
+
 mod tui;
 
 use clap::{Parser, Subcommand};

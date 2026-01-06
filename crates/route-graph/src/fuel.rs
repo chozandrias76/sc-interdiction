@@ -21,6 +21,7 @@ pub struct QtDriveEfficiency {
 
 impl QtDriveEfficiency {
     /// Create a new efficiency rating.
+    #[must_use]
     pub const fn new(name: &'static str, fuel_per_mkm: f64) -> Self {
         Self { name, fuel_per_mkm }
     }
@@ -29,7 +30,7 @@ impl QtDriveEfficiency {
 /// Default quantum drive efficiency ratings by size class.
 ///
 /// **STATUS: ESTIMATED VALUES - NEEDS VERIFICATION**
-/// See: docs/DATA_SOURCES.md - Quantum Drive Efficiency section
+/// See: `docs/DATA_SOURCES.md` - Quantum Drive Efficiency section
 ///
 /// These are estimated values based on observed quantum travel fuel consumption patterns.
 /// Actual values may vary based on specific drive models and game balance changes.
@@ -53,6 +54,8 @@ pub static QT_DRIVE_EFFICIENCY: &[QtDriveEfficiency] = &[
 /// Get the default efficiency for a quantum drive size (1-3).
 ///
 /// Returns None if size is out of range.
+#[must_use]
+#[allow(clippy::indexing_slicing)] // Static array with known valid indices
 pub fn efficiency_for_size(size: u8) -> Option<&'static QtDriveEfficiency> {
     match size {
         1 => Some(&QT_DRIVE_EFFICIENCY[0]),
@@ -81,6 +84,7 @@ pub fn efficiency_for_size(size: u8) -> Option<&'static QtDriveEfficiency> {
 ///     assert_eq!(fuel, 2000.0);
 /// }
 /// ```
+#[must_use]
 pub fn calculate_qt_fuel_consumption(distance_mkm: f64, efficiency: &QtDriveEfficiency) -> f64 {
     if distance_mkm <= 0.0 {
         return 0.0;
@@ -97,6 +101,7 @@ pub fn calculate_qt_fuel_consumption(distance_mkm: f64, efficiency: &QtDriveEffi
 ///
 /// # Returns
 /// A tuple of (`can_complete`, `fuel_required`, `fuel_remaining`)
+#[must_use]
 pub fn can_complete_route(
     distance_mkm: f64,
     fuel_capacity: f64,
@@ -119,6 +124,7 @@ pub fn can_complete_route(
 ///
 /// # Returns
 /// Maximum travel distance in millions of km.
+#[must_use]
 pub fn max_range_mkm(fuel_capacity: f64, efficiency: &QtDriveEfficiency) -> f64 {
     if efficiency.fuel_per_mkm <= 0.0 {
         return 0.0;
@@ -235,6 +241,7 @@ impl FuelStationIndex {
     /// Create a new fuel station index from terminal data.
     ///
     /// Only includes terminals where `is_refuel` is true.
+    #[must_use]
     pub fn from_terminals(terminals: &[api_client::Terminal]) -> Self {
         let stations = terminals
             .iter()
@@ -265,11 +272,13 @@ impl FuelStationIndex {
     }
 
     /// Get all fuel stations.
+    #[must_use]
     pub fn all_stations(&self) -> &[FuelStation] {
         &self.stations
     }
 
     /// Get fuel stations in a specific star system.
+    #[must_use]
     pub fn stations_in_system(&self, system: &str) -> Vec<&FuelStation> {
         self.stations
             .iter()
@@ -285,6 +294,7 @@ impl FuelStationIndex {
     /// Find the nearest fuel station to a given position.
     ///
     /// Returns (station, `distance_mkm`) or None if no stations have positions.
+    #[must_use]
     pub fn find_nearest(&self, position: &crate::Point3D) -> Option<(&FuelStation, f64)> {
         self.stations
             .iter()
@@ -303,6 +313,7 @@ impl FuelStationIndex {
     /// Find the nearest fuel station along a route (within a given deviation threshold).
     ///
     /// Returns (station, `distance_from_route_mkm`) if one is found.
+    #[must_use]
     pub fn find_nearest_on_route(
         &self,
         start: &crate::Point3D,
@@ -518,6 +529,10 @@ pub struct Waypoint {
 /// # Returns
 /// * `Ok(Vec<Waypoint>)` - List of waypoints including refuel stops if needed
 /// * `Err(String)` - If route cannot be completed (no positions found, no fuel stations available, etc.)
+///
+/// # Errors
+///
+/// Returns an error if positions cannot be resolved or no refueling route exists.
 pub fn find_route_with_refueling(
     origin: &str,
     dest: &str,
@@ -677,6 +692,7 @@ pub const QUANTUM_FUEL_PRICE_PER_UNIT: f64 = 1.5;
 /// let cost = calculate_refuel_cost(2000.0, None);
 /// assert_eq!(cost, 3000.0); // 2000 units * 1.5 aUEC/unit
 /// ```
+#[must_use]
 pub fn calculate_refuel_cost(fuel_needed: f64, price_per_unit: Option<f64>) -> f64 {
     let price = price_per_unit.unwrap_or(QUANTUM_FUEL_PRICE_PER_UNIT);
     fuel_needed * price
@@ -709,6 +725,7 @@ pub fn calculate_refuel_cost(fuel_needed: f64, price_per_unit: Option<f64>) -> f
 /// // let waypoints = find_route_with_refueling("Hurston", "microTech", fuel_capacity, efficiency, &index)?;
 /// // let cost = calculate_route_refuel_cost(&waypoints, fuel_capacity, efficiency, None);
 /// ```
+#[must_use]
 pub fn calculate_route_refuel_cost(
     waypoints: &[Waypoint],
     fuel_capacity: f64,

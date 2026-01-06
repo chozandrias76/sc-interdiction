@@ -16,11 +16,13 @@ pub struct Point3D {
 }
 
 impl Point3D {
+    #[must_use]
     pub const fn new(x: f64, y: f64, z: f64) -> Self {
         Self { x, y, z }
     }
 
     /// Calculate Euclidean distance to another point.
+    #[must_use]
     pub fn distance_to(&self, other: &Point3D) -> f64 {
         let dx = self.x - other.x;
         let dy = self.y - other.y;
@@ -29,6 +31,7 @@ impl Point3D {
     }
 
     /// Calculate distance squared (faster for comparisons).
+    #[must_use]
     pub fn distance_squared(&self, other: &Point3D) -> f64 {
         let dx = self.x - other.x;
         let dy = self.y - other.y;
@@ -62,6 +65,7 @@ pub struct NearbyHotspot {
 
 impl SpatialIndex {
     /// Create a new empty spatial index.
+    #[must_use]
     pub fn new() -> Self {
         Self {
             hotspots: Vec::new(),
@@ -74,6 +78,7 @@ impl SpatialIndex {
     }
 
     /// Build index from chokepoints with coordinates.
+    #[must_use]
     pub fn from_chokepoints(chokepoints: Vec<Chokepoint>) -> Self {
         let mut index = Self::new();
 
@@ -98,6 +103,7 @@ impl SpatialIndex {
     }
 
     /// Find the k nearest hotspots to a point.
+    #[must_use]
     pub fn find_nearest(&self, point: &Point3D, k: usize) -> Vec<NearbyHotspot> {
         let mut distances: Vec<_> = self
             .hotspots
@@ -123,6 +129,7 @@ impl SpatialIndex {
     }
 
     /// Find all hotspots within a radius.
+    #[must_use]
     pub fn find_within_radius(&self, point: &Point3D, radius: f64) -> Vec<NearbyHotspot> {
         let radius_sq = radius * radius;
 
@@ -143,6 +150,7 @@ impl SpatialIndex {
     }
 
     /// Find hotspots in a specific system.
+    #[must_use]
     pub fn find_in_system(&self, system: &str) -> Vec<&IndexedHotspot> {
         self.hotspots
             .iter()
@@ -151,6 +159,7 @@ impl SpatialIndex {
     }
 
     /// Get all hotspots sorted by traffic score.
+    #[must_use]
     pub fn by_traffic(&self) -> Vec<&IndexedHotspot> {
         let mut sorted: Vec<_> = self.hotspots.iter().collect();
         sorted.sort_by(|a, b| {
@@ -162,11 +171,13 @@ impl SpatialIndex {
     }
 
     /// Number of indexed hotspots.
+    #[must_use]
     pub fn len(&self) -> usize {
         self.hotspots.len()
     }
 
     /// Check if index is empty.
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.hotspots.is_empty()
     }
@@ -230,6 +241,7 @@ pub struct RouteSegment {
 
 impl RouteSegment {
     /// Get the midpoint of the route.
+    #[must_use]
     pub fn midpoint(&self) -> Point3D {
         Point3D::new(
             (self.origin.x + self.destination.x) / 2.0,
@@ -239,6 +251,7 @@ impl RouteSegment {
     }
 
     /// Check if this route crosses system boundaries.
+    #[must_use]
     pub fn is_cross_system(&self) -> bool {
         match (&self.origin_system, &self.destination_system) {
             (Some(origin), Some(dest)) => origin != dest,
@@ -248,6 +261,7 @@ impl RouteSegment {
 
     /// Calculate the closest point on this segment to another segment.
     /// Returns the point on this segment closest to the other segment.
+    #[must_use]
     pub fn closest_approach_to(&self, other: &RouteSegment) -> (Point3D, f64) {
         // Simplified: find closest approach between two line segments
         // Use parametric form: P(t) = origin + t*(dest - origin)
@@ -307,6 +321,7 @@ impl RouteSegment {
     }
 
     /// Get the length of this route segment.
+    #[must_use]
     pub fn length(&self) -> f64 {
         self.origin.distance_to(&self.destination)
     }
@@ -389,6 +404,8 @@ pub struct IntersectingRoute {
 ///
 /// This finds points in 3D space where trade route paths cross or come close,
 /// making them ideal interdiction spots to catch ships from multiple routes.
+#[must_use]
+#[allow(clippy::indexing_slicing)] // Loop bounds and length checks guarantee valid indices
 pub fn find_route_intersections(
     routes: &[RouteSegment],
     proximity_threshold: f64, // How close routes need to be to count as intersecting (in Mkm)
@@ -518,6 +535,7 @@ pub fn find_route_intersections(
     intersections
 }
 
+#[allow(clippy::indexing_slicing)] // Length checks guarantee valid indices
 fn generate_intersection_name(routes: &[&RouteSegment]) -> String {
     // Check if routes are cross-system
     let mut all_systems = std::collections::HashSet::new();
@@ -904,6 +922,7 @@ fn get_qt_destinations() -> Vec<QtDestination> {
 /// We score destinations by:
 /// 1. How close your QT path passes to the zone (must be < 20km for Mantis range)
 /// 2. Whether the zone is between you and the destination (not behind you)
+#[allow(clippy::indexing_slicing)] // Empty checks and early returns guarantee valid indices
 fn calculate_jump_instruction(zone_position: &Point3D, _system: &str) -> JumpInstruction {
     let destinations = get_qt_destinations();
 

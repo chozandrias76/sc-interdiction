@@ -67,7 +67,7 @@ fn extract_system_from_location(location: &str) -> Option<String> {
 
 /// Filter hotspots to those relevant for a specific location/system.
 /// Returns hotspots sorted by proximity to the location.
-/// By default, filters OUT cross-system hotspots unless allow_cross_system is true.
+/// By default, filters OUT cross-system hotspots unless `allow_cross_system` is true.
 #[allow(dead_code)]
 pub fn filter_hotspots_for_location(
     hotspots: &[RouteIntersection],
