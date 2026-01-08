@@ -46,6 +46,11 @@ ordered-float = "4.0"
 # Caching
 dashmap = "6.0"
 
+# ORM
+diesel = { version = "2.2", features = ["postgres", "r2d2", "chrono"] }
+dotenvy = "0.15"
+chrono = { version = "0.4", features = ["serde"] }
+
 # Internal crates
 api-client = { path = "crates/api-client" }
 route-graph = { path = "crates/route-graph" }

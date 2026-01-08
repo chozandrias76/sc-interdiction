@@ -24,6 +24,7 @@ dirs = "5"
 api-client.workspace = true
 route-graph.workspace = true
 intel.workspace = true
+sc-data-extractor.workspace = true
 server = { path = "../server" }
 unicode-width = "0.2.0"
 

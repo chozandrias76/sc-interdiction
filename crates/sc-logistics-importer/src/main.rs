@@ -1,9 +1,11 @@
-//! CLI tool for importing `SCLogistics` data into databases
+//! CLI tool for importing `SCLogistics` data into `PostgreSQL` databases
 
 // CLI binaries intentionally use stdout for user output
 #![allow(clippy::print_stdout)]
 
 use clap::{Parser, Subcommand};
+use diesel::prelude::*;
+use diesel::sql_types::BigInt;
 use eyre::Result;
 use sc_data_extractor::{
     database::{Database, DatabaseBuilder},
@@ -19,9 +21,9 @@ struct Cli {
     #[arg(short, long, default_value = "../SCLogistics")]
     sclogistics_path: PathBuf,
 
-    /// Output database path
-    #[arg(short, long, default_value = "data/sc-game-data.db")]
-    output: PathBuf,
+    /// `PostgreSQL` database URL (uses `DATABASE_URL` env var if not provided)
+    #[arg(short, long, env = "DATABASE_URL")]
+    database_url: Option<String>,
 
     #[command(subcommand)]
     command: Commands,
@@ -40,53 +42,52 @@ enum Commands {
 }
 
 fn main() -> Result<()> {
+    dotenvy::dotenv().ok();
     let cli = Cli::parse();
+
+    let database_url = cli.database_url.ok_or_else(|| {
+        eyre::eyre!(
+            "DATABASE_URL not set. Use --database-url or set DATABASE_URL environment variable"
+        )
+    })?;
 
     match cli.command {
         Commands::All => {
             println!("Importing all data from {}", cli.sclogistics_path.display());
-            import_all(&cli.sclogistics_path, &cli.output)?;
+            import_all(&cli.sclogistics_path, &database_url)?;
         }
         Commands::Starmap => {
             println!(
                 "Importing starmap data from {}",
                 cli.sclogistics_path.display()
             );
-            import_starmap(&cli.sclogistics_path, &cli.output)?;
+            import_starmap(&cli.sclogistics_path, &database_url)?;
         }
         Commands::Shops => {
             println!(
                 "Importing shop data from {}",
                 cli.sclogistics_path.display()
             );
-            import_shops(&cli.sclogistics_path, &cli.output)?;
+            import_shops(&cli.sclogistics_path, &database_url)?;
         }
         Commands::Stats => {
-            show_stats(&cli.output)?;
+            show_stats(&database_url)?;
         }
     }
 
     Ok(())
 }
 
-fn import_all(sclogistics_path: &Path, output: &Path) -> Result<()> {
-    if let Some(parent) = output.parent() {
-        std::fs::create_dir_all(parent)?;
-    }
-
-    let output_str = output
-        .to_str()
-        .ok_or_else(|| eyre::eyre!("Invalid UTF-8 in output path"))?;
-    let db = Database::new(output_str)?;
+fn import_all(sclogistics_path: &Path, database_url: &str) -> Result<()> {
+    let db = Database::new(database_url)?;
     let mut builder = DatabaseBuilder::new(db);
-    builder.init_schema()?;
 
     println!("Parsing starmap XML files...");
     let parser = StarmapParser::new(sclogistics_path);
     let locations = parser.parse_all()?;
     println!("Found {} locations", locations.len());
 
-    println!("Inserting locations into database...");
+    println!("Inserting locations into database (raw schema)...");
     let count = builder.insert_locations(&locations)?;
     println!("Inserted {} locations", count);
 
@@ -95,26 +96,19 @@ fn import_all(sclogistics_path: &Path, output: &Path) -> Result<()> {
     let inventories = shops_parser.parse_all()?;
     println!("Found {} shop inventories", inventories.len());
 
-    println!("Inserting shops into database...");
+    println!("Inserting shops into database (raw schema)...");
     let shop_count = builder.insert_shops(&inventories)?;
     println!("Inserted {} shops", shop_count);
 
-    println!("\n✓ Database created at {}", output.display());
+    println!("\n✓ Data imported to PostgreSQL (raw schema)");
+    println!("Run 'make dbt-all' to build silver/gold layers");
 
     Ok(())
 }
 
-fn import_starmap(sclogistics_path: &Path, output: &Path) -> Result<()> {
-    if let Some(parent) = output.parent() {
-        std::fs::create_dir_all(parent)?;
-    }
-
-    let output_str = output
-        .to_str()
-        .ok_or_else(|| eyre::eyre!("Invalid UTF-8 in output path"))?;
-    let db = Database::new(output_str)?;
+fn import_starmap(sclogistics_path: &Path, database_url: &str) -> Result<()> {
+    let db = Database::new(database_url)?;
     let mut builder = DatabaseBuilder::new(db);
-    builder.init_schema()?;
 
     println!("Parsing starmap XML files...");
     let parser = StarmapParser::new(sclogistics_path);
@@ -123,22 +117,14 @@ fn import_starmap(sclogistics_path: &Path, output: &Path) -> Result<()> {
 
     let count = builder.insert_locations(&locations)?;
     println!("Inserted {} locations", count);
-    println!("✓ Database updated at {}", output.display());
+    println!("✓ Starmap data imported to PostgreSQL (raw schema)");
 
     Ok(())
 }
 
-fn import_shops(sclogistics_path: &Path, output: &Path) -> Result<()> {
-    if let Some(parent) = output.parent() {
-        std::fs::create_dir_all(parent)?;
-    }
-
-    let output_str = output
-        .to_str()
-        .ok_or_else(|| eyre::eyre!("Invalid UTF-8 in output path"))?;
-    let db = Database::new(output_str)?;
+fn import_shops(sclogistics_path: &Path, database_url: &str) -> Result<()> {
+    let db = Database::new(database_url)?;
     let mut builder = DatabaseBuilder::new(db);
-    builder.init_schema()?;
 
     println!("Parsing shop inventory JSON files...");
     let parser = ShopsParser::new(sclogistics_path);
@@ -147,30 +133,51 @@ fn import_shops(sclogistics_path: &Path, output: &Path) -> Result<()> {
 
     let count = builder.insert_shops(&inventories)?;
     println!("Inserted {} shops", count);
-    println!("✓ Database updated at {}", output.display());
+    println!("✓ Shop data imported to PostgreSQL (raw schema)");
 
     Ok(())
 }
 
-fn show_stats(db_path: &Path) -> Result<()> {
-    let db_path_str = db_path
-        .to_str()
-        .ok_or_else(|| eyre::eyre!("Invalid UTF-8 in database path"))?;
-    let db = Database::new(db_path_str)?;
-    let conn = db.connection();
+fn show_stats(database_url: &str) -> Result<()> {
+    let db = Database::new(database_url)?;
+    let mut conn = db.get_connection()?;
 
-    let location_count: i64 =
-        conn.query_row("SELECT COUNT(*) FROM locations", [], |row| row.get(0))?;
+    #[derive(QueryableByName)]
+    struct CountRow {
+        #[diesel(sql_type = BigInt)]
+        cnt: i64,
+    }
 
-    let shop_count: i64 = conn.query_row("SELECT COUNT(*) FROM shops", [], |row| row.get(0))?;
+    let location_count: CountRow =
+        diesel::sql_query("SELECT COUNT(*) as cnt FROM raw.locations").get_result(&mut *conn)?;
 
-    let item_count: i64 =
-        conn.query_row("SELECT COUNT(*) FROM shop_items", [], |row| row.get(0))?;
+    let shop_count: CountRow =
+        diesel::sql_query("SELECT COUNT(*) as cnt FROM raw.shops").get_result(&mut *conn)?;
 
-    println!("Database Statistics:");
-    println!("  Locations: {}", location_count);
-    println!("  Shops: {}", shop_count);
-    println!("  Shop Items: {}", item_count);
+    let item_count: CountRow =
+        diesel::sql_query("SELECT COUNT(*) as cnt FROM raw.shop_items").get_result(&mut *conn)?;
+
+    println!("Database Statistics (raw schema):");
+    println!("  Locations: {}", location_count.cnt);
+    println!("  Shops: {}", shop_count.cnt);
+    println!("  Shop Items: {}", item_count.cnt);
+
+    // Also show silver schema stats if available
+    let silver_location_count: Result<CountRow, _> =
+        diesel::sql_query("SELECT COUNT(*) as cnt FROM silver.locations").get_result(&mut *conn);
+
+    if let Ok(count) = silver_location_count {
+        let silver_shop_count: CountRow =
+            diesel::sql_query("SELECT COUNT(*) as cnt FROM silver.shops").get_result(&mut *conn)?;
+        let silver_item_count: CountRow =
+            diesel::sql_query("SELECT COUNT(*) as cnt FROM silver.shop_items")
+                .get_result(&mut *conn)?;
+
+        println!("\nDatabase Statistics (silver schema):");
+        println!("  Locations: {}", count.cnt);
+        println!("  Shops: {}", silver_shop_count.cnt);
+        println!("  Shop Items: {}", silver_item_count.cnt);
+    }
 
     Ok(())
 }

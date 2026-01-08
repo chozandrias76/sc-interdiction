@@ -1,0 +1,12 @@
+
+    
+    
+    truncate table "sc_interdiction"."raw_silver"."lagrange_planets";
+    -- dbt seed --
+    
+          insert into "sc_interdiction"."raw_silver"."lagrange_planets" ("loc_name", "planet_loc_name", "system_name") values
+          (%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s),(%s,%s,%s)
+      
+
+;
+  

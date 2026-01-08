@@ -1,0 +1,40 @@
+version: 2
+
+models:
+  - name: silver_locations
+    description: Silver layer locations with validated relationships, display names, and corrected Lagrange point hierarchy
+    columns:
+      - name: id
+        description: Unique location identifier
+        tests:
+          - unique
+          - not_null
+      - name: display_name
+        description: Human-readable location name (from seed)
+      - name: parent_id
+        description: Parent location ID (Lagrange points re-parented to planets)
+
+  - name: silver_shops
+    description: Silver layer shops with validated location references
+    columns:
+      - name: shop_id
+        description: Unique shop identifier
+        tests:
+          - unique
+          - not_null
+
+  - name: silver_shop_items
+    description: Silver layer shop items with validated shop references
+    columns:
+      - name: id
+        tests:
+          - unique
+          - not_null
+
+  - name: silver_quantum_routes
+    description: Silver layer quantum routes with validated location references
+    columns:
+      - name: id
+        tests:
+          - unique
+          - not_null
