@@ -1,11 +1,22 @@
-//! Map location data for different star systems.
+//! Map location data sourced from database and route-graph coordinates.
+//!
+//! This module provides map locations by:
+//! 1. Querying the database for location metadata (name, type, parent)
+//! 2. Looking up coordinates from route-graph's static position database
+//! 3. Falling back to static data if database is unavailable
 
 use super::super::types::{MapLocation, MapLocationType};
-use std::f64::consts::PI;
+use route_graph::{estimate_position, locations_in_system, LOCATION_POSITIONS};
+use sc_data_extractor::database::Database;
 
 /// Infer system name from a location string.
 pub fn infer_system(location: &str) -> String {
     let loc_lower = location.to_lowercase();
+
+    // Check route-graph positions for system info
+    if let Some(pos) = LOCATION_POSITIONS.get(loc_lower.as_str()) {
+        return pos.system.to_string();
+    }
 
     // Stanton system locations
     let stanton_locations = [
@@ -16,6 +27,7 @@ pub fn infer_system(location: &str) -> String {
         "lorville",
         "orison",
         "area18",
+        "area 18",
         "new babbage",
         "port olisar",
         "everus",
@@ -58,206 +70,192 @@ pub fn infer_system(location: &str) -> String {
     "Stanton".to_string() // Default
 }
 
-/// Build static map locations for a system.
-/// Uses angular positions to spread planets around the star for visualization.
+/// Build map locations from database, with coordinate lookup from route-graph.
+///
+/// Falls back to static data if database is unavailable.
 pub fn build_map_locations(system: &str) -> Vec<MapLocation> {
+    // Try to load from database first
+    if let Ok(db) = Database::from_env() {
+        if let Ok(db_locations) = db.query_map_locations_for_system(system) {
+            let mut locations = Vec::new();
+
+            for db_loc in db_locations {
+                // Look up coordinates from route-graph
+                let name_lower = db_loc.display_name.to_lowercase();
+                if let Some(pos) = estimate_position(&name_lower) {
+                    let loc_type = match db_loc.nav_icon.as_str() {
+                        "Star" => MapLocationType::Star,
+                        "Planet" => MapLocationType::Planet,
+                        "Moon" => MapLocationType::Moon,
+                        "Station" | "LandingZone" => MapLocationType::Station,
+                        _ => continue, // Skip unknown types
+                    };
+
+                    locations.push(MapLocation {
+                        name: db_loc.display_name,
+                        x: pos.x,
+                        y: pos.y,
+                        loc_type,
+                        parent: db_loc.parent_display_name,
+                    });
+                }
+            }
+
+            if !locations.is_empty() {
+                // Add the star at center if not already present
+                if !locations
+                    .iter()
+                    .any(|l| l.loc_type == MapLocationType::Star)
+                {
+                    locations.insert(
+                        0,
+                        MapLocation {
+                            name: system.to_string(),
+                            x: 0.0,
+                            y: 0.0,
+                            loc_type: MapLocationType::Star,
+                            parent: None,
+                        },
+                    );
+                }
+                return locations;
+            }
+        }
+    }
+
+    // Fall back to static data
+    build_static_map_locations(system)
+}
+
+/// Build static map locations (fallback when database unavailable).
+fn build_static_map_locations(system: &str) -> Vec<MapLocation> {
     let mut locations = Vec::new();
 
-    match system {
-        "Stanton" => build_stanton_locations(&mut locations),
-        "Pyro" => build_pyro_locations(&mut locations),
-        _ => {}
+    // Get all locations from route-graph for this system
+    let system_locations = locations_in_system(system);
+
+    for pos in system_locations {
+        let loc_type = infer_location_type(pos.name, pos.parent);
+
+        locations.push(MapLocation {
+            name: pos.name.to_string(),
+            x: pos.position.x,
+            y: pos.position.y,
+            loc_type,
+            parent: pos.parent.map(String::from),
+        });
+    }
+
+    // Add star at center if not present
+    if !locations
+        .iter()
+        .any(|l| l.loc_type == MapLocationType::Star)
+    {
+        locations.insert(
+            0,
+            MapLocation {
+                name: system.to_string(),
+                x: 0.0,
+                y: 0.0,
+                loc_type: MapLocationType::Star,
+                parent: None,
+            },
+        );
     }
 
     locations
 }
 
-fn build_stanton_locations(locations: &mut Vec<MapLocation>) {
-    // Star at center
-    locations.push(MapLocation {
-        name: "Stanton".to_string(),
-        angle: 0.0,
-        orbital_radius: 0.0,
-        loc_type: MapLocationType::Star,
-        parent: None,
-    });
+/// Infer location type from name and parent.
+fn infer_location_type(name: &str, parent: Option<&str>) -> MapLocationType {
+    let name_lower = name.to_lowercase();
 
-    // Planets - spread around the star at different angles
-    add_stanton_planets(locations);
-    add_hurston_moons(locations);
-    add_crusader_moons(locations);
-    add_arccorp_moons(locations);
-    add_microtech_moons(locations);
-    add_stanton_stations(locations);
-}
-
-fn add_stanton_planets(locations: &mut Vec<MapLocation>) {
-    // Hurston: ~45 degrees (inner)
-    locations.push(MapLocation {
-        name: "Hurston".to_string(),
-        angle: PI * 0.25,
-        orbital_radius: 12.85,
-        loc_type: MapLocationType::Planet,
-        parent: None,
-    });
-
-    // Crusader: ~135 degrees
-    locations.push(MapLocation {
-        name: "Crusader".to_string(),
-        angle: PI * 0.75,
-        orbital_radius: 18.96,
-        loc_type: MapLocationType::Planet,
-        parent: None,
-    });
-
-    // ArcCorp: ~225 degrees
-    locations.push(MapLocation {
-        name: "ArcCorp".to_string(),
-        angle: PI * 1.25,
-        orbital_radius: 18.59,
-        loc_type: MapLocationType::Planet,
-        parent: None,
-    });
-
-    // microTech: ~315 degrees (outer)
-    locations.push(MapLocation {
-        name: "microTech".to_string(),
-        angle: PI * 1.75,
-        orbital_radius: 22.46,
-        loc_type: MapLocationType::Planet,
-        parent: None,
-    });
-}
-
-fn add_hurston_moons(locations: &mut Vec<MapLocation>) {
-    for (i, name) in ["Arial", "Aberdeen", "Magda", "Ita"].iter().enumerate() {
-        locations.push(MapLocation {
-            name: (*name).to_string(),
-            angle: PI * 0.25 + (i as f64 * PI * 0.5),
-            orbital_radius: 1.5,
-            loc_type: MapLocationType::Moon,
-            parent: Some("Hurston".to_string()),
-        });
+    // Stars have no parent and are at origin
+    if parent.is_none() {
+        // Check if it's a planet (has orbital radius)
+        if let Some(pos) = LOCATION_POSITIONS.get(name_lower.as_str()) {
+            if pos.position.x.abs() < 0.001 && pos.position.y.abs() < 0.001 {
+                return MapLocationType::Star;
+            }
+        }
+        return MapLocationType::Planet;
     }
-}
 
-fn add_crusader_moons(locations: &mut Vec<MapLocation>) {
-    for (i, name) in ["Cellin", "Daymar", "Yela"].iter().enumerate() {
-        locations.push(MapLocation {
-            name: (*name).to_string(),
-            angle: PI * 0.75 + (i as f64 * PI * 0.67),
-            orbital_radius: 1.8,
-            loc_type: MapLocationType::Moon,
-            parent: Some("Crusader".to_string()),
-        });
-    }
-}
-
-fn add_arccorp_moons(locations: &mut Vec<MapLocation>) {
-    for (i, name) in ["Lyria", "Wala"].iter().enumerate() {
-        locations.push(MapLocation {
-            name: (*name).to_string(),
-            angle: PI * 1.25 + (i as f64 * PI),
-            orbital_radius: 1.5,
-            loc_type: MapLocationType::Moon,
-            parent: Some("ArcCorp".to_string()),
-        });
-    }
-}
-
-fn add_microtech_moons(locations: &mut Vec<MapLocation>) {
-    for (i, name) in ["Calliope", "Clio", "Euterpe"].iter().enumerate() {
-        locations.push(MapLocation {
-            name: (*name).to_string(),
-            angle: PI * 1.75 + (i as f64 * PI * 0.67),
-            orbital_radius: 1.8,
-            loc_type: MapLocationType::Moon,
-            parent: Some("microTech".to_string()),
-        });
-    }
-}
-
-fn add_stanton_stations(locations: &mut Vec<MapLocation>) {
-    locations.push(MapLocation {
-        name: "Port Olisar".to_string(),
-        angle: PI * 0.75 + 0.1,
-        orbital_radius: 0.5,
-        loc_type: MapLocationType::Station,
-        parent: Some("Crusader".to_string()),
-    });
-    locations.push(MapLocation {
-        name: "Everus Harbor".to_string(),
-        angle: PI * 0.25 + 0.1,
-        orbital_radius: 0.5,
-        loc_type: MapLocationType::Station,
-        parent: Some("Hurston".to_string()),
-    });
-    locations.push(MapLocation {
-        name: "Baijini Point".to_string(),
-        angle: PI * 1.25 + 0.1,
-        orbital_radius: 0.5,
-        loc_type: MapLocationType::Station,
-        parent: Some("ArcCorp".to_string()),
-    });
-    locations.push(MapLocation {
-        name: "Port Tressler".to_string(),
-        angle: PI * 1.75 + 0.1,
-        orbital_radius: 0.5,
-        loc_type: MapLocationType::Station,
-        parent: Some("microTech".to_string()),
-    });
-    locations.push(MapLocation {
-        name: "Grim HEX".to_string(),
-        angle: PI * 0.75 + PI * 0.67 * 2.0 + 0.2,
-        orbital_radius: 0.3,
-        loc_type: MapLocationType::Station,
-        parent: Some("Yela".to_string()),
-    });
-}
-
-fn build_pyro_locations(locations: &mut Vec<MapLocation>) {
-    // Pyro star
-    locations.push(MapLocation {
-        name: "Pyro".to_string(),
-        angle: 0.0,
-        orbital_radius: 0.0,
-        loc_type: MapLocationType::Star,
-        parent: None,
-    });
-
-    // Planets spread around the star
-    let pyro_planets = [
-        ("Pyro I", 5.0, 0.0),
-        ("Pyro II", 10.0, PI * 0.4),
-        ("Pyro III", 18.0, PI * 0.8),
-        ("Pyro IV", 28.0, PI * 1.2),
-        ("Pyro V", 40.0, PI * 1.5),
-        ("Pyro VI", 55.0, PI * 1.8),
+    // Check for station indicators
+    let station_keywords = [
+        "station", "harbor", "point", "olisar", "tressler", "hex", "kareah", "covalex", "seraphim",
+        "-l1", "-l2", "-l3", "-l4", "-l5",
     ];
-
-    for (name, radius, angle) in pyro_planets {
-        locations.push(MapLocation {
-            name: name.to_string(),
-            angle,
-            orbital_radius: radius,
-            loc_type: MapLocationType::Planet,
-            parent: None,
-        });
+    for keyword in station_keywords {
+        if name_lower.contains(keyword) {
+            return MapLocationType::Station;
+        }
     }
 
-    // Stations
-    locations.push(MapLocation {
-        name: "Ruin Station".to_string(),
-        angle: 0.1,
-        orbital_radius: 0.5,
-        loc_type: MapLocationType::Station,
-        parent: Some("Pyro I".to_string()),
-    });
-    locations.push(MapLocation {
-        name: "Checkmate".to_string(),
-        angle: PI * 1.2 + 0.1,
-        orbital_radius: 0.5,
-        loc_type: MapLocationType::Station,
-        parent: Some("Pyro IV".to_string()),
-    });
+    // Check for landing zone indicators
+    let landing_keywords = [
+        "lorville",
+        "orison",
+        "area 18",
+        "area18",
+        "new babbage",
+        "levski",
+    ];
+    for keyword in landing_keywords {
+        if name_lower.contains(keyword) {
+            return MapLocationType::Station; // Landing zones render as stations
+        }
+    }
+
+    // If parent is a planet, it's likely a moon
+    if let Some(p) = parent {
+        let parent_lower = p.to_lowercase();
+        let planets = [
+            "hurston",
+            "crusader",
+            "arccorp",
+            "microtech",
+            "pyro i",
+            "pyro ii",
+            "pyro iii",
+            "pyro iv",
+            "pyro v",
+            "pyro vi",
+        ];
+        for planet in planets {
+            if parent_lower.contains(planet) {
+                return MapLocationType::Moon;
+            }
+        }
+    }
+
+    MapLocationType::Moon // Default to moon
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_infer_system() {
+        assert_eq!(infer_system("Hurston"), "Stanton");
+        assert_eq!(infer_system("Pyro III"), "Pyro");
+        assert_eq!(infer_system("Port Olisar"), "Stanton");
+    }
+
+    #[test]
+    fn test_static_locations() {
+        let locations = build_static_map_locations("Stanton");
+        assert!(!locations.is_empty());
+
+        // Should have a star
+        assert!(locations
+            .iter()
+            .any(|l| l.loc_type == MapLocationType::Star));
+
+        // Should have planets
+        assert!(locations
+            .iter()
+            .any(|l| l.loc_type == MapLocationType::Planet));
+    }
 }
