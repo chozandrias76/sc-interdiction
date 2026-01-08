@@ -1,0 +1,14 @@
+[print_schema]
+file = "src/database/schema.rs"
+custom_type_derives = ["diesel::query_builder::QueryId"]
+
+[print_schema.raw]
+file = "src/database/schema_raw.rs"
+schema = "raw"
+
+[print_schema.silver]
+file = "src/database/schema_silver.rs"
+schema = "silver"
+
+[migrations_directory]
+dir = "migrations"

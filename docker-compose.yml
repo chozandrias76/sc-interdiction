@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: sc
+      POSTGRES_PASSWORD: sc
+      POSTGRES_DB: sc_interdiction
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sc -d sc_interdiction"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+
+  dbt:
+    image: ghcr.io/dbt-labs/dbt-postgres:1.7.0
+    environment:
+      DBT_HOST: db
+      DBT_PORT: 5432
+      DBT_USER: sc
+      DBT_PASSWORD: sc
+      DBT_DBNAME: sc_interdiction
+    volumes:
+      - ./dbt:/usr/app
+    working_dir: /usr/app
+    depends_on:
+      db:
+        condition: service_healthy
+    profiles:
+      - dbt
+
+volumes:
+  pgdata:

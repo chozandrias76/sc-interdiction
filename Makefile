@@ -6,7 +6,7 @@
 export CARGO_TARGET_DIR ?= /tmp/cargo-target-sc-interdiction
 export CARGO_INCREMENTAL ?= 1
 
-.PHONY: help setup build build-release test test-pkg test-cli coverage coverage-html coverage-check install-coverage-tools clean check fmt clippy doc run serve
+.PHONY: help setup build build-release test test-pkg test-cli coverage coverage-html coverage-check install-coverage-tools clean check fmt clippy doc run serve db-up db-down db-migrate db-import data-viewer
 
 # Coverage threshold
 COVERAGE_THRESHOLD := 80
@@ -36,6 +36,23 @@ help:
 	@echo "  make clippy                   - Run linter"
 	@echo "  make fmt                      - Format code"
 	@echo "  make doc                      - Build and open documentation"
+	@echo ""
+	@echo "Database (PostgreSQL via Docker):"
+	@echo "  make db-setup                 - All-in-one: start + migrate + import + dbt"
+	@echo "  make data-viewer              - Launch data browser TUI"
+	@echo "  make db-up                    - Start PostgreSQL (auto-finds free port)"
+	@echo "  make db-down                  - Stop PostgreSQL"
+	@echo "  make db-port                  - Show current port and DATABASE_URL"
+	@echo "  make db-reset                 - Wipe and rebuild database"
+	@echo "  make db-shell                 - Interactive psql shell"
+	@echo "  make db-query SQL=\"...\"       - Run a SQL query"
+	@echo ""
+	@echo "dbt (transformations):"
+	@echo "  make dbt-all                  - Full pipeline: seed + run + test"
+	@echo "  make dbt-seed                 - Load seed data (display_names)"
+	@echo "  make dbt-run                  - Run all models (silver/gold)"
+	@echo "  make dbt-test                 - Run dbt tests"
+	@echo "  make dbt-debug                - Test dbt connection"
 	@echo ""
 	@echo "Run:"
 	@echo "  make run                      - Run CLI (debug build)"
@@ -213,3 +230,147 @@ info:
 	@echo ""
 	@echo "Cargo version:"
 	@cargo --version
+
+# Database port file (persists allocated port)
+DB_PORT_FILE := .db-port
+
+# Find available port starting from base, incrementing until free
+define find_port
+$(shell \
+	port=$(1); \
+	while ss -tln 2>/dev/null | grep -q ":$$port " || \
+	      netstat -tln 2>/dev/null | grep -q ":$$port "; do \
+		port=$$((port + 1)); \
+		if [ $$port -gt $$(($(1) + 100)) ]; then \
+			echo "ERROR: No free port found" >&2; \
+			exit 1; \
+		fi; \
+	done; \
+	echo $$port)
+endef
+
+# Load or find DB port
+DB_PORT := $(shell cat $(DB_PORT_FILE) 2>/dev/null || echo "")
+ifeq ($(DB_PORT),)
+  DB_PORT := $(call find_port,5432)
+endif
+export DB_PORT
+export DATABASE_URL = postgres://sc:sc@localhost:$(DB_PORT)/sc_interdiction
+
+# Database commands
+db-up:
+	@echo "Finding available port starting from 5432..."
+	@port=$$(port=5432; \
+		while ss -tln 2>/dev/null | grep -q ":$$port " || \
+		      netstat -tln 2>/dev/null | grep -q ":$$port "; do \
+			port=$$((port + 1)); \
+		done; \
+		echo $$port); \
+	echo $$port > $(DB_PORT_FILE); \
+	echo "Using port: $$port"; \
+	DB_PORT=$$port docker compose up -d db
+	@echo "Waiting for database to be ready..."
+	@until docker compose exec -T db pg_isready -U sc -d sc_interdiction >/dev/null 2>&1; do \
+		sleep 1; \
+	done
+	@echo "✓ PostgreSQL is ready on port $$(cat $(DB_PORT_FILE))"
+	@echo "  DATABASE_URL=postgres://sc:sc@localhost:$$(cat $(DB_PORT_FILE))/sc_interdiction"
+
+db-down:
+	docker compose down
+	@rm -f $(DB_PORT_FILE)
+
+db-migrate:
+	@if [ ! -f $(DB_PORT_FILE) ]; then echo "Database not running. Run 'make db-up' first."; exit 1; fi
+	@echo "Running migrations..."
+	@DATABASE_URL=postgres://sc:sc@localhost:$$(cat $(DB_PORT_FILE))/sc_interdiction \
+		sh -c 'cd crates/sc-data-extractor && diesel migration run'
+	@echo "✓ Migrations complete"
+
+db-import:
+	@if [ ! -f $(DB_PORT_FILE) ]; then echo "Database not running. Run 'make db-up' first."; exit 1; fi
+	@echo "Importing SCLogistics data..."
+	@DATABASE_URL=postgres://sc:sc@localhost:$$(cat $(DB_PORT_FILE))/sc_interdiction \
+		cargo run -p sc-logistics-importer -- all
+	@echo "✓ Import complete"
+
+db-setup: db-up
+	@sleep 2
+	$(MAKE) db-migrate
+	$(MAKE) db-import
+	$(MAKE) dbt-all
+	@echo ""
+	@echo "✓ Database ready! Run 'make data-viewer' to browse."
+
+data-viewer:
+	@if [ ! -f $(DB_PORT_FILE) ]; then echo "Database not running. Run 'make db-up' first."; exit 1; fi
+	@DATABASE_URL=postgres://sc:sc@localhost:$$(cat $(DB_PORT_FILE))/sc_interdiction \
+		cargo run -p data-viewer
+
+db-reset: db-down
+	docker volume rm sc-interdiction_pgdata 2>/dev/null || true
+	$(MAKE) db-setup
+
+db-port:
+	@if [ -f $(DB_PORT_FILE) ]; then \
+		echo "Database port: $$(cat $(DB_PORT_FILE))"; \
+		echo "DATABASE_URL=postgres://sc:sc@localhost:$$(cat $(DB_PORT_FILE))/sc_interdiction"; \
+	else \
+		echo "Database not running"; \
+	fi
+
+# Generic database query: make db-query SQL="SELECT * FROM gold.locations LIMIT 5"
+db-query:
+	@if [ -z "$(SQL)" ]; then \
+		echo "Usage: make db-query SQL=\"your SQL query here\""; \
+		echo "Example: make db-query SQL=\"SELECT * FROM gold.locations LIMIT 5\""; \
+		exit 1; \
+	fi
+	@docker exec -i sc-interdiction-db-1 psql -U sc -d sc_interdiction -c "$(SQL)"
+
+# Interactive psql shell
+db-shell:
+	@docker exec -it sc-interdiction-db-1 psql -U sc -d sc_interdiction
+
+# ============================================================================
+# dbt commands
+# ============================================================================
+
+# Run dbt in docker
+define run_dbt
+	@if [ ! -f $(DB_PORT_FILE) ]; then echo "Database not running. Run 'make db-up' first."; exit 1; fi
+	@docker compose run --rm \
+		-e DBT_HOST=db \
+		-e DBT_PORT=5432 \
+		-e DBT_USER=sc \
+		-e DBT_PASSWORD=sc \
+		-e DBT_DBNAME=sc_interdiction \
+		dbt $(1)
+endef
+
+dbt-debug:
+	$(call run_dbt,debug)
+
+dbt-deps:
+	$(call run_dbt,deps)
+
+dbt-seed:
+	$(call run_dbt,seed)
+
+dbt-run:
+	$(call run_dbt,run)
+
+dbt-test:
+	$(call run_dbt,test)
+
+dbt-build:
+	$(call run_dbt,build)
+
+# Full dbt pipeline: seed + run + test
+dbt-all: dbt-seed dbt-run dbt-test
+	@echo "✓ dbt pipeline complete"
+
+# Show dbt docs (generates and serves)
+dbt-docs:
+	$(call run_dbt,docs generate)
+	@echo "Run 'docker compose run --rm -p 8080:8080 dbt docs serve' to view docs"
