@@ -1,0 +1,72 @@
+version: 2
+
+seeds:
+  - name: display_names
+    description: |
+      Human-readable display names for Star Citizen locations.
+      Maps internal game location names (e.g., @Stanton1) to display names (e.g., Hurston).
+
+      Source: Manual curation from Star Citizen Wiki and in-game references.
+
+      To refresh:
+        1. Check starcitizen.tools for new/changed location names
+        2. Cross-reference with SCLogistics starmap XML files
+        3. Update display_names.csv
+    columns:
+      - name: loc_name
+        description: Internal game location name (e.g., @Stanton1)
+      - name: display_name
+        description: Human-readable name (e.g., Hurston)
+
+  - name: location_coordinates
+    description: |
+      X,Y coordinates for known locations in millions of km (Mkm).
+      Used for distance calculations between locations.
+
+      Source: route-graph/src/locations.rs
+      Coordinate system: 2D projection, star at origin (0,0)
+
+      To refresh:
+        1. Update crates/route-graph/src/locations.rs with new positions
+        2. Run the extraction script to regenerate this CSV
+        3. Coordinates use orbital_pos(radius, angle) converted to Cartesian
+    columns:
+      - name: display_name
+        description: Human-readable location name
+      - name: system_name
+        description: Star system (Stanton, Pyro, etc.)
+      - name: x_mkm
+        description: X coordinate in millions of km
+      - name: y_mkm
+        description: Y coordinate in millions of km
+
+  - name: lagrange_planets
+    description: |
+      Maps Lagrange point locations to their associated planets.
+
+      The game data (SCLogistics) incorrectly parents all Lagrange points to the system star.
+      This seed provides the correct planet associations based on game lore.
+
+      Naming conventions:
+        - Stanton: HUR=Hurston, CRU=Crusader, ARC=ArcCorp, MIC=microTech
+        - Pyro: P1-P6 = Pyro I through Pyro VI
+
+      Sources:
+        - Star Citizen Wiki: https://starcitizen.tools/Lagrangian_point
+        - SCLogistics repository: starmap/pu/station/reststop/*.xml
+        - RSI Starmap (when available): https://robertsspaceindustries.com/starmap
+
+      To refresh this data:
+        1. Run: grep -r 'name="@RR_' /path/to/SCLogistics/starmap --include="*.xml" -h | sed 's/.*name="\([^"]*\)".*/\1/' | sort -u
+        2. Check starcitizen.tools for any new Lagrange point stations
+        3. Map new entries to their planet using the naming convention
+        4. Update lagrange_planets.csv
+
+      Last updated: 2026-01-07
+    columns:
+      - name: loc_name
+        description: Internal game location name for the Lagrange point (e.g., @RR_ARC_L1)
+      - name: planet_loc_name
+        description: Internal game location name for the associated planet (e.g., @Stanton3)
+      - name: system_name
+        description: Star system name (e.g., Stanton, Pyro)

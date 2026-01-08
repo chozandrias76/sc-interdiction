@@ -1,0 +1,36 @@
+version: 2
+
+models:
+  - name: gold_locations
+    description: Gold layer locations with denormalized parent info
+    columns:
+      - name: id
+        description: Unique location identifier
+      - name: display_name
+        description: Human-readable location name
+      - name: parent_display_name
+        description: Human-readable parent location name
+
+  - name: gold_shops
+    description: Gold layer shops with denormalized location info
+
+  - name: gold_shop_items
+    description: Gold layer shop items with profit margin calculations
+    columns:
+      - name: profit_margin_pct
+        description: Calculated profit margin percentage
+
+  - name: gold_quantum_routes
+    description: Gold layer quantum routes with denormalized location names
+
+  - name: gold_location_distances
+    description: Calculated distances between all location pairs within the same system
+    columns:
+      - name: from_location
+        description: Starting location display name
+      - name: to_location
+        description: Destination location display name
+      - name: distance_mkm
+        description: Distance in millions of km (Mkm)
+      - name: distance_au
+        description: Distance in astronomical units (AU)

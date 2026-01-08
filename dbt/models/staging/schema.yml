@@ -1,0 +1,38 @@
+version: 2
+
+models:
+  - name: stg_locations
+    description: Staging layer for raw locations from Diesel ingestion
+    columns:
+      - name: id
+        description: Unique location identifier
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_shops
+    description: Staging layer for raw shops
+    columns:
+      - name: shop_id
+        description: Unique shop identifier
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_shop_items
+    description: Staging layer for raw shop inventory items
+    columns:
+      - name: id
+        description: Auto-generated primary key
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_quantum_routes
+    description: Staging layer for raw quantum travel routes
+    columns:
+      - name: id
+        description: Auto-generated primary key
+        tests:
+          - unique
+          - not_null
