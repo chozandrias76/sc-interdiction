@@ -14,7 +14,10 @@ pub enum Error {
     Json(#[from] serde_json::Error),
 
     #[error("Database error: {0}")]
-    Database(#[from] rusqlite::Error),
+    Database(String),
+
+    #[error("Diesel error: {0}")]
+    Diesel(#[from] diesel::result::Error),
 
     #[error("Invalid data in file {path}: {reason}")]
     InvalidData { path: PathBuf, reason: String },

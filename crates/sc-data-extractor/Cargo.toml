@@ -18,7 +18,9 @@ thiserror.workspace = true
 eyre.workspace = true
 
 # Database
-rusqlite = { version = "0.32", features = ["bundled"] }
+diesel.workspace = true
+dotenvy.workspace = true
+chrono.workspace = true
 
 # Utilities
 walkdir = "2.5"
@@ -26,6 +28,14 @@ glob = "0.3"
 
 [dev-dependencies]
 tempfile = "3.0"
+
+[build-dependencies]
+# XML parsing for schema inference
+quick-xml = { version = "0.36", features = ["serialize"] }
+# JSON parsing for schema inference
+serde_json = "1.0"
+# Directory traversal
+walkdir = "2.5"
 
 [lints]
 workspace = true

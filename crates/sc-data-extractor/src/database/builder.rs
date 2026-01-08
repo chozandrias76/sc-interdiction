@@ -1,10 +1,13 @@
-//! Database builder for populating from parsed data
+//! Database builder for populating from parsed data using Diesel ORM
 
-use crate::database::schema::Database;
+use diesel::prelude::*;
+
+use crate::database::connection::Database;
+use crate::database::models::{NewLocation, NewQuantumRoute, NewShop, NewShopItem};
+use crate::database::schema::raw::{locations, quantum_routes, shop_items, shops};
 use crate::error::Result;
 use crate::models::shops::ShopInventory;
 use crate::models::starmap::StarmapLocation;
-use rusqlite::params;
 
 /// Builder for populating database from parsed data
 pub struct DatabaseBuilder {
@@ -13,132 +16,179 @@ pub struct DatabaseBuilder {
 
 impl DatabaseBuilder {
     /// Creates a new database builder
+    #[must_use]
     pub fn new(db: Database) -> Self {
         Self { db }
     }
 
-    /// Initializes the database schema.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if schema creation fails.
-    pub fn init_schema(&self) -> Result<()> {
-        self.db.init_schema()
-    }
-
-    /// Inserts starmap locations into the database.
+    /// Inserts starmap locations into the raw schema.
     ///
     /// # Errors
     ///
     /// Returns an error if database insertion fails.
-    pub fn insert_locations(&mut self, locations: &[StarmapLocation]) -> Result<usize> {
+    pub fn insert_locations(&mut self, starmap_locations: &[StarmapLocation]) -> Result<usize> {
+        let mut conn = self.db.get_connection()?;
         let mut count = 0;
-        let conn = self.db.connection_mut();
 
-        let tx = conn.transaction()?;
-
-        for loc in locations {
+        for loc in starmap_locations {
             let qt = loc.quantum_travel.as_ref();
-            tx.execute(
-                r#"
-                INSERT OR REPLACE INTO locations (
-                    id, name, parent_id, location_type, nav_icon, affiliation,
-                    description, is_scannable, hide_in_starmap,
-                    obstruction_radius, arrival_radius, arrival_point_offset, adoption_radius
-                ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)
-                "#,
-                params![
-                    loc.id,
-                    loc.name,
-                    loc.parent,
-                    loc.location_type,
-                    loc.nav_icon,
-                    loc.affiliation,
-                    loc.description,
-                    loc.is_scannable as i32,
-                    loc.hide_in_starmap as i32,
-                    qt.map(|q| q.obstruction_radius),
-                    qt.map(|q| q.arrival_radius),
-                    qt.map(|q| q.arrival_point_detection_offset),
-                    qt.map(|q| q.adoption_radius),
-                ],
-            )?;
+            let new_location = NewLocation {
+                id: &loc.id,
+                name: &loc.name,
+                parent_id: loc.parent.as_deref(),
+                location_type: &loc.location_type,
+                nav_icon: loc.nav_icon.as_deref(),
+                affiliation: loc.affiliation.as_deref(),
+                description: loc.description.as_deref(),
+                is_scannable: loc.is_scannable,
+                hide_in_starmap: loc.hide_in_starmap,
+                obstruction_radius: qt.map(|q| q.obstruction_radius),
+                arrival_radius: qt.map(|q| q.arrival_radius),
+                arrival_point_offset: qt.map(|q| q.arrival_point_detection_offset),
+                adoption_radius: qt.map(|q| q.adoption_radius),
+            };
+
+            diesel::insert_into(locations::table)
+                .values(&new_location)
+                .on_conflict(locations::id)
+                .do_update()
+                .set((
+                    locations::name.eq(&new_location.name),
+                    locations::parent_id.eq(&new_location.parent_id),
+                    locations::location_type.eq(&new_location.location_type),
+                    locations::nav_icon.eq(&new_location.nav_icon),
+                    locations::affiliation.eq(&new_location.affiliation),
+                    locations::description.eq(&new_location.description),
+                    locations::is_scannable.eq(new_location.is_scannable),
+                    locations::hide_in_starmap.eq(new_location.hide_in_starmap),
+                    locations::obstruction_radius.eq(new_location.obstruction_radius),
+                    locations::arrival_radius.eq(new_location.arrival_radius),
+                    locations::arrival_point_offset.eq(new_location.arrival_point_offset),
+                    locations::adoption_radius.eq(new_location.adoption_radius),
+                ))
+                .execute(&mut *conn)?;
+
             count += 1;
         }
-
-        tx.commit()?;
 
         Ok(count)
     }
 
-    /// Inserts shop inventories into the database.
+    /// Inserts shop inventories into the raw schema.
     ///
     /// # Errors
     ///
     /// Returns an error if database insertion fails.
     pub fn insert_shops(&mut self, inventories: &[ShopInventory]) -> Result<usize> {
+        let mut conn = self.db.get_connection()?;
         let mut shop_count = 0;
-        let mut item_count = 0;
-        let conn = self.db.connection_mut();
-
-        let tx = conn.transaction()?;
 
         for inv in inventories {
             for shop_id in inv.shop_id.split(',') {
                 let shop_id = shop_id.trim();
-                tx.execute(
-                    "INSERT OR IGNORE INTO shops (shop_id, shop_name) VALUES (?1, ?2)",
-                    params![shop_id, format!("Shop_{shop_id}")],
-                )?;
+                let shop_name = format!("Shop_{shop_id}");
+
+                let new_shop = NewShop {
+                    shop_id,
+                    location_id: None,
+                    shop_name: &shop_name,
+                };
+
+                diesel::insert_into(shops::table)
+                    .values(&new_shop)
+                    .on_conflict(shops::shop_id)
+                    .do_nothing()
+                    .execute(&mut *conn)?;
+
                 shop_count += 1;
 
                 for item in &inv.collection.inventory {
                     if let Some(item_id) = item.id.id.first() {
-                        tx.execute(
-                            r#"
-                            INSERT OR REPLACE INTO shop_items 
-                                (shop_id, item_id, buy_price, sell_price, max_inventory)
-                            VALUES (?1, ?2, ?3, ?4, ?5)
-                            "#,
-                            params![
-                                shop_id,
-                                item_id,
-                                item.buy_price,
-                                item.sell_price,
-                                item.max_inventory
-                            ],
-                        )?;
-                        item_count += 1;
+                        let new_item = NewShopItem {
+                            shop_id,
+                            item_id,
+                            buy_price: item.buy_price,
+                            sell_price: item.sell_price,
+                            max_inventory: item.max_inventory,
+                        };
+
+                        diesel::insert_into(shop_items::table)
+                            .values(&new_item)
+                            .on_conflict((shop_items::shop_id, shop_items::item_id))
+                            .do_update()
+                            .set((
+                                shop_items::buy_price.eq(new_item.buy_price),
+                                shop_items::sell_price.eq(new_item.sell_price),
+                                shop_items::max_inventory.eq(new_item.max_inventory),
+                            ))
+                            .execute(&mut *conn)?;
                     }
                 }
             }
         }
 
-        tx.commit()?;
-
-        // Note: caller is responsible for logging/displaying this information
-        let _ = item_count; // Suppress unused warning
         Ok(shop_count)
     }
 
+    /// Inserts quantum routes into the raw schema.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if database insertion fails.
+    pub fn insert_quantum_routes(
+        &mut self,
+        routes: &[(String, String, Option<f64>)],
+    ) -> Result<usize> {
+        let mut conn = self.db.get_connection()?;
+        let mut count = 0;
+
+        for (from_loc, to_loc, distance) in routes {
+            let new_route = NewQuantumRoute {
+                from_location: from_loc,
+                to_location: to_loc,
+                distance: *distance,
+            };
+
+            diesel::insert_into(quantum_routes::table)
+                .values(&new_route)
+                .on_conflict((quantum_routes::from_location, quantum_routes::to_location))
+                .do_update()
+                .set(quantum_routes::distance.eq(new_route.distance))
+                .execute(&mut *conn)?;
+
+            count += 1;
+        }
+
+        Ok(count)
+    }
+
     /// Consumes the builder and returns the database
+    #[must_use]
     pub fn build(self) -> Database {
         self.db
     }
 }
 
 #[cfg(test)]
-#[allow(clippy::expect_used)]
 mod tests {
     use super::*;
     use crate::models::shops::*;
     use crate::models::starmap::*;
+    use dotenvy::dotenv;
+
+    fn setup_test_db() -> Option<Database> {
+        dotenv().ok();
+        Database::from_env().ok()
+    }
 
     #[test]
+    #[ignore = "requires PostgreSQL database"]
     fn test_insert_locations() {
-        let db = Database::new_in_memory().expect("Failed to create DB");
+        let Some(db) = setup_test_db() else {
+            eprintln!("Skipping test: no database connection");
+            return;
+        };
         let mut builder = DatabaseBuilder::new(db);
-        builder.init_schema().expect("Failed to init schema");
 
         let locations = vec![StarmapLocation {
             id: "test-id-123".to_string(),
@@ -166,10 +216,13 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "requires PostgreSQL database"]
     fn test_insert_shops() {
-        let db = Database::new_in_memory().expect("Failed to create DB");
+        let Some(db) = setup_test_db() else {
+            eprintln!("Skipping test: no database connection");
+            return;
+        };
         let mut builder = DatabaseBuilder::new(db);
-        builder.init_schema().expect("Failed to init schema");
 
         let inventories = vec![ShopInventory {
             shop_id: "shop-123".to_string(),
