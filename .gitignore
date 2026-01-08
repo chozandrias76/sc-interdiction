@@ -29,3 +29,5 @@ Thumbs.db
 /tmp/
 .envrc
 .db-port
+dbt/logs/
+dbt/target/
