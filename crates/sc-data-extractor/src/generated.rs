@@ -27,6 +27,7 @@ mod schema_info {
 pub use schema_info::*;
 
 #[cfg(test)]
+#[allow(clippy::assertions_on_constants)]
 mod tests {
     use super::*;
 

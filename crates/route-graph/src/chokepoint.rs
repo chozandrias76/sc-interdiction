@@ -132,3 +132,181 @@ fn suggest_interdict_position(node: &Node) -> InterdictPosition {
         direction,
     }
 }
+
+#[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::indexing_slicing)]
+mod tests {
+    use super::*;
+    use crate::graph::{NodeType, RouteGraph};
+
+    fn create_test_graph() -> RouteGraph {
+        let mut graph = RouteGraph::new();
+
+        // Create test terminal data
+        let terminal1 = api_client::Terminal {
+            id: 1,
+            name: Some("Port Olisar".to_string()),
+            code: Some("PO".to_string()),
+            nickname: None,
+            terminal_type: Some("STATION".to_string()),
+            star_system_name: Some("Stanton".to_string()),
+            planet_name: Some("Crusader".to_string()),
+            moon_name: None,
+            space_station_name: None,
+            outpost_name: None,
+            city_name: None,
+            has_freight_elevator: false,
+            has_loading_dock: false,
+            has_docking_port: false,
+            is_refuel: true,
+            is_refinery: false,
+        };
+
+        let terminal2 = api_client::Terminal {
+            id: 2,
+            name: Some("Area18".to_string()),
+            code: Some("A18".to_string()),
+            nickname: None,
+            terminal_type: Some("CITY".to_string()),
+            star_system_name: Some("Stanton".to_string()),
+            planet_name: Some("ArcCorp".to_string()),
+            moon_name: None,
+            space_station_name: None,
+            outpost_name: None,
+            city_name: None,
+            has_freight_elevator: false,
+            has_loading_dock: false,
+            has_docking_port: false,
+            is_refuel: false,
+            is_refinery: false,
+        };
+
+        graph.add_terminal(&terminal1);
+        graph.add_terminal(&terminal2);
+
+        graph
+    }
+
+    #[test]
+    fn test_find_chokepoints_empty() {
+        let graph = create_test_graph();
+        let trade_routes = vec![];
+
+        let chokepoints = find_chokepoints(&graph, &trade_routes);
+
+        assert_eq!(chokepoints.len(), 0);
+    }
+
+    #[test]
+    fn test_find_chokepoints_single_route() {
+        let graph = create_test_graph();
+        let trade_routes = vec![("PO".to_string(), "A18".to_string(), 100.0)];
+
+        let chokepoints = find_chokepoints(&graph, &trade_routes);
+
+        // Should have 2 chokepoints (one for each terminal)
+        assert_eq!(chokepoints.len(), 2);
+    }
+
+    #[test]
+    fn test_find_chokepoints_sorted_by_traffic() {
+        let graph = create_test_graph();
+        let trade_routes = vec![
+            ("PO".to_string(), "A18".to_string(), 50.0),
+            ("PO".to_string(), "A18".to_string(), 100.0),
+            ("A18".to_string(), "PO".to_string(), 25.0),
+        ];
+
+        let chokepoints = find_chokepoints(&graph, &trade_routes);
+
+        // First chokepoint should have highest traffic score
+        assert!(chokepoints[0].traffic_score >= chokepoints[1].traffic_score);
+    }
+
+    #[test]
+    fn test_find_chokepoints_route_count() {
+        let graph = create_test_graph();
+        let trade_routes = vec![
+            ("PO".to_string(), "A18".to_string(), 50.0),
+            ("PO".to_string(), "A18".to_string(), 100.0),
+        ];
+
+        let chokepoints = find_chokepoints(&graph, &trade_routes);
+
+        // PO should have 2 routes
+        let po_chokepoint = chokepoints.iter().find(|c| c.node.id == "1").unwrap();
+        assert_eq!(po_chokepoint.route_count, 2);
+    }
+
+    #[test]
+    fn test_suggest_interdict_position_station() {
+        let node = Node {
+            id: "1".to_string(),
+            name: "Test Station".to_string(),
+            node_type: NodeType::Station,
+            system: "Stanton".to_string(),
+            parent_body: "Crusader".to_string(),
+            coords: None,
+            is_fuel_station: true,
+        };
+
+        let position = suggest_interdict_position(&node);
+
+        assert_eq!(position.distance_km, 150.0);
+        assert!(position.description.contains("Test Station"));
+    }
+
+    #[test]
+    fn test_suggest_interdict_position_outpost() {
+        let node = Node {
+            id: "2".to_string(),
+            name: "Test Outpost".to_string(),
+            node_type: NodeType::Outpost,
+            system: "Stanton".to_string(),
+            parent_body: "Daymar".to_string(),
+            coords: None,
+            is_fuel_station: false,
+        };
+
+        let position = suggest_interdict_position(&node);
+
+        assert_eq!(position.distance_km, 100.0);
+        assert_eq!(position.direction, "Low orbit above outpost");
+    }
+
+    #[test]
+    fn test_suggest_interdict_position_city() {
+        let node = Node {
+            id: "3".to_string(),
+            name: "Area18".to_string(),
+            node_type: NodeType::City,
+            system: "Stanton".to_string(),
+            parent_body: "ArcCorp".to_string(),
+            coords: None,
+            is_fuel_station: false,
+        };
+
+        let position = suggest_interdict_position(&node);
+
+        assert_eq!(position.distance_km, 200.0);
+        assert_eq!(position.direction, "Main approach corridor");
+    }
+
+    #[test]
+    fn test_suggest_interdict_position_orbital_marker() {
+        let node = Node {
+            id: "4".to_string(),
+            name: "CRU-L1".to_string(),
+            node_type: NodeType::OrbitalMarker,
+            system: "Stanton".to_string(),
+            parent_body: "Crusader".to_string(),
+            coords: None,
+            is_fuel_station: false,
+        };
+
+        let position = suggest_interdict_position(&node);
+
+        assert_eq!(position.distance_km, 50.0);
+        assert_eq!(position.direction, "Near OM marker");
+    }
+}

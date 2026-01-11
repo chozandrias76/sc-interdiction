@@ -6,6 +6,9 @@
 //! 3. Infer types from actual values
 //! 4. Generate Rust structs and SQL schema
 
+// Build scripts are expected to panic on errors
+#![allow(clippy::unwrap_used, clippy::expect_used)]
+
 use std::collections::BTreeMap;
 use std::env;
 use std::fs::{self, File};
@@ -49,11 +52,9 @@ impl InferredType {
 
     fn to_sql_type(&self) -> &'static str {
         match self {
-            InferredType::String => "TEXT",
-            InferredType::Integer => "INTEGER",
+            InferredType::String | InferredType::Object(_) | InferredType::Array(_) => "TEXT",
+            InferredType::Integer | InferredType::Boolean => "INTEGER",
             InferredType::Float => "REAL",
-            InferredType::Boolean => "INTEGER",
-            InferredType::Object(_) | InferredType::Array(_) => "TEXT", // JSON serialized
         }
     }
 
@@ -249,8 +250,7 @@ fn scan_xml_files(starmap_dir: &Path) -> EntitySchema {
                             process_xml_attributes(e, &mut schema, file_count);
                         }
                     }
-                    Ok(Event::Eof) => break,
-                    Err(_) => break,
+                    Ok(Event::Eof) | Err(_) => break,
                     _ => {}
                 }
                 buf.clear();
@@ -283,34 +283,32 @@ fn scan_xml_files(starmap_dir: &Path) -> EntitySchema {
 }
 
 fn process_xml_attributes(element: &BytesStart, schema: &mut EntitySchema, file_count: usize) {
-    for attr_result in element.attributes() {
-        if let Ok(attr) = attr_result {
-            let key = String::from_utf8_lossy(attr.key.as_ref()).to_string();
-            let value = String::from_utf8_lossy(&attr.value).to_string();
+    for attr in element.attributes().flatten() {
+        let key = String::from_utf8_lossy(attr.key.as_ref()).to_string();
+        let value = String::from_utf8_lossy(&attr.value).to_string();
 
-            // Skip internal/metadata attributes we don't need
-            if key == "__type" || key == "__path" {
-                continue;
-            }
-
-            let rust_name = to_snake_case(&key);
-            let inferred_type = infer_type_from_value(&value);
-
-            schema
-                .fields
-                .entry(key.clone())
-                .and_modify(|f| {
-                    f.occurrence_count += 1;
-                    f.field_type = f.field_type.merge(&inferred_type);
-                })
-                .or_insert(FieldInfo {
-                    original_name: key,
-                    rust_name,
-                    field_type: inferred_type,
-                    occurrence_count: 1,
-                    total_files: file_count,
-                });
+        // Skip internal/metadata attributes we don't need
+        if key == "__type" || key == "__path" {
+            continue;
         }
+
+        let rust_name = to_snake_case(&key);
+        let inferred_type = infer_type_from_value(&value);
+
+        schema
+            .fields
+            .entry(key.clone())
+            .and_modify(|f| {
+                f.occurrence_count += 1;
+                f.field_type = f.field_type.merge(&inferred_type);
+            })
+            .or_insert(FieldInfo {
+                original_name: key,
+                rust_name,
+                field_type: inferred_type,
+                occurrence_count: 1,
+                total_files: file_count,
+            });
     }
 }
 
@@ -437,7 +435,8 @@ fn process_json_object(obj: &JsonValue, schema: &mut EntitySchema, count: usize)
 
 fn infer_json_type(value: &JsonValue) -> InferredType {
     match value {
-        JsonValue::Null => InferredType::String, // Nullable -> String as fallback
+        // Nullable and String both map to String (fallback for null)
+        JsonValue::Null | JsonValue::String(_) => InferredType::String,
         JsonValue::Bool(_) => InferredType::Boolean,
         JsonValue::Number(n) => {
             if n.is_i64() {
@@ -446,7 +445,6 @@ fn infer_json_type(value: &JsonValue) -> InferredType {
                 InferredType::Float
             }
         }
-        JsonValue::String(_) => InferredType::String,
         JsonValue::Array(arr) => {
             if let Some(first) = arr.first() {
                 InferredType::Array(Box::new(infer_json_type(first)))

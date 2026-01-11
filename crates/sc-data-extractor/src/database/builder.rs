@@ -170,6 +170,7 @@ impl DatabaseBuilder {
 }
 
 #[cfg(test)]
+#[allow(clippy::expect_used, clippy::print_stderr)]
 mod tests {
     use super::*;
     use crate::models::shops::*;
