@@ -27,8 +27,11 @@ pub fn render_tables(frame: &mut Frame, area: Rect, app: &App) {
                 )
             }
             TableListItem::Table(idx) => {
-                let table = &app.tables[*idx];
-                let content = format!("  {} ({})", table.name, table.row_count);
+                let content = app
+                    .tables
+                    .get(*idx)
+                    .map(|table| format!("  {} ({})", table.name, table.row_count))
+                    .unwrap_or_else(|| "  <unknown>".to_string());
                 ListItem::new(content)
             }
         })

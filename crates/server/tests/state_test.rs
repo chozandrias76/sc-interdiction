@@ -1,21 +1,22 @@
 //! Tests for application state management.
+#![allow(clippy::unwrap_used)]
 
 use server::AppState;
 use std::sync::Arc;
 
-#[test]
-fn test_app_state_creation() {
-    let state = AppState::new("test-api-key");
+#[tokio::test]
+async fn test_app_state_creation() {
+    let state = AppState::new("test-api-key").await.unwrap();
 
     // Verify state can be created successfully
     // If we got here without panicking, the state was created
-    let _ = state.analyzer;
-    let _ = state.graph;
+    let _ = &state.analyzer;
+    let _ = &state.graph;
 }
 
-#[test]
-fn test_app_state_clone() {
-    let state = AppState::new("test-api-key");
+#[tokio::test]
+async fn test_app_state_clone() {
+    let state = AppState::new("test-api-key").await.unwrap();
     let cloned = state.clone();
 
     // AppState should be cloneable (required for Axum)
@@ -32,7 +33,7 @@ fn test_app_state_clone() {
 
 #[tokio::test]
 async fn test_init_graph_empty_state() {
-    let state = AppState::new("test-api-key");
+    let state = AppState::new("test-api-key").await.unwrap();
 
     // Graph should start empty
     let graph = state.graph.read().await;
@@ -42,7 +43,7 @@ async fn test_init_graph_empty_state() {
 
 #[tokio::test]
 async fn test_init_graph_is_idempotent() {
-    let state = AppState::new("test-api-key");
+    let state = AppState::new("test-api-key").await.unwrap();
 
     // Calling init_graph multiple times should be safe
     // (though it will fail without real API access)

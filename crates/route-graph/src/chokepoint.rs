@@ -134,6 +134,7 @@ fn suggest_interdict_position(node: &Node) -> InterdictPosition {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::indexing_slicing)]
 mod tests {
     use super::*;
     use crate::graph::{NodeType, RouteGraph};

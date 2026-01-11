@@ -1,4 +1,5 @@
 //! Integration tests for API routes.
+#![allow(clippy::unwrap_used)]
 
 use axum::{
     body::Body,
@@ -10,13 +11,10 @@ use tower::ServiceExt;
 
 /// Helper to send a GET request to the app and return status + body
 async fn get(uri: &str) -> (StatusCode, String) {
-    let state = AppState::new("test-api-key");
+    let state = AppState::new("test-api-key").await.unwrap();
     let app = create_router(state);
 
-    let request = Request::builder()
-        .uri(uri)
-        .body(Body::empty())
-        .unwrap();
+    let request = Request::builder().uri(uri).body(Body::empty()).unwrap();
 
     let response = app.oneshot(request).await.unwrap();
     let status = response.status();

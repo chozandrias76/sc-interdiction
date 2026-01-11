@@ -470,6 +470,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "data-viewer"
+version = "0.1.4"
+dependencies = [
+ "clap",
+ "crossterm",
+ "diesel",
+ "dotenvy",
+ "eyre",
+ "ratatui",
+ "thiserror 1.0.69",
+]
+
+[[package]]
 name = "diesel"
 version = "2.3.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"

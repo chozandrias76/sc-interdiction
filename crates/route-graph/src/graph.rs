@@ -319,6 +319,7 @@ impl Default for RouteGraph {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::indexing_slicing, clippy::panic)]
 mod tests {
     use super::*;
 
@@ -424,8 +425,7 @@ mod tests {
         let mut graph = RouteGraph::new();
         let terminal1 = create_test_terminal(1, "Port Olisar", "PO", "STATION", "Stanton", true);
         let terminal2 = create_test_terminal(2, "Area18", "A18", "CITY", "Stanton", false);
-        let terminal3 =
-            create_test_terminal(3, "Lorville", "LOR", "CITY", "Stanton", false);
+        let terminal3 = create_test_terminal(3, "Lorville", "LOR", "CITY", "Stanton", false);
 
         graph.add_terminal(&terminal1);
         graph.add_terminal(&terminal2);
@@ -514,8 +514,7 @@ mod tests {
         let mut graph = RouteGraph::new();
         let terminal1 = create_test_terminal(1, "Port Olisar", "PO", "STATION", "Stanton", true);
         let terminal2 = create_test_terminal(2, "Area18", "A18", "CITY", "Stanton", false);
-        let terminal3 =
-            create_test_terminal(3, "Lorville", "LOR", "CITY", "Stanton", false);
+        let terminal3 = create_test_terminal(3, "Lorville", "LOR", "CITY", "Stanton", false);
 
         graph.add_terminal(&terminal1);
         graph.add_terminal(&terminal2);
