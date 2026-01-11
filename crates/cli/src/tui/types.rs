@@ -37,10 +37,10 @@ pub enum RouteSort {
 #[derive(Debug, Clone)]
 pub struct MapLocation {
     pub name: String,
-    /// Angle from center in radians (for 2D map display).
-    pub angle: f64,
-    /// Distance from center (or parent) for orbital display.
-    pub orbital_radius: f64,
+    /// X coordinate in millions of km (Mkm) from system center.
+    pub x: f64,
+    /// Y coordinate in millions of km (Mkm) from system center.
+    pub y: f64,
     pub loc_type: MapLocationType,
     pub parent: Option<String>,
 }

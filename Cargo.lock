@@ -1768,6 +1768,7 @@ dependencies = [
  "intel",
  "ratatui",
  "route-graph",
+ "sc-data-extractor",
  "serde",
  "serde_json",
  "server",
@@ -1783,6 +1784,8 @@ name = "sc-logistics-importer"
 version = "0.1.4"
 dependencies = [
  "clap",
+ "diesel",
+ "dotenvy",
  "eyre",
  "sc-data-extractor",
 ]

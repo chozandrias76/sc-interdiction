@@ -2,7 +2,7 @@
 
 use crate::tui::app::App;
 use crate::tui::text::truncate;
-use crate::tui::types::{MapLocation, MapLocationType};
+use crate::tui::types::MapLocationType;
 use crate::tui::widgets::format_value;
 use ratatui::{
     prelude::*,
@@ -25,56 +25,15 @@ pub fn render_map(frame: &mut Frame, app: &App, area: Rect) {
     render_hotspot_details(frame, app, chunks[1]);
 }
 
-/// Convert a location to its display (x, y) coordinates using angle and orbital radius.
-fn location_to_xy(
-    loc: &MapLocation,
-    planet_positions: &std::collections::HashMap<String, (f64, f64)>,
-) -> (f64, f64) {
-    let (base_x, base_y) = if let Some(parent) = &loc.parent {
-        // Get parent's position
-        planet_positions.get(parent).copied().unwrap_or((0.0, 0.0))
-    } else {
-        (0.0, 0.0) // Orbits the star
-    };
-
-    // Calculate position from angle and radius
-    let x = base_x + loc.orbital_radius * loc.angle.cos();
-    let y = base_y + loc.orbital_radius * loc.angle.sin();
-    (x, y)
-}
-
 #[allow(clippy::too_many_lines)]
 fn render_system_canvas(frame: &mut Frame, app: &App, area: Rect) {
-    // First pass: calculate planet positions (they orbit the star)
-    let mut planet_positions: std::collections::HashMap<String, (f64, f64)> =
+    // Build position map from location x,y coordinates
+    let mut all_positions: std::collections::HashMap<String, (f64, f64)> =
         std::collections::HashMap::new();
 
     for loc in &app.map_locations {
-        if loc.loc_type == MapLocationType::Planet {
-            let x = loc.orbital_radius * loc.angle.cos();
-            let y = loc.orbital_radius * loc.angle.sin();
-            planet_positions.insert(loc.name.clone(), (x, y));
-        }
+        all_positions.insert(loc.name.clone(), (loc.x, loc.y));
     }
-
-    // Second pass: calculate moon positions (they orbit planets)
-    let mut moon_positions: std::collections::HashMap<String, (f64, f64)> =
-        std::collections::HashMap::new();
-    for loc in &app.map_locations {
-        if loc.loc_type == MapLocationType::Moon {
-            if let Some(parent) = &loc.parent {
-                if let Some(&(px, py)) = planet_positions.get(parent) {
-                    let x = px + loc.orbital_radius * loc.angle.cos();
-                    let y = py + loc.orbital_radius * loc.angle.sin();
-                    moon_positions.insert(loc.name.clone(), (x, y));
-                }
-            }
-        }
-    }
-
-    // Merge positions
-    let mut all_positions = planet_positions.clone();
-    all_positions.extend(moon_positions.clone());
 
     // Calculate bounds - include both map locations AND hotspots
     let mut min_x = -5.0_f64;
@@ -83,11 +42,10 @@ fn render_system_canvas(frame: &mut Frame, app: &App, area: Rect) {
     let mut max_y = 5.0_f64;
 
     for loc in &app.map_locations {
-        let (x, y) = location_to_xy(loc, &all_positions);
-        min_x = min_x.min(x);
-        max_x = max_x.max(x);
-        min_y = min_y.min(y);
-        max_y = max_y.max(y);
+        min_x = min_x.min(loc.x);
+        max_x = max_x.max(loc.x);
+        min_y = min_y.min(loc.y);
+        max_y = max_y.max(loc.y);
     }
 
     // Include visible hotspot positions in bounds (using actual x,y coordinates)
@@ -111,7 +69,6 @@ fn render_system_canvas(frame: &mut Frame, app: &App, area: Rect) {
     let map_locations = app.map_locations.clone();
     let hotspots: Vec<_> = app.visible_hotspots().cloned().collect();
     let map_selected = app.map_selected;
-    let positions = all_positions.clone();
     let hotspot_limit = app.hotspot_limit;
     let total_hotspots = app.hotspots.len();
 
@@ -159,28 +116,32 @@ fn render_system_canvas(frame: &mut Frame, app: &App, area: Rect) {
                 color: Color::Yellow,
             });
 
-            // Draw orbital rings for planets (faint circles)
+            // Draw orbital rings for planets (faint circles based on distance from center)
             for loc in &map_locations {
                 if loc.loc_type == MapLocationType::Planet && loc.parent.is_none() {
-                    // Draw orbit circle - approximate with line segments
-                    let segments = 32;
-                    for i in 0..segments {
-                        let a1 = 2.0 * std::f64::consts::PI * i as f64 / segments as f64;
-                        let a2 = 2.0 * std::f64::consts::PI * (i + 1) as f64 / segments as f64;
-                        ctx.draw(&CanvasLine {
-                            x1: loc.orbital_radius * a1.cos(),
-                            y1: loc.orbital_radius * a1.sin(),
-                            x2: loc.orbital_radius * a2.cos(),
-                            y2: loc.orbital_radius * a2.sin(),
-                            color: Color::DarkGray,
-                        });
+                    // Calculate orbital radius from x,y position
+                    let orbital_radius = (loc.x * loc.x + loc.y * loc.y).sqrt();
+                    if orbital_radius > 0.1 {
+                        // Draw orbit circle - approximate with line segments
+                        let segments = 32;
+                        for i in 0..segments {
+                            let a1 = 2.0 * std::f64::consts::PI * i as f64 / segments as f64;
+                            let a2 = 2.0 * std::f64::consts::PI * (i + 1) as f64 / segments as f64;
+                            ctx.draw(&CanvasLine {
+                                x1: orbital_radius * a1.cos(),
+                                y1: orbital_radius * a1.sin(),
+                                x2: orbital_radius * a2.cos(),
+                                y2: orbital_radius * a2.sin(),
+                                color: Color::DarkGray,
+                            });
+                        }
                     }
                 }
             }
 
-            // Draw locations
+            // Draw locations using their x,y coordinates directly
             for loc in &map_locations {
-                let (x, y) = location_to_xy(loc, &positions);
+                let (x, y) = (loc.x, loc.y);
 
                 let (color, radius) = match loc.loc_type {
                     MapLocationType::Star => continue, // Already drawn
