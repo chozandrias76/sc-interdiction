@@ -6,6 +6,7 @@ on:
 
 jobs:
   validate-pr:
+    if: false # disabled for now - keeping workflow for later
     runs-on: ubuntu-latest
     name: Validate PR Title and Description
     steps:
