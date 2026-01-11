@@ -1,0 +1,86 @@
+loc_name,display_name
+@StantonStar,Stanton
+@PyroStar,Pyro
+@Nyx_Star,Nyx
+@Stanton1,Hurston
+@Stanton2,Crusader
+@Stanton3,ArcCorp
+@Stanton4,microTech
+@Stanton1a,Arial
+@Stanton1b,Aberdeen
+@Stanton1c,Magda
+@Stanton1d,Ita
+@Stanton2a,Cellin
+@Stanton2b,Daymar
+@Stanton2c,Yela
+@Stanton3a,Lyria
+@Stanton3b,Wala
+@Stanton4a,Calliope
+@Stanton4b,Clio
+@Stanton4c,Euterpe
+@ui_pregame_port_Lorville_name,Lorville
+@ui_pregame_port_Orison_name,Orison
+@ui_pregame_port_Area18_name,Area 18
+@ui_pregame_port_NewBabbage_name,New Babbage
+@ui_pregame_port_GrimHex_name,Grim HEX
+@ui_pregame_port_Levski_name,Levski
+@Stanton1_Transfer,Everus Harbor
+@Stanton2_Transfer_Seraphim,Seraphim Station
+@Stanton3_Transfer,Baijini Point
+@Stanton4_Transfer,Port Tressler
+@stanton2_restockStation042,Port Olisar
+@stanton2_security_kareah,Security Post Kareah
+@stanton2_Shipping_Covalex,Covalex Shipping Hub
+@RR_HUR_L1,HUR-L1
+@RR_HUR_L2,HUR-L2
+@RR_HUR_L3,HUR-L3
+@RR_HUR_L4,HUR-L4
+@RR_HUR_L5,HUR-L5
+@RR_CRU_L1,CRU-L1
+@RR_CRU_L4,CRU-L4
+@RR_CRU_L5,CRU-L5
+@RR_ARC_L1,ARC-L1
+@RR_ARC_L2,ARC-L2
+@RR_ARC_L3,ARC-L3
+@RR_ARC_L4,ARC-L4
+@RR_ARC_L5,ARC-L5
+@RR_MIC_L1,MIC-L1
+@RR_MIC_L2,MIC-L2
+@RR_MIC_L3,MIC-L3
+@RR_MIC_L4,MIC-L4
+@RR_MIC_L5,MIC-L5
+@Pyro1,Pyro I
+@Pyro2,Pyro II
+@Pyro3,Pyro III
+@Pyro4,Pyro IV
+@Pyro5,Pyro V
+@Pyro6,Pyro VI
+@Pyro5a_Ignis,Ignis
+@Pyro5b_Vatra,Vatra
+@Pyro5c_Adir,Adir
+@Pyro5d_Fairo,Fairo
+@Pyro5e_Fuego,Fuego
+@Pyro5f_Vuur,Vuur
+@Pyro_ruinstation,Ruin Station
+@ui_pregame_port_Checkmate_name,Checkmate Station
+@RR_P1_L2,PYR-L2
+@RR_P1_L3,PYR-L3
+@RR_P1_L4,PYR-L4
+@RR_P1_L5,PYR-L5
+@RR_P2,Pyro II Station
+@RR_P3,Pyro III Station
+@RR_P5_L1,P5-L1
+@RR_P5_L2,P5-L2
+@RR_P5_L3,P5-L3
+@RR_P5_L4,P5-L4
+@RR_P5_L5,P5-L5
+@RR_P6_L1,P6-L1
+@RR_P6_L2,P6-L2
+@Delamar,Delamar
+@Nyx1,Nyx I
+@Nyx2,Nyx II
+@Nyx3,Nyx III
+@Stanton_JumpPoint_Pyro,Stanton-Pyro Jump Point
+@Pyro_JumpPoint_Stanton,Pyro-Stanton Jump Point
+@Stanton_Pyro_JPStation,Stanton-Pyro Jump Station
+@Pyro_Stanton_JPStation,Pyro-Stanton Jump Station

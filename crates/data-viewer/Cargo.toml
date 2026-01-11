@@ -1,0 +1,29 @@
+[package]
+name = "data-viewer"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "TUI for browsing PostgreSQL game data with medallion architecture"
+
+[[bin]]
+name = "data-viewer"
+path = "src/main.rs"
+
+[dependencies]
+# TUI
+ratatui.workspace = true
+crossterm.workspace = true
+
+# Database
+diesel.workspace = true
+dotenvy.workspace = true
+
+# CLI
+clap.workspace = true
+
+# Error handling
+eyre.workspace = true
+thiserror.workspace = true
+
+[lints]
+workspace = true
