@@ -1,132 +1,60 @@
-//! Database schema and queries
+// @generated automatically by Diesel CLI.
+// Only raw schema is managed by Diesel - silver/gold are managed by dbt
 
-use crate::error::Result;
-use rusqlite::Connection;
-
-/// `SQLite` database for extracted game data
-pub struct Database {
-    conn: Connection,
-}
-
-impl Database {
-    /// Creates a new in-memory database.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the database connection fails.
-    pub fn new_in_memory() -> Result<Self> {
-        let conn = Connection::open_in_memory()?;
-        Ok(Self { conn })
+pub mod raw {
+    diesel::table! {
+        raw.locations (id) {
+            id -> Text,
+            name -> Text,
+            parent_id -> Nullable<Text>,
+            location_type -> Text,
+            nav_icon -> Nullable<Text>,
+            affiliation -> Nullable<Text>,
+            description -> Nullable<Text>,
+            is_scannable -> Bool,
+            hide_in_starmap -> Bool,
+            obstruction_radius -> Nullable<Float8>,
+            arrival_radius -> Nullable<Float8>,
+            arrival_point_offset -> Nullable<Float8>,
+            adoption_radius -> Nullable<Float8>,
+            created_at -> Timestamptz,
+            updated_at -> Timestamptz,
+        }
     }
 
-    /// Creates a new database at the specified path.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the database file cannot be opened or created.
-    pub fn new(path: &str) -> Result<Self> {
-        let conn = Connection::open(path)?;
-        Ok(Self { conn })
+    diesel::table! {
+        raw.quantum_routes (id) {
+            id -> Int4,
+            from_location -> Text,
+            to_location -> Text,
+            distance -> Nullable<Float8>,
+            created_at -> Timestamptz,
+            updated_at -> Timestamptz,
+        }
     }
 
-    /// Initializes the database schema.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if schema creation fails.
-    pub fn init_schema(&self) -> Result<()> {
-        self.conn.execute_batch(
-            r#"
-            CREATE TABLE IF NOT EXISTS locations (
-                id TEXT PRIMARY KEY,
-                name TEXT NOT NULL,
-                parent_id TEXT,
-                location_type TEXT NOT NULL,
-                nav_icon TEXT,
-                affiliation TEXT,
-                description TEXT,
-                is_scannable INTEGER NOT NULL,
-                hide_in_starmap INTEGER NOT NULL,
-                obstruction_radius REAL,
-                arrival_radius REAL,
-                arrival_point_offset REAL,
-                adoption_radius REAL
-            );
-
-            CREATE INDEX IF NOT EXISTS idx_locations_parent ON locations(parent_id);
-            CREATE INDEX IF NOT EXISTS idx_locations_type ON locations(location_type);
-
-            CREATE TABLE IF NOT EXISTS shops (
-                shop_id TEXT PRIMARY KEY,
-                location_id TEXT,
-                shop_name TEXT NOT NULL,
-                FOREIGN KEY (location_id) REFERENCES locations(id)
-            );
-
-            CREATE INDEX IF NOT EXISTS idx_shops_location ON shops(location_id);
-
-            CREATE TABLE IF NOT EXISTS shop_items (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                shop_id TEXT NOT NULL,
-                item_id TEXT NOT NULL,
-                buy_price REAL NOT NULL,
-                sell_price REAL NOT NULL,
-                max_inventory REAL NOT NULL,
-                FOREIGN KEY (shop_id) REFERENCES shops(shop_id),
-                UNIQUE(shop_id, item_id)
-            );
-
-            CREATE INDEX IF NOT EXISTS idx_shop_items_shop ON shop_items(shop_id);
-            CREATE INDEX IF NOT EXISTS idx_shop_items_item ON shop_items(item_id);
-
-            CREATE TABLE IF NOT EXISTS quantum_routes (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                from_location TEXT NOT NULL,
-                to_location TEXT NOT NULL,
-                distance REAL,
-                FOREIGN KEY (from_location) REFERENCES locations(id),
-                FOREIGN KEY (to_location) REFERENCES locations(id),
-                UNIQUE(from_location, to_location)
-            );
-
-            CREATE INDEX IF NOT EXISTS idx_routes_from ON quantum_routes(from_location);
-            CREATE INDEX IF NOT EXISTS idx_routes_to ON quantum_routes(to_location);
-            "#,
-        )?;
-
-        Ok(())
+    diesel::table! {
+        raw.shop_items (id) {
+            id -> Int4,
+            shop_id -> Text,
+            item_id -> Text,
+            buy_price -> Float8,
+            sell_price -> Float8,
+            max_inventory -> Float8,
+            created_at -> Timestamptz,
+            updated_at -> Timestamptz,
+        }
     }
 
-    /// Returns the underlying connection for custom queries
-    pub fn connection(&self) -> &Connection {
-        &self.conn
+    diesel::table! {
+        raw.shops (shop_id) {
+            shop_id -> Text,
+            location_id -> Nullable<Text>,
+            shop_name -> Text,
+            created_at -> Timestamptz,
+            updated_at -> Timestamptz,
+        }
     }
 
-    /// Returns a mutable reference to the underlying connection
-    pub fn connection_mut(&mut self) -> &mut Connection {
-        &mut self.conn
-    }
-}
-
-#[cfg(test)]
-#[allow(clippy::expect_used)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_init_schema() {
-        let db = Database::new_in_memory().expect("Failed to create database");
-        db.init_schema().expect("Failed to initialize schema");
-
-        let table_count: i32 = db
-            .connection()
-            .query_row(
-                "SELECT COUNT(*) FROM sqlite_master WHERE type='table'",
-                [],
-                |row| row.get(0),
-            )
-            .expect("Failed to query tables");
-
-        assert!(table_count >= 4);
-    }
+    diesel::allow_tables_to_appear_in_same_query!(locations, quantum_routes, shop_items, shops,);
 }
