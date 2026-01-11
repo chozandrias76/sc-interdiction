@@ -48,3 +48,11 @@ repos:
         language: system
         types: [rust]
         pass_filenames: false
+
+      - id: cargo-coverage
+        name: cargo coverage (80% minimum)
+        entry: cargo tarpaulin --all-features --workspace --timeout 120 --fail-under 80 --skip-clean
+        language: system
+        types: [rust]
+        pass_filenames: false
+        stages: [pre-push]
