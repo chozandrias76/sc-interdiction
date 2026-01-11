@@ -12,6 +12,10 @@ clap.workspace = true
 # Internal crates
 sc-data-extractor = { path = "../sc-data-extractor" }
 
+# Database
+diesel.workspace = true
+dotenvy.workspace = true
+
 # Error handling
 eyre.workspace = true
 
