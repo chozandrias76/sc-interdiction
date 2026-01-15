@@ -71,3 +71,53 @@ impl ContractReward {
         self
     }
 }
+
+/// A Wikelo trade contract.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WikieloContract {
+    /// Unique identifier for this contract
+    pub id: String,
+    /// Display name of the contract
+    pub name: String,
+    /// Items required to complete this contract
+    pub requirements: Vec<ContractRequirement>,
+    /// Rewards for completing this contract
+    pub rewards: Vec<ContractReward>,
+    /// Whether this contract is repeatable
+    pub repeatable: bool,
+    /// Optional description/flavor text
+    pub description: Option<String>,
+}
+
+impl WikieloContract {
+    /// Calculate total estimated reward value.
+    #[must_use]
+    pub fn total_reward_value(&self) -> u64 {
+        self.rewards.iter().filter_map(|r| r.estimated_value).sum()
+    }
+
+    /// Get all unique item IDs required by this contract.
+    #[must_use]
+    pub fn required_item_ids(&self) -> Vec<&str> {
+        self.requirements
+            .iter()
+            .map(|r| r.item_id.as_str())
+            .collect()
+    }
+
+    /// Check if this contract requires a specific item.
+    #[must_use]
+    pub fn requires_item(&self, item_id: &str) -> bool {
+        self.requirements.iter().any(|r| r.item_id == item_id)
+    }
+
+    /// Get quantity required of a specific item.
+    #[must_use]
+    pub fn quantity_required(&self, item_id: &str) -> u32 {
+        self.requirements
+            .iter()
+            .filter(|r| r.item_id == item_id)
+            .map(|r| r.quantity)
+            .sum()
+    }
+}

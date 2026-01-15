@@ -16,5 +16,5 @@ pub use targets::{
 };
 pub use wikelo::{
     AcquisitionMethod, ContractRequirement, ContractReward, ItemCategory, ItemSource, RewardType,
-    SourceLocation, WikieloItem,
+    SourceLocation, WikieloContract, WikieloItem,
 };
