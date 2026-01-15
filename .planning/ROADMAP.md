@@ -30,7 +30,7 @@ None
 **Plans**: 2 plans
 
 Plans:
-- [ ] 01-01: Define core types (WikieloItem, ItemSource, ItemCategory)
+- [x] 01-01: Define core types (WikieloItem, ItemSource, ItemCategory)
 - [ ] 01-02: Define contract types (WikieloContract, ContractRequirement)
 
 ### Phase 2: Item Source Research
@@ -94,7 +94,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Wikelo Data Model | 0/2 | Not started | - |
+| 1. Wikelo Data Model | 1/2 | In progress | - |
 | 2. Item Source Research | 0/3 | Not started | - |
 | 3. Wikelo Data Module | 0/2 | Not started | - |
 | 4. Source Intel Integration | 0/3 | Not started | - |
