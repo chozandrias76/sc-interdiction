@@ -35,9 +35,9 @@ Key finding: The wiki and community tools (wikelotrades.com, finder.cstone.space
 
 | Item | Source Location | System | Method | Reliability | Notes |
 |------|----------------|--------|--------|-------------|-------|
-| **Carinite** | Aberdeen, Daymar (Hathor caves) | Stanton | Mining | 5 | Caves exposed by Hathor orbital laser platforms; deep-red mineral |
-| **Carinite (Pure)** | Aberdeen, Daymar | Stanton | Mining | 3 | Rarer pure vein variant |
-| **Quantanium** | Various asteroid fields | Stanton/Pyro | Mining | 4 | Ship mining; volatile; 24 SCU = 1 Polaris Bit |
+| **Carinite** | Aberdeen, Daymar (Hathor caves) | Stanton | Mining | 5 | VERIFIED: Caves exposed by Hathor orbital laser platforms; deep-red mineral; used in advanced processors; Size 5 commodity (16 SCU) |
+| **Carinite (Pure)** | Aberdeen, Daymar | Stanton | Mining | 2 | NOT VERIFIED: Wiki does not mention pure variant; needs gameplay validation |
+| **Quantanium** | Various asteroid fields | Stanton/Pyro | Mining | 4 | Ship mining; volatile; exchange rate needs validation |
 | **Jaclium (Ore)** | ARC-L1, ARC-L2, asteroid fields | Stanton | Mining | 3 | Rare metal for strong alloys; asteroid or ground deposits |
 | **Saldynium (Ore)** | Asteroid fields | Stanton | Mining | 3 | Rare; high-powered laser production; specific environmental formation |
 | **Copper** | Various | Stanton/Pyro | Mining | 5 | Common ore |
@@ -50,19 +50,19 @@ Key finding: The wiki and community tools (wikelotrades.com, finder.cstone.space
 
 | Item | Source Location | System | Method | Reliability | Notes |
 |------|----------------|--------|--------|-------------|-------|
-| **MG Scrip** | Mercenary Guild contracts | Stanton/Pyro | Mission | 5 | Routine Patrol = 2, Security Threat = 14 |
-| **Council Scrip** | Ace Pilot loot drops | Stanton/Pyro | Combat | 3 | Small chance spawn during MG contracts; drops 3 per Ace |
-| **Polaris Bit** | Wikelo Emporium (Quantanium trade) | Stanton | Purchase | 5 | Trade 24 SCU Quantanium = 1 Bit at Kinga/Dasi/Selo |
-| **ASD Secure Drive** | ASD Onyx Facilities | Stanton | Mission | 5 | Hackrow Agency investigation contracts; 5-10 per mission |
-| **DCHS-05 Orbital Positioning Comp-Board** | Unknown | Unknown | Mission/Loot | 2 | Likely mission reward or hostile outpost loot |
-| **Ace Interceptor Helmet** | Ace Pilot loot drops | Stanton/Pyro | Combat | 3 | Same source as Council Scrip |
-| **Tevarin War Service Marker (Pristine)** | Hostile outposts (small square boxes) | Stanton | Salvage | 2 | Rare collectible; random loot |
-| **Government Cartography Agency Medal (Pristine)** | Hostile outposts | Stanton | Salvage | 2 | Rare collectible; random loot |
-| **UEE 6th Platoon Medal (Pristine)** | Hostile outposts | Stanton | Salvage | 2 | Rare collectible; random loot |
-| **Large Artifact Fragment (Pristine)** | Abandoned outposts (Hurston) | Stanton | Salvage | 2 | Hadasian artifact; rare spawn |
+| **MG Scrip** | Mercenary Guild contracts | Stanton/Pyro | Mission | 5 | VERIFIED: Awarded for MG contract completion; traded for Wikelo Favors; specific mission amounts need gameplay validation |
+| **Council Scrip** | Unknown source | Stanton/Pyro | Combat | 2 | PARTIAL: Wiki confirms Wikelo trade but source unclear; Ace Pilot drops unconfirmed; needs gameplay validation |
+| **Polaris Bit** | Wikelo contracts (Quantanium delivery) | Stanton | Mission | 4 | VERIFIED: Earned via Wikelo Quantanium delivery contracts; required for Polaris ship purchase; exchange rate unconfirmed |
+| **ASD Secure Drive** | ASD Onyx Facility (Jorrit dossier missions) | Stanton | Mission | 5 | VERIFIED: Investigation contracts (Power Usage, Energy Anomaly, Security, Seismic Data); delivered to home location |
+| **DCHS-05 Orbital Positioning Comp-Board** | Unknown | Unknown | Mission/Loot | 1 | LOW CONFIDENCE: Likely mission reward or hostile outpost loot; needs gameplay validation |
+| **Ace Interceptor Helmet** | Ace Pilot loot drops | Stanton/Pyro | Combat | 2 | LOW CONFIDENCE: Same source as Council Scrip; needs gameplay validation |
+| **Tevarin War Service Marker (Pristine)** | Hostile outposts (small square boxes) | Stanton | Salvage | 2 | LOW CONFIDENCE: Rare collectible; random loot; needs gameplay validation |
+| **Government Cartography Agency Medal (Pristine)** | Hostile outposts | Stanton | Salvage | 2 | LOW CONFIDENCE: Rare collectible; random loot; needs gameplay validation |
+| **UEE 6th Platoon Medal (Pristine)** | Hostile outposts | Stanton | Salvage | 2 | LOW CONFIDENCE: Rare collectible; random loot; needs gameplay validation |
+| **Large Artifact Fragment (Pristine)** | Abandoned outposts (Hurston) | Stanton | Salvage | 2 | LOW CONFIDENCE: Hadasian artifact; rare spawn; needs gameplay validation |
 | **Vanduul Plating** | Vanduul tech smugglers mission | Stanton | Combat | 3 | Combat loot from Vanduul encounters |
 | **Vanduul Metal** | Vanduul tech smugglers mission | Stanton | Combat | 3 | Same source as plating |
-| **Wikelo Favor** | Wikelo contracts | Stanton | Mission | 5 | Primary Wikelo currency; earned by completing his contracts |
+| **Wikelo Favor** | Wikelo contracts | Stanton | Mission | 5 | VERIFIED: Primary Wikelo currency; MG Scrip trades for Favors at Wikelo Emporiums |
 </item_source_findings>
 
 <data_sources>
