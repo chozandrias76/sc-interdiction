@@ -15,7 +15,7 @@ None
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
 - [x] **Phase 1: Wikelo Data Model** - Define data structures for items, sources, contracts
-- [ ] **Phase 2: Item Source Research** - Research and compile item→source mappings from wiki
+- [x] **Phase 2: Item Source Research** - Research and compile item→source mappings from wiki
 - [ ] **Phase 3: Wikelo Data Module** - Create crate with static Wikelo item/source data
 - [ ] **Phase 4: Source Intel Integration** - Integrate source flagging into intel crate
 - [ ] **Phase 5: TUI Wikelo Views** - Add Wikelo intel display to dashboard
@@ -41,7 +41,7 @@ Plans:
 **Plans**: 1 plan (consolidated after research completion)
 
 Plans:
-- [ ] 02-01: Verify research and create Phase 3-ready data reference
+- [x] 02-01: Verify research and create Phase 3-ready data reference
 
 ### Phase 3: Wikelo Data Module
 **Goal**: Create wikelo-data crate with static compiled item/source data
@@ -93,7 +93,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Wikelo Data Model | 2/2 | Complete | 2026-01-15 |
-| 2. Item Source Research | 0/1 | Research complete, verification pending | - |
+| 2. Item Source Research | 1/1 | Complete | 2026-01-15 |
 | 3. Wikelo Data Module | 0/2 | Not started | - |
 | 4. Source Intel Integration | 0/3 | Not started | - |
 | 5. TUI Wikelo Views | 0/3 | Not started | - |
