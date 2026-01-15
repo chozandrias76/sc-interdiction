@@ -15,5 +15,6 @@ pub use targets::{
     TargetPrediction, TradeActivity, TradeRun, TrafficDirection,
 };
 pub use wikelo::{
-    AcquisitionMethod, ContractRequirement, ItemCategory, ItemSource, SourceLocation, WikieloItem,
+    AcquisitionMethod, ContractRequirement, ContractReward, ItemCategory, ItemSource, RewardType,
+    SourceLocation, WikieloItem,
 };
