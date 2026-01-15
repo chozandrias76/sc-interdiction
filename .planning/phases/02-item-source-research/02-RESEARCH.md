@@ -1,6 +1,7 @@
 # Phase 2: Item Source Research - Research
 
 **Researched:** 2026-01-15
+**Verified:** 2026-01-15 (Task 02-01)
 **Domain:** Star Citizen wiki data extraction for Wikelo item sources
 **Confidence:** HIGH
 
@@ -21,14 +22,14 @@ Key finding: The wiki and community tools (wikelotrades.com, finder.cstone.space
 
 | Item | Source Location | System | Method | Reliability | Notes |
 |------|----------------|--------|--------|-------------|-------|
-| **Irradiated Valakkar Fang (Juvenile/Adult/Apex)** | Monox, Pyro I | Pyro | Hunting | 4 | Storm Breaker event on Pyro I; also Hathor Mining areas on Aberdeen/Daymar |
-| **Irradiated Valakkar Pearl** | Monox, Pyro I | Pyro | Hunting | 4 | Same as fangs; different drop from same creature |
-| **Tundra Kopion Horn** | microTech (OM-5, OM-13 to OM-18) | Stanton | Hunting | 4 | Spawn near Shubin facilities; packs of 8-18; tundra/grassland biomes along equator |
+| **Irradiated Valakkar Fang (Juvenile/Adult/Apex)** | Monox, Pyro I, Daymar | Pyro/Stanton | Hunting | 4 | Native to Leir III; invasive on Monox/Pyro I/Daymar; sizes: Juvenile ~5m, Adult ~15m, Apex ~300m |
+| **Irradiated Valakkar Pearl** | Monox, Pyro I, Daymar | Pyro/Stanton | Hunting | 4 | Same as fangs; pearl-like body parts harvested |
+| **Tundra Kopion Horn** | microTech (equator/Green Zones) | Stanton | Hunting | 4 | Elevated grasslands/tundras; packs of 8-18; OM coords community-sourced |
 | **Irradiated Kopion Horn** | Unknown | Unknown | Hunting | 2 | Likely variant on Pyro; needs validation |
-| **Yormandi Eye** | ASD Onyx Facility Site B | Stanton | Combat | 5 | Boss fight in cave arena; dedicated boss chamber |
-| **Yormandi Tongue** | ASD Onyx Facility Site B | Stanton | Combat | 5 | Same source as eyes |
-| **Quasi Grazer Tongue** | microTech (Grassland) | Stanton | Hunting | 4 | Grassland Quasi Grazer variant |
-| **Quasi Grazer Egg (various)** | microTech, other planets | Stanton | Hunting | 4 | Desert, Tundra, Grassland variants on different biomes |
+| **Yormandi Eye** | ASD Onyx Facility (cave system) | Stanton | Combat | 5 | Underground cave encounter; antibody-rich eyes valued by researchers |
+| **Yormandi Tongue** | ASD Onyx Facility (cave system) | Stanton | Combat | 5 | Same source as eyes; prized for culinary use |
+| **Quasi Grazer Tongue** | Terra III (Quasi), terraformed planets | Terra/Stanton | Hunting | 3 | Native to Quasi on Terra III; "space cow" found on most terraformed worlds |
+| **Quasi Grazer Egg (various)** | Terra III, other planets | Terra/Stanton | Hunting | 3 | Desert, Boreal, Grassland variants on different biomes |
 
 ### Plan 02-02: Mining/Material Items
 
