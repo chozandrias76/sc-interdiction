@@ -4,6 +4,7 @@
 
 mod ships;
 mod targets;
+mod wikelo;
 
 #[cfg(test)]
 mod ships_tests;
@@ -13,3 +14,4 @@ pub use targets::{
     CommodityValue, HotRoute, InterdictionHotspot, RouteLeg, ShipFrequency, TargetAnalyzer,
     TargetPrediction, TradeActivity, TradeRun, TrafficDirection,
 };
+pub use wikelo::{AcquisitionMethod, ItemCategory, ItemSource, SourceLocation, WikieloItem};
