@@ -4,6 +4,8 @@
 //! This enables source location flagging - ships leaving certain locations
 //! are likely carrying specific valuable items.
 
+mod contracts;
 mod types;
 
+pub use contracts::*;
 pub use types::*;

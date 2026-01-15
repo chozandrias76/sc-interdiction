@@ -14,4 +14,6 @@ pub use targets::{
     CommodityValue, HotRoute, InterdictionHotspot, RouteLeg, ShipFrequency, TargetAnalyzer,
     TargetPrediction, TradeActivity, TradeRun, TrafficDirection,
 };
-pub use wikelo::{AcquisitionMethod, ItemCategory, ItemSource, SourceLocation, WikieloItem};
+pub use wikelo::{
+    AcquisitionMethod, ContractRequirement, ItemCategory, ItemSource, SourceLocation, WikieloItem,
+};
