@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-01-14)
 
 ## Current Position
 
-Phase: 3 of 6 (Wikelo Data Module) — BLOCKED
-Plan: Research complete, planning blocked
-Status: Awaiting Phase 2.1 insertion (Game Data Extraction)
-Last activity: 2026-01-15 — Phase 3 research discovered Data.p4k requirement
+Phase: 2.1 of 7 (Game Data Extraction) — Ready for planning
+Plan: Research complete (02.1-RESEARCH.md)
+Status: Phase 2.1 inserted into roadmap, ready to plan
+Last activity: 2026-01-16 — Phase 2.1 research complete
 
-Progress: ███░░░░░░░ 23% (paused for roadmap update)
+Progress: ███░░░░░░░ 23% (Phase 2.1 ready for planning)
 
 ## Performance Metrics
 
@@ -60,29 +60,27 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-15
-Stopped at: Phase 3 research — discovered Data.p4k requirement
-Resume file: .planning/phases/03-wikelo-data-module/03-RESEARCH.md
+Last session: 2026-01-16
+Stopped at: Phase 2.1 research complete
+Resume file: .planning/phases/02.1-game-data-extraction/02.1-RESEARCH.md
 
 ### Critical Context for Next Session
 
-**Discovery:** Star Citizen's `Data.p4k` (150GB archive) contains authoritative game data:
-- `Data\Game2.dcb` (294MB) — DataForge database with items, contracts, missions
-- `Data\Localization\english\global.ini` (9.5MB) — English text strings
+**Phase 2.1 research is complete.** Key findings:
 
-**Action Required:**
-1. Update ROADMAP.md to insert Phase 2.1 (Game Data Extraction Pipeline)
-2. Extract Game2.dcb and global.ini using 7z (now installed in WSL)
-3. Convert .dcb to XML using unforge or explore native Rust options
-4. Build CLI viewer for exploring DataForge structure
-5. Find Wikelo contract definitions in extracted data
-6. Then proceed with Phase 3 using authoritative data
+1. **No Rust crate exists** for p4k/dcb parsing — all tools are C#/Python
+2. **Recommended approach:** Shell out to `scdatatools` (Python), parse JSON output
+3. **Don't hand-roll** format parsers — complex, changes with game updates
+
+**Ready for next action:**
+- Run `/gsd:plan-phase 2.1` to create execution plan
+- Plans will cover: scdatatools setup, extraction, CLI viewer, caching
 
 **Key Files:**
 - Game data: `/mnt/c/Star Citizen/StarCitizen/LIVE/Data.p4k`
-- Research: `.planning/phases/03-wikelo-data-module/03-RESEARCH.md`
-- Extraction tools: [unp4k](https://github.com/dolkensp/unp4k), [StarBreaker](https://github.com/diogotr7/StarBreaker)
+- Research: `.planning/phases/02.1-game-data-extraction/02.1-RESEARCH.md`
+- Tool: `pip install scdatatools` (Python, actively maintained)
 
 **Crates to Update:**
-- `sc-data-extractor` — needs Data.p4k support (currently uses SCLogistics)
-- `data-viewer` — new CLI for exploring extracted data
+- `sc-data-extractor` — add Data.p4k extraction via scdatatools
+- `data-viewer` — new CLI for exploring extracted DataForge JSON

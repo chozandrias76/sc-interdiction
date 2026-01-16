@@ -16,6 +16,7 @@ None
 
 - [x] **Phase 1: Wikelo Data Model** - Define data structures for items, sources, contracts
 - [x] **Phase 2: Item Source Research** - Research and compile item→source mappings from wiki
+- [ ] **Phase 2.1: Game Data Extraction** - INSERTED: Extract authoritative data from Data.p4k
 - [ ] **Phase 3: Wikelo Data Module** - Create crate with static Wikelo item/source data
 - [ ] **Phase 4: Source Intel Integration** - Integrate source flagging into intel crate
 - [ ] **Phase 5: TUI Wikelo Views** - Add Wikelo intel display to dashboard
@@ -43,9 +44,21 @@ Plans:
 Plans:
 - [x] 02-01: Verify research and create Phase 3-ready data reference
 
+### Phase 2.1: Game Data Extraction (INSERTED)
+**Goal**: Build pipeline to extract authoritative item/contract data from Data.p4k
+**Depends on**: Phase 2 (understanding what data we need)
+**Research**: Complete (02.1-RESEARCH.md)
+**Research topics**: Data.p4k format, DataForge DCB parsing, scdatatools, extraction caching
+**Plans**: 3 plans
+
+Plans:
+- [ ] 02.1-01: Set up scdatatools and extract Game2.dcb + global.ini
+- [ ] 02.1-02: Build DataForge exploration CLI to find Wikelo contracts
+- [ ] 02.1-03: Create extraction pipeline with caching for sc-data-extractor
+
 ### Phase 3: Wikelo Data Module
 **Goal**: Create wikelo-data crate with static compiled item/source data
-**Depends on**: Phase 2 (need researched data to compile)
+**Depends on**: Phase 2.1 (need authoritative data from game files)
 **Research**: Unlikely (standard crate creation)
 **Plans**: 2 plans
 
@@ -88,12 +101,13 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
+Phases execute in numeric order: 1 → 2 → 2.1 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Wikelo Data Model | 2/2 | Complete | 2026-01-15 |
 | 2. Item Source Research | 1/1 | Complete | 2026-01-15 |
+| 2.1. Game Data Extraction | 0/3 | Not started | - |
 | 3. Wikelo Data Module | 0/2 | Not started | - |
 | 4. Source Intel Integration | 0/3 | Not started | - |
 | 5. TUI Wikelo Views | 0/3 | Not started | - |
