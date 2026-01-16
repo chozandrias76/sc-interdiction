@@ -31,3 +31,16 @@ Thumbs.db
 .db-port
 dbt/logs/
 dbt/target/
+
+# Game data extraction
+/extracted/
+*.dcb
+*.p4k
+
+# Python virtual environment
+/.venv/
+__pycache__/
+*.pyc
+
+# Extraction tools
+/tools/
