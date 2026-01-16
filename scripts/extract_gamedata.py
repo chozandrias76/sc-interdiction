@@ -2,16 +2,29 @@
 """
 Star Citizen game data extraction script.
 
-Uses scdatatools to extract:
-- DataForge records (Game2.dcb) as JSON files
-- Localization strings (global.ini) as CSV
+Provides two extraction methods:
+1. Primary: Clone pre-extracted JSON from scunpacked-data repository
+   (Works reliably, community-maintained, updated with game patches)
+
+2. Fallback: scdatatools for direct p4k extraction
+   (May not work with latest game versions due to format changes)
+
+Output files:
+- items.json - All game items with properties
+- labels.json - Localization strings (English)
+- ships.json - Ship definitions
+- fps-items.json - FPS/player equipment
+- ship-items.json - Ship components
 
 Prerequisites:
-    pip install scdatatools
+    git (for scunpacked-data clone)
+    OR
+    pip install scdatatools (for direct extraction)
 
 Usage:
     python scripts/extract_gamedata.py --help
-    python scripts/extract_gamedata.py --p4k "/mnt/c/Star Citizen/StarCitizen/LIVE/Data.p4k"
+    python scripts/extract_gamedata.py  # Uses scunpacked-data (recommended)
+    python scripts/extract_gamedata.py --from-p4k  # Try direct extraction
 """
 
 import argparse
@@ -23,11 +36,26 @@ from pathlib import Path
 
 DEFAULT_P4K_PATH = "/mnt/c/Star Citizen/StarCitizen/LIVE/Data.p4k"
 DEFAULT_OUTPUT_DIR = "./extracted"
+SCUNPACKED_REPO = "https://github.com/StarCitizenWiki/scunpacked-data.git"
 
 
 def log(msg: str) -> None:
     """Print message to stderr for progress reporting."""
     print(msg, file=sys.stderr)
+
+
+def check_git() -> bool:
+    """Verify git is installed."""
+    try:
+        result = subprocess.run(
+            ["git", "--version"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        return result.returncode == 0
+    except FileNotFoundError:
+        return False
 
 
 def check_scdatatools() -> bool:
@@ -44,11 +72,49 @@ def check_scdatatools() -> bool:
         return False
 
 
-def extract_dataforge(p4k_path: str, output_dir: Path) -> bool:
-    """Extract DataForge records as JSON files.
+def clone_scunpacked_data(output_dir: Path) -> bool:
+    """Clone or update scunpacked-data repository.
 
-    Uses scdt forge extract with JSON output format.
-    Extracts all records from the DataForge database.
+    This is the recommended extraction method as it contains
+    pre-extracted and validated JSON data maintained by the
+    Star Citizen Wiki community.
+    """
+    scunpacked_dir = output_dir / "scunpacked-data"
+
+    if scunpacked_dir.exists():
+        # Update existing clone
+        log(f"Updating existing scunpacked-data at {scunpacked_dir}...")
+        cmd = ["git", "-C", str(scunpacked_dir), "pull", "--ff-only"]
+    else:
+        # Fresh clone
+        log(f"Cloning scunpacked-data to {scunpacked_dir}...")
+        log("This contains pre-extracted JSON from Star Citizen game files.")
+        output_dir.mkdir(parents=True, exist_ok=True)
+        cmd = ["git", "clone", "--depth", "1", SCUNPACKED_REPO, str(scunpacked_dir)]
+
+    log(f"Running: {' '.join(cmd)}")
+
+    try:
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if result.returncode != 0:
+            log(f"Git command failed: {result.stderr}")
+            return False
+        return True
+    except Exception as e:
+        log(f"Error with git: {e}")
+        return False
+
+
+def extract_dataforge(p4k_path: str, output_dir: Path) -> bool:
+    """Extract DataForge records as JSON files using scdatatools.
+
+    Note: This may fail with newer game versions due to p4k format changes.
+    The scunpacked-data approach is more reliable.
     """
     forge_output = output_dir / "dataforge"
     forge_output.mkdir(parents=True, exist_ok=True)
@@ -69,7 +135,7 @@ def extract_dataforge(p4k_path: str, output_dir: Path) -> bool:
     try:
         result = subprocess.run(
             cmd,
-            capture_output=False,  # Stream output to terminal
+            capture_output=False,
             check=False,
         )
         if result.returncode != 0:
@@ -82,10 +148,7 @@ def extract_dataforge(p4k_path: str, output_dir: Path) -> bool:
 
 
 def extract_localization(p4k_path: str, output_dir: Path) -> bool:
-    """Extract localization strings to CSV.
-
-    Uses scdt localization export to get all translation keys.
-    """
+    """Extract localization strings using scdatatools."""
     output_file = output_dir / "localization.csv"
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -116,154 +179,159 @@ def extract_localization(p4k_path: str, output_dir: Path) -> bool:
         return False
 
 
-def extract_global_ini(p4k_path: str, output_dir: Path) -> bool:
-    """Extract global.ini directly from p4k archive.
-
-    Falls back to direct file extraction if localization export fails.
-    """
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    log(f"Extracting global.ini to {output_dir}...")
-
-    cmd = [
-        "scdt", "p4k", "extract",
-        p4k_path,
-        "--output", str(output_dir),
-        "--file-filter", "*/english/global.ini",
-        "-v",
+def verify_scunpacked_data(output_dir: Path) -> dict:
+    """Verify scunpacked-data extraction and return file info."""
+    scunpacked_dir = output_dir / "scunpacked-data"
+    expected_files = [
+        "items.json",
+        "labels.json",
+        "ships.json",
+        "fps-items.json",
+        "ship-items.json",
+        "manufacturers.json",
     ]
 
-    log(f"Running: {' '.join(cmd)}")
+    results = {}
+    for filename in expected_files:
+        filepath = scunpacked_dir / filename
+        if filepath.exists():
+            size = filepath.stat().st_size
+            results[filename] = {
+                "exists": True,
+                "size": size,
+                "size_human": f"{size / (1024*1024):.1f}MB" if size > 1024*1024 else f"{size / 1024:.1f}KB",
+            }
+        else:
+            results[filename] = {"exists": False}
 
-    try:
-        result = subprocess.run(
-            cmd,
-            capture_output=False,
-            check=False,
-        )
-        if result.returncode != 0:
-            log(f"Warning: global.ini extraction returned code {result.returncode}")
-            return False
-        return True
-    except Exception as e:
-        log(f"Error extracting global.ini: {e}")
-        return False
+    return results
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Extract Star Citizen game data using scdatatools",
+        description="Extract Star Citizen game data for sc-interdiction project",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
+Extraction Methods:
+    Default: Clone scunpacked-data repository (recommended)
+             Contains pre-extracted JSON maintained by Star Citizen Wiki
+
+    --from-p4k: Direct extraction using scdatatools
+                May fail with newer game versions
+
 Examples:
-    # Extract with default paths
+    # Clone/update scunpacked-data (recommended)
     python scripts/extract_gamedata.py
 
-    # Specify custom p4k location
-    python scripts/extract_gamedata.py --p4k "/path/to/Data.p4k"
+    # Try direct p4k extraction (requires scdatatools + compatible game version)
+    python scripts/extract_gamedata.py --from-p4k --p4k "/path/to/Data.p4k"
 
-    # Specify output directory
-    python scripts/extract_gamedata.py --output ./my_extracted_data
-
-    # Extract only specific data
-    python scripts/extract_gamedata.py --dataforge-only
-    python scripts/extract_gamedata.py --localization-only
+Output:
+    extracted/scunpacked-data/items.json     - All items (~46MB)
+    extracted/scunpacked-data/labels.json    - Localization (~10MB)
+    extracted/scunpacked-data/ships.json     - Ships (~1.4MB)
+    extracted/scunpacked-data/fps-items.json - FPS equipment (~19MB)
 """,
+    )
+
+    parser.add_argument(
+        "--from-p4k",
+        action="store_true",
+        help="Extract directly from Data.p4k using scdatatools (may fail with newer versions)",
     )
 
     parser.add_argument(
         "--p4k",
         default=DEFAULT_P4K_PATH,
-        help=f"Path to Data.p4k file (default: {DEFAULT_P4K_PATH})",
+        help=f"Path to Data.p4k file for --from-p4k mode (default: {DEFAULT_P4K_PATH})",
     )
 
     parser.add_argument(
         "--output", "-o",
         default=DEFAULT_OUTPUT_DIR,
-        help=f"Output directory for extracted files (default: {DEFAULT_OUTPUT_DIR})",
+        help=f"Output directory (default: {DEFAULT_OUTPUT_DIR})",
     )
 
     parser.add_argument(
-        "--dataforge-only",
+        "--update",
         action="store_true",
-        help="Extract only DataForge records",
-    )
-
-    parser.add_argument(
-        "--localization-only",
-        action="store_true",
-        help="Extract only localization data",
+        help="Force update of scunpacked-data even if it exists",
     )
 
     args = parser.parse_args()
-
-    # Validate p4k path
-    p4k_path = Path(args.p4k)
-    if not p4k_path.exists():
-        log(f"Error: Data.p4k not found at {p4k_path}")
-        log("Please specify the correct path with --p4k")
-        sys.exit(1)
-
-    # Check scdatatools
-    if not check_scdatatools():
-        log("Error: scdatatools not found. Install with: pip install scdatatools")
-        sys.exit(1)
-
-    log(f"Using Data.p4k: {p4k_path}")
-    log(f"Output directory: {args.output}")
-
     output_dir = Path(args.output)
-    output_dir.mkdir(parents=True, exist_ok=True)
 
-    success = True
+    if args.from_p4k:
+        # Direct p4k extraction mode
+        log("=== Direct P4K Extraction Mode ===")
+        log("Note: This may fail with newer game versions. Consider using scunpacked-data instead.")
 
-    # Determine what to extract
-    extract_df = not args.localization_only
-    extract_loc = not args.dataforge_only
+        p4k_path = Path(args.p4k)
+        if not p4k_path.exists():
+            log(f"Error: Data.p4k not found at {p4k_path}")
+            log("Please specify the correct path with --p4k")
+            sys.exit(1)
 
-    if extract_df:
-        if not extract_dataforge(str(p4k_path), output_dir):
-            success = False
+        if not check_scdatatools():
+            log("Error: scdatatools not found.")
+            log("Install with: pip install scdatatools")
+            log("Or use the default scunpacked-data method instead.")
+            sys.exit(1)
 
-    if extract_loc:
-        # Try localization export first, fall back to direct extraction
-        if not extract_localization(str(p4k_path), output_dir):
-            log("Trying direct global.ini extraction...")
-            if not extract_global_ini(str(p4k_path), output_dir):
-                success = False
+        log(f"Using Data.p4k: {p4k_path}")
+        log(f"Output directory: {args.output}")
 
-    # Summary
-    log("\n=== Extraction Summary ===")
+        output_dir.mkdir(parents=True, exist_ok=True)
 
-    if extract_df:
-        forge_dir = output_dir / "dataforge"
-        if forge_dir.exists():
-            json_files = list(forge_dir.rglob("*.json"))
-            log(f"DataForge: {len(json_files)} JSON files extracted")
+        df_success = extract_dataforge(str(p4k_path), output_dir)
+        loc_success = extract_localization(str(p4k_path), output_dir)
+
+        if df_success and loc_success:
+            log("\nExtraction completed successfully!")
+            sys.exit(0)
         else:
-            log("DataForge: FAILED")
+            log("\nExtraction failed. Consider using scunpacked-data instead:")
+            log("  python scripts/extract_gamedata.py")
+            sys.exit(1)
 
-    if extract_loc:
-        loc_file = output_dir / "localization.csv"
-        if loc_file.exists():
-            lines = sum(1 for _ in open(loc_file))
-            log(f"Localization: {lines} entries in {loc_file}")
-        else:
-            # Check for global.ini
-            ini_files = list(output_dir.rglob("global.ini"))
-            if ini_files:
-                for ini in ini_files:
-                    lines = sum(1 for _ in open(ini))
-                    log(f"global.ini: {lines} lines in {ini}")
-            else:
-                log("Localization: FAILED")
-
-    if success:
-        log("\nExtraction completed successfully!")
-        sys.exit(0)
     else:
-        log("\nExtraction completed with warnings. Check output above.")
-        sys.exit(1)
+        # scunpacked-data mode (default)
+        log("=== scunpacked-data Extraction Mode ===")
+        log("Using pre-extracted JSON from Star Citizen Wiki community")
+
+        if not check_git():
+            log("Error: git not found. Please install git.")
+            sys.exit(1)
+
+        scunpacked_dir = output_dir / "scunpacked-data"
+
+        if scunpacked_dir.exists() and not args.update:
+            log(f"scunpacked-data already exists at {scunpacked_dir}")
+            log("Use --update to pull latest changes")
+        else:
+            if not clone_scunpacked_data(output_dir):
+                log("\nFailed to clone/update scunpacked-data")
+                sys.exit(1)
+
+        # Verify extraction
+        log("\n=== Extraction Summary ===")
+        results = verify_scunpacked_data(output_dir)
+
+        all_exist = True
+        for filename, info in results.items():
+            if info["exists"]:
+                log(f"  {filename}: {info['size_human']}")
+            else:
+                log(f"  {filename}: MISSING")
+                all_exist = False
+
+        if all_exist:
+            log("\nExtraction completed successfully!")
+            log(f"\nData available at: {scunpacked_dir}")
+            sys.exit(0)
+        else:
+            log("\nSome files are missing. Try re-running with --update")
+            sys.exit(1)
 
 
 if __name__ == "__main__":
