@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-01-14)
 
 ## Current Position
 
-Phase: 2 of 6 (Item Source Research)
-Plan: 1 of 1 in current phase
-Status: Phase complete
-Last activity: 2026-01-15 — Completed 02-01-PLAN.md
+Phase: 3 of 6 (Wikelo Data Module) — BLOCKED
+Plan: Research complete, planning blocked
+Status: Awaiting Phase 2.1 insertion (Game Data Extraction)
+Last activity: 2026-01-15 — Phase 3 research discovered Data.p4k requirement
 
-Progress: ███░░░░░░░ 23%
+Progress: ███░░░░░░░ 23% (paused for roadmap update)
 
 ## Performance Metrics
 
@@ -47,6 +47,8 @@ Recent decisions affecting current work:
 - Valakkar locations include Daymar (Stanton), not just Pyro
 - Quasi Grazer native to Terra III, not microTech
 - 9 low-confidence items flagged for gameplay validation before treating as reliable
+- **NEW:** Data.p4k is authoritative source; wiki research is starting point only
+- **NEW:** Need Phase 2.1 to build game data extraction pipeline before Phase 3
 
 ### Deferred Issues
 
@@ -59,5 +61,28 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-15
-Stopped at: Completed 02-01-PLAN.md (Phase 2 complete)
-Resume file: None
+Stopped at: Phase 3 research — discovered Data.p4k requirement
+Resume file: .planning/phases/03-wikelo-data-module/03-RESEARCH.md
+
+### Critical Context for Next Session
+
+**Discovery:** Star Citizen's `Data.p4k` (150GB archive) contains authoritative game data:
+- `Data\Game2.dcb` (294MB) — DataForge database with items, contracts, missions
+- `Data\Localization\english\global.ini` (9.5MB) — English text strings
+
+**Action Required:**
+1. Update ROADMAP.md to insert Phase 2.1 (Game Data Extraction Pipeline)
+2. Extract Game2.dcb and global.ini using 7z (now installed in WSL)
+3. Convert .dcb to XML using unforge or explore native Rust options
+4. Build CLI viewer for exploring DataForge structure
+5. Find Wikelo contract definitions in extracted data
+6. Then proceed with Phase 3 using authoritative data
+
+**Key Files:**
+- Game data: `/mnt/c/Star Citizen/StarCitizen/LIVE/Data.p4k`
+- Research: `.planning/phases/03-wikelo-data-module/03-RESEARCH.md`
+- Extraction tools: [unp4k](https://github.com/dolkensp/unp4k), [StarBreaker](https://github.com/diogotr7/StarBreaker)
+
+**Crates to Update:**
+- `sc-data-extractor` — needs Data.p4k support (currently uses SCLogistics)
+- `data-viewer` — new CLI for exploring extracted data
