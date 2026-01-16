@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-01-14)
 
 ## Current Position
 
-Phase: 2.1 of 7 (Game Data Extraction) — Ready for planning
-Plan: Research complete (02.1-RESEARCH.md)
-Status: Phase 2.1 inserted into roadmap, ready to plan
-Last activity: 2026-01-16 — Phase 2.1 research complete
+Phase: 2.1 of 7 (Game Data Extraction)
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2026-01-16 — Completed 02.1-01-PLAN.md
 
-Progress: ███░░░░░░░ 23% (Phase 2.1 ready for planning)
+Progress: ████░░░░░░ 31% (4 of 13 plans complete)
 
 ## Performance Metrics
 
@@ -49,6 +49,7 @@ Recent decisions affecting current work:
 - 9 low-confidence items flagged for gameplay validation before treating as reliable
 - **NEW:** Data.p4k is authoritative source; wiki research is starting point only
 - **NEW:** Need Phase 2.1 to build game data extraction pipeline before Phase 3
+- **NEW:** scdatatools broken; using scunpacked-data repo for game data instead
 
 ### Deferred Issues
 
@@ -61,26 +62,23 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-16
-Stopped at: Phase 2.1 research complete
-Resume file: .planning/phases/02.1-game-data-extraction/02.1-RESEARCH.md
+Stopped at: Completed 02.1-01-PLAN.md
+Resume file: .planning/phases/02.1-game-data-extraction/02.1-01-SUMMARY.md
 
 ### Critical Context for Next Session
 
-**Phase 2.1 research is complete.** Key findings:
+**Plan 02.1-01 complete.** Key outcomes:
 
-1. **No Rust crate exists** for p4k/dcb parsing — all tools are C#/Python
-2. **Recommended approach:** Shell out to `scdatatools` (Python), parse JSON output
-3. **Don't hand-roll** format parsers — complex, changes with game updates
+1. **scdatatools broken** — p4k parser incompatible with current game format
+2. **Using scunpacked-data** — community-maintained JSON, updated with patches
+3. **Extracted data available** — items.json (46MB), labels.json (9.9MB), ships, etc.
 
 **Ready for next action:**
-- Run `/gsd:plan-phase 2.1` to create execution plan
-- Plans will cover: scdatatools setup, extraction, CLI viewer, caching
+- Run `/gsd:execute-plan .planning/phases/02.1-game-data-extraction/02.1-02-PLAN.md`
+- May need to adjust 02.1-02 approach — we have structured JSON, not raw DataForge
 
 **Key Files:**
-- Game data: `/mnt/c/Star Citizen/StarCitizen/LIVE/Data.p4k`
-- Research: `.planning/phases/02.1-game-data-extraction/02.1-RESEARCH.md`
-- Tool: `pip install scdatatools` (Python, actively maintained)
-
-**Crates to Update:**
-- `sc-data-extractor` — add Data.p4k extraction via scdatatools
-- `data-viewer` — new CLI for exploring extracted DataForge JSON
+- Extraction script: `scripts/extract_gamedata.py`
+- Extracted data: `extracted/scunpacked-data/` (7.4GB, in .gitignore)
+- Items: `extracted/scunpacked-data/items.json`
+- Labels: `extracted/scunpacked-data/labels.json`
