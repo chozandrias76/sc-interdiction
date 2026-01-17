@@ -25,11 +25,13 @@ pub mod database;
 pub mod dataforge;
 pub mod error;
 pub mod generated;
+pub mod localization;
 pub mod models;
 pub mod parsers;
 
 pub use dataforge::{DataForgeExtractor, DataForgeStatus, GameItem, Ship};
 pub use error::{Error, Result};
+pub use localization::LocalizationStore;
 
 /// Path to the `SCLogistics` repository clone (relative to workspace root)
 pub const SCLOGISTICS_PATH: &str = "../SCLogistics";
