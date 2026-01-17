@@ -1,0 +1,30 @@
+[package]
+name = "dataforge-explorer"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "CLI for exploring Star Citizen game data from scunpacked-data JSON files"
+
+[[bin]]
+name = "dataforge-explorer"
+path = "src/main.rs"
+
+[dependencies]
+# CLI
+clap.workspace = true
+
+# Serialization
+serde.workspace = true
+serde_json.workspace = true
+
+# Error handling
+eyre.workspace = true
+
+# Progress indicators
+indicatif = "0.17"
+
+# Regex for search
+regex = "1.10"
+
+[lints]
+workspace = true
