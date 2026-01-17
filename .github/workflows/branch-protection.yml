@@ -4,18 +4,79 @@ on:
   pull_request:
     branches:
       - main
+      - develop
 
 jobs:
   validate-source-branch:
     name: Validate PR Source Branch
     runs-on: self-hosted
     steps:
-      - name: Check if PR is from release branch
+      - name: Validate branch naming for PR to main
+        if: github.base_ref == 'main'
         run: |
-          if [[ ! "${{ github.head_ref }}" =~ ^release/[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Error: Pull requests to main must originate from a release/ branch with semantic versioning."
-            echo "Current source branch: ${{ github.head_ref }}"
+          SOURCE_BRANCH="${{ github.head_ref }}"
+
+          # PRs to main must come from release/* branches
+          if [[ ! "$SOURCE_BRANCH" =~ ^release/[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+|-beta\.[0-9]+|-alpha\.[0-9]+)?$ ]]; then
+            echo "::error::Pull requests to main must originate from a release/ branch with semantic versioning."
+            echo ""
+            echo "Current source branch: $SOURCE_BRANCH"
             echo "Expected format: release/X.Y.Z (e.g., release/1.2.3)"
+            echo ""
+            echo "Workflow:"
+            echo "  1. Create a release branch from develop"
+            echo "  2. Open PR from release/X.Y.Z to main"
             exit 1
           fi
-          echo "Success: PR is from valid release branch: ${{ github.head_ref }}"
+
+          echo "Valid: PR is from release branch: $SOURCE_BRANCH"
+
+      - name: Validate branch naming for PR to develop
+        if: github.base_ref == 'develop'
+        run: |
+          SOURCE_BRANCH="${{ github.head_ref }}"
+
+          # PRs to develop must come from feature/*, bugfix/*, etc. or release/* (back-merge)
+          VALID_PATTERNS=(
+            "^feature/.*"
+            "^feat/.*"
+            "^bugfix/.*"
+            "^fix/.*"
+            "^hotfix/.*"
+            "^chore/.*"
+            "^docs/.*"
+            "^refactor/.*"
+            "^test/.*"
+            "^ci/.*"
+            "^release/[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+|-beta\.[0-9]+|-alpha\.[0-9]+)?$"
+          )
+
+          VALID=false
+          for pattern in "${VALID_PATTERNS[@]}"; do
+            if [[ "$SOURCE_BRANCH" =~ $pattern ]]; then
+              VALID=true
+              break
+            fi
+          done
+
+          if [[ "$VALID" != "true" ]]; then
+            echo "::error::Pull requests to develop must originate from a properly named branch."
+            echo ""
+            echo "Current source branch: $SOURCE_BRANCH"
+            echo ""
+            echo "Valid branch prefixes:"
+            echo "  - feature/*  (new features)"
+            echo "  - feat/*     (new features, short form)"
+            echo "  - bugfix/*   (bug fixes)"
+            echo "  - fix/*      (bug fixes, short form)"
+            echo "  - hotfix/*   (urgent fixes)"
+            echo "  - chore/*    (maintenance tasks)"
+            echo "  - docs/*     (documentation)"
+            echo "  - refactor/* (code refactoring)"
+            echo "  - test/*     (test additions/changes)"
+            echo "  - ci/*       (CI/CD changes)"
+            echo "  - release/*  (back-merge from release)"
+            exit 1
+          fi
+
+          echo "Valid: PR is from properly named branch: $SOURCE_BRANCH"
