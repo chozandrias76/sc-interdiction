@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-14)
 ## Current Position
 
 Phase: 2.1 of 7 (Game Data Extraction)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-01-16 — Completed 02.1-01-PLAN.md
+Last activity: 2026-01-17 — Completed 02.1-02-PLAN.md
 
-Progress: ████░░░░░░ 31% (4 of 13 plans complete)
+Progress: ████░░░░░░ 38% (5 of 13 plans complete)
 
 ## Performance Metrics
 
@@ -50,6 +50,7 @@ Recent decisions affecting current work:
 - **NEW:** Data.p4k is authoritative source; wiki research is starting point only
 - **NEW:** Need Phase 2.1 to build game data extraction pipeline before Phase 3
 - **NEW:** scdatatools broken; using scunpacked-data repo for game data instead
+- **NEW:** Mission data NOT in scunpacked-data; Phase 3 needs wiki scraping for contract details
 
 ### Deferred Issues
 
@@ -61,24 +62,24 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-16
-Stopped at: Completed 02.1-01-PLAN.md
-Resume file: .planning/phases/02.1-game-data-extraction/02.1-01-SUMMARY.md
+Last session: 2026-01-17
+Stopped at: Completed 02.1-02-PLAN.md
+Resume file: .planning/phases/02.1-game-data-extraction/02.1-02-SUMMARY.md
 
 ### Critical Context for Next Session
 
-**Plan 02.1-01 complete.** Key outcomes:
+**Plan 02.1-02 complete.** Key outcomes:
 
-1. **scdatatools broken** — p4k parser incompatible with current game format
-2. **Using scunpacked-data** — community-maintained JSON, updated with patches
-3. **Extracted data available** — items.json (46MB), labels.json (9.9MB), ships, etc.
+1. **dataforge-explorer CLI** — Can search/filter scunpacked-data JSON files
+2. **44 Wikelo records found** — Items, ships, stations, faction palettes documented
+3. **Mission data gap** — Contracts/missions NOT in scunpacked-data
 
 **Ready for next action:**
-- Run `/gsd:execute-plan .planning/phases/02.1-game-data-extraction/02.1-02-PLAN.md`
-- May need to adjust 02.1-02 approach — we have structured JSON, not raw DataForge
+- Run `/gsd:execute-plan .planning/phases/02.1-game-data-extraction/02.1-03-PLAN.md`
+- Plan 03 builds extraction pipeline with caching
+- **Note:** May need to adjust Phase 3 approach — wiki scraping required for mission details
 
 **Key Files:**
-- Extraction script: `scripts/extract_gamedata.py`
-- Extracted data: `extracted/scunpacked-data/` (7.4GB, in .gitignore)
-- Items: `extracted/scunpacked-data/items.json`
-- Labels: `extracted/scunpacked-data/labels.json`
+- Explorer CLI: `crates/dataforge-explorer/src/main.rs`
+- Wikelo findings: `.planning/phases/02.1-game-data-extraction/DATAFORGE-FINDINGS.md`
+- Extracted data: `extracted/scunpacked-data/` (items.json, ships.json, labels.json)
