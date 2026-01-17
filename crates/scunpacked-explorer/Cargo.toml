@@ -1,0 +1,21 @@
+[package]
+name = "scunpacked-explorer"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "CLI tool for exploring scunpacked-data JSON files to find game data"
+
+[[bin]]
+name = "scunpacked-explorer"
+path = "src/main.rs"
+
+[dependencies]
+clap.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+eyre.workspace = true
+indicatif = "0.17"
+regex = "1.10"
+
+[lints]
+workspace = true

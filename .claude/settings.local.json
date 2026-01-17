@@ -45,7 +45,10 @@
       "Bash(grep:*)",
       "Bash(git pull:*)",
       "Bash(~/.local/bin/gh pr view 39 --json title,body,baseRefName,headRefName,mergeable,mergeStateStatus,commits,files)",
-      "Bash(~/.local/bin/gh pr diff 39)"
+      "Bash(~/.local/bin/gh pr diff 39)",
+      "Bash(bd sync:*)",
+      "Bash(gh repo view:*)",
+      "Bash(gh api:*)"
     ]
   }
 }
