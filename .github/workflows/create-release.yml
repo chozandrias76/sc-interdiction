@@ -25,7 +25,7 @@ permissions:
 jobs:
   create-release-branch:
     name: Create Release Branch and PR
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     environment: Actions and Workflows
     steps:
       - name: Checkout develop

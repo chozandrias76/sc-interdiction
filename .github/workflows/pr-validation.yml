@@ -6,13 +6,11 @@ on:
 
 jobs:
   validate-pr:
-    if: false # disabled for now - keeping workflow for later
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     name: Validate PR Title and Description
     steps:
       - name: Check PR Title and Description
         uses: actions/github-script@v7
-        if: false # disabled for now
         with:
           script: |
             const { data: pr } = await github.rest.pulls.get({

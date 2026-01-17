@@ -8,7 +8,7 @@ on:
 jobs:
   validate-source-branch:
     name: Validate PR Source Branch
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Check if PR is from release branch
         run: |
