@@ -158,3 +158,168 @@ fn normalize_location(name: &str) -> String {
         .collect::<Vec<_>>()
         .join(" ")
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use intel::{AcquisitionMethod, ItemSource, SourceLocation};
+
+    /// Create a test item with the given parameters.
+    fn make_test_item(
+        id: &str,
+        name: &str,
+        category: ItemCategory,
+        sources: Vec<(&str, &str)>,
+    ) -> WikieloItem {
+        WikieloItem {
+            id: id.to_string(),
+            name: name.to_string(),
+            category,
+            sources: sources
+                .into_iter()
+                .map(|(loc, sys)| ItemSource {
+                    location: SourceLocation {
+                        name: loc.to_string(),
+                        system: sys.to_string(),
+                        description: None,
+                    },
+                    method: AcquisitionMethod::Hunting,
+                    reliability: 3,
+                    notes: None,
+                })
+                .collect(),
+            estimated_value: Some(1000),
+            stackable: true,
+            scu_per_unit: None,
+        }
+    }
+
+    #[test]
+    fn test_registry_creation() {
+        let items = vec![
+            make_test_item("item_1", "Item 1", ItemCategory::CreaturePart, vec![("Pyro I", "Pyro")]),
+            make_test_item("item_2", "Item 2", ItemCategory::MinedMaterial, vec![("ARC-L1", "Stanton")]),
+        ];
+
+        let registry = WikieloRegistry::from_items(items);
+
+        assert_eq!(registry.item_count(), 2);
+        assert_eq!(registry.all_items().len(), 2);
+    }
+
+    #[test]
+    fn test_get_by_id() {
+        let items = vec![
+            make_test_item("valakkar_fang", "Valakkar Fang", ItemCategory::CreaturePart, vec![("Pyro I", "Pyro")]),
+            make_test_item("carinite_ore", "Carinite Ore", ItemCategory::MinedMaterial, vec![("ARC-L1", "Stanton")]),
+        ];
+
+        let registry = WikieloRegistry::from_items(items);
+
+        // Found cases
+        let item = registry.get("valakkar_fang");
+        assert!(item.is_some());
+        assert_eq!(item.unwrap().name, "Valakkar Fang");
+
+        let item = registry.get("carinite_ore");
+        assert!(item.is_some());
+        assert_eq!(item.unwrap().name, "Carinite Ore");
+
+        // Not found case
+        assert!(registry.get("nonexistent").is_none());
+    }
+
+    #[test]
+    fn test_items_at_location() {
+        let items = vec![
+            make_test_item("item_1", "Item 1", ItemCategory::CreaturePart, vec![("Lazarus Transport Centers", "Pyro")]),
+            make_test_item("item_2", "Item 2", ItemCategory::MinedMaterial, vec![("Lazarus Transport Centers", "Pyro")]),
+            make_test_item("item_3", "Item 3", ItemCategory::CombatLoot, vec![("ARC-L1", "Stanton")]),
+        ];
+
+        let registry = WikieloRegistry::from_items(items);
+
+        // Should find items at Lazarus (normalized matching)
+        let at_lazarus = registry.items_at_location("Lazarus Transport Centers");
+        assert_eq!(at_lazarus.len(), 2);
+
+        // Case-insensitive matching
+        let at_lazarus_lower = registry.items_at_location("lazarus transport centers");
+        assert_eq!(at_lazarus_lower.len(), 2);
+
+        // Items at ARC-L1
+        let at_arc = registry.items_at_location("ARC-L1");
+        assert_eq!(at_arc.len(), 1);
+        assert_eq!(at_arc[0].name, "Item 3");
+
+        // No items at unknown location
+        let at_unknown = registry.items_at_location("Unknown Station");
+        assert!(at_unknown.is_empty());
+    }
+
+    #[test]
+    fn test_items_in_system() {
+        let items = vec![
+            make_test_item("item_1", "Item 1", ItemCategory::CreaturePart, vec![("Location A", "Pyro")]),
+            make_test_item("item_2", "Item 2", ItemCategory::MinedMaterial, vec![("Location B", "Pyro")]),
+            make_test_item("item_3", "Item 3", ItemCategory::CombatLoot, vec![("ARC-L1", "Stanton")]),
+        ];
+
+        let registry = WikieloRegistry::from_items(items);
+
+        // Should aggregate items across locations in same system
+        let in_pyro = registry.items_in_system("Pyro");
+        assert_eq!(in_pyro.len(), 2);
+
+        // Case-insensitive
+        let in_pyro_lower = registry.items_in_system("pyro");
+        assert_eq!(in_pyro_lower.len(), 2);
+
+        // Items in Stanton
+        let in_stanton = registry.items_in_system("Stanton");
+        assert_eq!(in_stanton.len(), 1);
+
+        // No items in unknown system
+        let in_unknown = registry.items_in_system("Nyx");
+        assert!(in_unknown.is_empty());
+    }
+
+    #[test]
+    fn test_items_by_category() {
+        let items = vec![
+            make_test_item("item_1", "Item 1", ItemCategory::CreaturePart, vec![("Loc A", "Pyro")]),
+            make_test_item("item_2", "Item 2", ItemCategory::CreaturePart, vec![("Loc B", "Pyro")]),
+            make_test_item("item_3", "Item 3", ItemCategory::MinedMaterial, vec![("Loc C", "Stanton")]),
+        ];
+
+        let registry = WikieloRegistry::from_items(items);
+
+        // Should find creature parts
+        let creature_parts = registry.items_by_category(ItemCategory::CreaturePart);
+        assert_eq!(creature_parts.len(), 2);
+
+        // Should find mined materials
+        let mined = registry.items_by_category(ItemCategory::MinedMaterial);
+        assert_eq!(mined.len(), 1);
+        assert_eq!(mined[0].name, "Item 3");
+
+        // No items in unused category
+        let combat = registry.items_by_category(ItemCategory::CombatLoot);
+        assert!(combat.is_empty());
+    }
+
+    #[test]
+    fn test_empty_registry() {
+        let registry = WikieloRegistry::new();
+
+        // All methods should handle empty registry gracefully
+        assert_eq!(registry.item_count(), 0);
+        assert!(registry.all_items().is_empty());
+        assert!(registry.get("any_id").is_none());
+        assert!(registry.items_at_location("any_location").is_empty());
+        assert!(registry.items_in_system("any_system").is_empty());
+        assert!(registry.items_by_category(ItemCategory::CreaturePart).is_empty());
+        assert!(registry.all_locations().is_empty());
+        assert!(registry.all_systems().is_empty());
+    }
+}
