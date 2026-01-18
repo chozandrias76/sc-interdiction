@@ -440,4 +440,131 @@ mod tests {
         assert!(registry.get("wikelo_favor").is_some());
         assert!(registry.get("irradiated_valakkar_fang_apex").is_some());
     }
+
+    // ==================== Integration Tests with Real Data ====================
+
+    #[test]
+    fn test_registry_loads_all_items() {
+        let registry = WikieloRegistry::new();
+        assert_eq!(
+            registry.item_count(),
+            31,
+            "Registry should load exactly 31 items from static data"
+        );
+    }
+
+    #[test]
+    fn test_valakkar_items_in_pyro() {
+        let registry = WikieloRegistry::new();
+        let pyro_items = registry.items_in_system("Pyro");
+
+        // Valakkar items should be in Pyro
+        let valakkar_ids = [
+            "irradiated_valakkar_fang_juvenile",
+            "irradiated_valakkar_fang_adult",
+            "irradiated_valakkar_fang_apex",
+            "irradiated_valakkar_pearl",
+        ];
+
+        for id in valakkar_ids {
+            let found = pyro_items.iter().any(|item| item.id == id);
+            assert!(found, "Item '{}' should be in Pyro system", id);
+        }
+    }
+
+    #[test]
+    fn test_creature_parts_category() {
+        let registry = WikieloRegistry::new();
+        let creature_parts = registry.items_by_category(ItemCategory::CreaturePart);
+
+        // Should have 10 creature parts
+        assert_eq!(
+            creature_parts.len(),
+            10,
+            "Expected 10 creature parts, got {}",
+            creature_parts.len()
+        );
+
+        // Verify known creature parts are present
+        let ids: Vec<&str> = creature_parts.iter().map(|i| i.id.as_str()).collect();
+        assert!(ids.contains(&"irradiated_valakkar_fang_apex"));
+        assert!(ids.contains(&"tundra_kopion_horn"));
+        assert!(ids.contains(&"yormandi_eye"));
+        assert!(ids.contains(&"quasi_grazer_tongue"));
+    }
+
+    #[test]
+    fn test_stanton_locations() {
+        let registry = WikieloRegistry::new();
+        let systems = registry.all_systems();
+
+        // Stanton should be present
+        assert!(
+            systems.contains(&"stanton"),
+            "Stanton should be in the registry's systems"
+        );
+
+        // Verify items in Stanton
+        let stanton_items = registry.items_in_system("Stanton");
+        assert!(!stanton_items.is_empty(), "Stanton should have items");
+
+        // Specific items should be in Stanton
+        let has_tundra_kopion = stanton_items
+            .iter()
+            .any(|i| i.id == "tundra_kopion_horn");
+        assert!(has_tundra_kopion, "Tundra Kopion Horn should be in Stanton");
+    }
+
+    #[test]
+    fn test_high_confidence_count() {
+        let registry = WikieloRegistry::new();
+        let high_conf = registry.high_confidence_items();
+
+        // Based on DATA-READY.md: 12 high (4-5) + 10 medium (3) items have at least one high source
+        // High confidence items should be 12-22 (items with at least one source >= 4)
+        assert!(
+            high_conf.len() >= 12 && high_conf.len() <= 22,
+            "Expected 12-22 high confidence items, got {}",
+            high_conf.len()
+        );
+    }
+
+    #[test]
+    fn test_needs_validation_count() {
+        let registry = WikieloRegistry::new();
+        let needs_val = registry.needs_validation();
+
+        // Based on DATA-READY.md: 9 low confidence items (reliability 1-2)
+        assert_eq!(
+            needs_val.len(),
+            9,
+            "Expected 9 items needing validation, got {}",
+            needs_val.len()
+        );
+
+        // Known low-confidence items
+        let ids: Vec<&str> = needs_val.iter().map(|i| i.id.as_str()).collect();
+        assert!(ids.contains(&"irradiated_kopion_horn"));
+        assert!(ids.contains(&"carinite_pure"));
+        assert!(ids.contains(&"dchs_05_comp_board"));
+    }
+
+    #[test]
+    fn test_specific_item_lookup() {
+        let registry = WikieloRegistry::new();
+
+        // Test wikelo_favor lookup
+        let favor = registry.get("wikelo_favor");
+        assert!(favor.is_some(), "wikelo_favor should exist");
+
+        let favor = favor.unwrap();
+        assert_eq!(favor.name, "Wikelo Favor");
+        assert_eq!(favor.category, ItemCategory::MissionCurrency);
+        assert!(!favor.sources.is_empty(), "wikelo_favor should have sources");
+
+        // Verify source details
+        let source = &favor.sources[0];
+        assert_eq!(source.location.system, "Stanton");
+        assert_eq!(source.reliability, 5);
+    }
 }
