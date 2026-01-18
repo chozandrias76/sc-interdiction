@@ -197,8 +197,18 @@ mod tests {
     #[test]
     fn test_registry_creation() {
         let items = vec![
-            make_test_item("item_1", "Item 1", ItemCategory::CreaturePart, vec![("Pyro I", "Pyro")]),
-            make_test_item("item_2", "Item 2", ItemCategory::MinedMaterial, vec![("ARC-L1", "Stanton")]),
+            make_test_item(
+                "item_1",
+                "Item 1",
+                ItemCategory::CreaturePart,
+                vec![("Pyro I", "Pyro")],
+            ),
+            make_test_item(
+                "item_2",
+                "Item 2",
+                ItemCategory::MinedMaterial,
+                vec![("ARC-L1", "Stanton")],
+            ),
         ];
 
         let registry = WikieloRegistry::from_items(items);
@@ -210,8 +220,18 @@ mod tests {
     #[test]
     fn test_get_by_id() {
         let items = vec![
-            make_test_item("valakkar_fang", "Valakkar Fang", ItemCategory::CreaturePart, vec![("Pyro I", "Pyro")]),
-            make_test_item("carinite_ore", "Carinite Ore", ItemCategory::MinedMaterial, vec![("ARC-L1", "Stanton")]),
+            make_test_item(
+                "valakkar_fang",
+                "Valakkar Fang",
+                ItemCategory::CreaturePart,
+                vec![("Pyro I", "Pyro")],
+            ),
+            make_test_item(
+                "carinite_ore",
+                "Carinite Ore",
+                ItemCategory::MinedMaterial,
+                vec![("ARC-L1", "Stanton")],
+            ),
         ];
 
         let registry = WikieloRegistry::from_items(items);
@@ -232,9 +252,24 @@ mod tests {
     #[test]
     fn test_items_at_location() {
         let items = vec![
-            make_test_item("item_1", "Item 1", ItemCategory::CreaturePart, vec![("Lazarus Transport Centers", "Pyro")]),
-            make_test_item("item_2", "Item 2", ItemCategory::MinedMaterial, vec![("Lazarus Transport Centers", "Pyro")]),
-            make_test_item("item_3", "Item 3", ItemCategory::CombatLoot, vec![("ARC-L1", "Stanton")]),
+            make_test_item(
+                "item_1",
+                "Item 1",
+                ItemCategory::CreaturePart,
+                vec![("Lazarus Transport Centers", "Pyro")],
+            ),
+            make_test_item(
+                "item_2",
+                "Item 2",
+                ItemCategory::MinedMaterial,
+                vec![("Lazarus Transport Centers", "Pyro")],
+            ),
+            make_test_item(
+                "item_3",
+                "Item 3",
+                ItemCategory::CombatLoot,
+                vec![("ARC-L1", "Stanton")],
+            ),
         ];
 
         let registry = WikieloRegistry::from_items(items);
@@ -260,9 +295,24 @@ mod tests {
     #[test]
     fn test_items_in_system() {
         let items = vec![
-            make_test_item("item_1", "Item 1", ItemCategory::CreaturePart, vec![("Location A", "Pyro")]),
-            make_test_item("item_2", "Item 2", ItemCategory::MinedMaterial, vec![("Location B", "Pyro")]),
-            make_test_item("item_3", "Item 3", ItemCategory::CombatLoot, vec![("ARC-L1", "Stanton")]),
+            make_test_item(
+                "item_1",
+                "Item 1",
+                ItemCategory::CreaturePart,
+                vec![("Location A", "Pyro")],
+            ),
+            make_test_item(
+                "item_2",
+                "Item 2",
+                ItemCategory::MinedMaterial,
+                vec![("Location B", "Pyro")],
+            ),
+            make_test_item(
+                "item_3",
+                "Item 3",
+                ItemCategory::CombatLoot,
+                vec![("ARC-L1", "Stanton")],
+            ),
         ];
 
         let registry = WikieloRegistry::from_items(items);
@@ -287,9 +337,24 @@ mod tests {
     #[test]
     fn test_items_by_category() {
         let items = vec![
-            make_test_item("item_1", "Item 1", ItemCategory::CreaturePart, vec![("Loc A", "Pyro")]),
-            make_test_item("item_2", "Item 2", ItemCategory::CreaturePart, vec![("Loc B", "Pyro")]),
-            make_test_item("item_3", "Item 3", ItemCategory::MinedMaterial, vec![("Loc C", "Stanton")]),
+            make_test_item(
+                "item_1",
+                "Item 1",
+                ItemCategory::CreaturePart,
+                vec![("Loc A", "Pyro")],
+            ),
+            make_test_item(
+                "item_2",
+                "Item 2",
+                ItemCategory::CreaturePart,
+                vec![("Loc B", "Pyro")],
+            ),
+            make_test_item(
+                "item_3",
+                "Item 3",
+                ItemCategory::MinedMaterial,
+                vec![("Loc C", "Stanton")],
+            ),
         ];
 
         let registry = WikieloRegistry::from_items(items);
@@ -318,7 +383,9 @@ mod tests {
         assert!(registry.get("any_id").is_none());
         assert!(registry.items_at_location("any_location").is_empty());
         assert!(registry.items_in_system("any_system").is_empty());
-        assert!(registry.items_by_category(ItemCategory::CreaturePart).is_empty());
+        assert!(registry
+            .items_by_category(ItemCategory::CreaturePart)
+            .is_empty());
         assert!(registry.all_locations().is_empty());
         assert!(registry.all_systems().is_empty());
     }
