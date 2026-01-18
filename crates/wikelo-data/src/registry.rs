@@ -7,7 +7,6 @@ use intel::{ItemCategory, WikieloItem};
 
 /// Repository of Wikelo items with bidirectional indexes.
 #[derive(Clone, Default)]
-#[allow(dead_code)] // Fields used in Task 2 lookup methods
 pub struct WikieloRegistry {
     /// Canonical item storage.
     items: Vec<WikieloItem>,
@@ -60,6 +59,89 @@ impl WikieloRegistry {
             by_system,
             by_category,
         }
+    }
+
+    // ==================== Item Lookups ====================
+
+    /// Get an item by its ID.
+    #[must_use]
+    pub fn get(&self, id: &str) -> Option<&WikieloItem> {
+        let idx = self.by_id.get(id)?;
+        self.items.get(*idx)
+    }
+
+    /// Get all items in the registry.
+    #[must_use]
+    pub fn all_items(&self) -> &[WikieloItem] {
+        &self.items
+    }
+
+    // ==================== Location Lookups ====================
+
+    /// Get all items available at a specific location.
+    #[must_use]
+    pub fn items_at_location(&self, location: &str) -> Vec<&WikieloItem> {
+        let key = normalize_location(location);
+        self.by_location
+            .get(&key)
+            .map(|indexes| {
+                indexes
+                    .iter()
+                    .filter_map(|idx| self.items.get(*idx))
+                    .collect()
+            })
+            .unwrap_or_default()
+    }
+
+    /// Get all items available in a specific system.
+    #[must_use]
+    pub fn items_in_system(&self, system: &str) -> Vec<&WikieloItem> {
+        let key = normalize_location(system);
+        self.by_system
+            .get(&key)
+            .map(|indexes| {
+                indexes
+                    .iter()
+                    .filter_map(|idx| self.items.get(*idx))
+                    .collect()
+            })
+            .unwrap_or_default()
+    }
+
+    // ==================== Category Lookups ====================
+
+    /// Get all items in a specific category.
+    #[must_use]
+    pub fn items_by_category(&self, category: ItemCategory) -> Vec<&WikieloItem> {
+        self.by_category
+            .get(&category)
+            .map(|indexes| {
+                indexes
+                    .iter()
+                    .filter_map(|idx| self.items.get(*idx))
+                    .collect()
+            })
+            .unwrap_or_default()
+    }
+
+    // ==================== Utility Methods ====================
+
+    /// List all unique location names in the registry.
+    #[must_use]
+    pub fn all_locations(&self) -> Vec<&str> {
+        self.by_location.keys().map(String::as_str).collect()
+    }
+
+    /// List all unique systems in the registry.
+    #[must_use]
+    pub fn all_systems(&self) -> Vec<&str> {
+        self.by_system.keys().map(String::as_str).collect()
+    }
+
+    /// Get the total number of items in the registry.
+    #[must_use]
+    pub fn item_count(&self) -> usize {
+        self.items.len()
     }
 }
 
