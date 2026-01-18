@@ -14,6 +14,7 @@ repos:
 
   - repo: local
     hooks:
+      # Pre-commit hooks (run on changed rust files)
       - id: cargo-fmt
         name: cargo fmt
         entry: cargo fmt --all --
@@ -49,10 +50,59 @@ repos:
         types: [rust]
         pass_filenames: false
 
+      # Pre-push hooks (always run on push regardless of file changes)
+      - id: cargo-fmt-push
+        name: cargo fmt (pre-push)
+        entry: cargo fmt --all -- --check
+        language: system
+        stages: [pre-push]
+        always_run: true
+        pass_filenames: false
+
+      - id: cargo-clippy-push
+        name: cargo clippy (pre-push)
+        entry: cargo clippy --all-targets --all-features
+        language: system
+        stages: [pre-push]
+        always_run: true
+        pass_filenames: false
+
+      - id: cargo-check-push
+        name: cargo check (pre-push)
+        entry: cargo check --all-targets --all-features
+        language: system
+        stages: [pre-push]
+        always_run: true
+        pass_filenames: false
+
+      - id: cargo-test-push
+        name: cargo test (pre-push)
+        entry: cargo test --all-features
+        language: system
+        stages: [pre-push]
+        always_run: true
+        pass_filenames: false
+
+      - id: cargo-audit-push
+        name: cargo audit (pre-push)
+        entry: cargo audit
+        language: system
+        stages: [pre-push]
+        always_run: true
+        pass_filenames: false
+
       - id: cargo-coverage
         name: cargo coverage (80% minimum)
         entry: cargo tarpaulin --all-features --workspace --timeout 120 --fail-under 80 --skip-clean
         language: system
-        types: [rust]
-        pass_filenames: false
         stages: [pre-push]
+        always_run: true
+        pass_filenames: false
+
+      - id: branch-protection
+        name: branch protection
+        entry: .githooks/check-branch-push.sh
+        language: script
+        stages: [pre-push]
+        always_run: true
+        pass_filenames: false

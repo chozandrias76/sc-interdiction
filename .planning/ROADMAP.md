@@ -54,7 +54,7 @@ Plans:
 Plans:
 - [x] 02.1-01: Set up scdatatools and extract Game2.dcb + global.ini
 - [x] 02.1-02: Build DataForge exploration CLI to find Wikelo contracts
-- [ ] 02.1-03: Create extraction pipeline with caching for sc-data-extractor
+- [x] 02.1-03: Create extraction pipeline with caching for sc-data-extractor
 
 ### Phase 3: Wikelo Data Module
 **Goal**: Create wikelo-data crate with static compiled item/source data
@@ -107,7 +107,7 @@ Phases execute in numeric order: 1 → 2 → 2.1 → 3 → 4 → 5 → 6
 |-------|----------------|--------|-----------|
 | 1. Wikelo Data Model | 2/2 | Complete | 2026-01-15 |
 | 2. Item Source Research | 1/1 | Complete | 2026-01-15 |
-| 2.1. Game Data Extraction | 2/3 | In progress | - |
+| 2.1. Game Data Extraction | 3/3 | Complete | 2026-01-17 |
 | 3. Wikelo Data Module | 0/2 | Not started | - |
 | 4. Source Intel Integration | 0/3 | Not started | - |
 | 5. TUI Wikelo Views | 0/3 | Not started | - |
