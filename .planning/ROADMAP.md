@@ -61,9 +61,10 @@ Plans:
 **Depends on**: Phase 2.1 (need authoritative data from game files)
 **Research**: Unlikely (standard crate creation)
 **Plans**: 2 plans
+**Status**: In progress
 
 Plans:
-- [ ] 03-01: Create crate structure with item registry
+- [x] 03-01: Create crate structure with item registry
 - [ ] 03-02: Populate static data from research, add lookup functions
 
 ### Phase 4: Source Intel Integration
@@ -108,7 +109,7 @@ Phases execute in numeric order: 1 → 2 → 2.1 → 3 → 4 → 5 → 6
 | 1. Wikelo Data Model | 2/2 | Complete | 2026-01-15 |
 | 2. Item Source Research | 1/1 | Complete | 2026-01-15 |
 | 2.1. Game Data Extraction | 3/3 | Complete | 2026-01-17 |
-| 3. Wikelo Data Module | 0/2 | Not started | - |
+| 3. Wikelo Data Module | 1/2 | In progress | - |
 | 4. Source Intel Integration | 0/3 | Not started | - |
 | 5. TUI Wikelo Views | 0/3 | Not started | - |
 | 6. Testing & Polish | 0/2 | Not started | - |

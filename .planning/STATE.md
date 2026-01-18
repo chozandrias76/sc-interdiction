@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-14)
 ## Current Position
 
 Phase: 3 of 7 (Wikelo Data Module)
-Plan: 0 of 2 in current phase
-Status: Phase 2.1 complete, ready for Phase 3
-Last activity: 2026-01-17 — Completed 02.1-03-PLAN.md
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-01-18 — Completed 03-01-PLAN.md
 
-Progress: █████░░░░░ 46% (6 of 13 plans complete)
+Progress: █████░░░░░ 54% (7 of 13 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 6
+- Total plans completed: 7
 - Average duration: 17 min
-- Total execution time: 1.7 hours
+- Total execution time: 1.9 hours
 
 **By Phase:**
 
@@ -30,10 +30,11 @@ Progress: █████░░░░░ 46% (6 of 13 plans complete)
 | 1. Wikelo Data Model | 2 | 14 min | 7 min |
 | 2. Item Source Research | 1 | 15 min | 15 min |
 | 2.1. Game Data Extraction | 3 | 72 min | 24 min |
+| 3. Wikelo Data Module | 1 | 15 min | 15 min |
 
 **Recent Trend:**
-- Last 5 plans: 6m, 8m, 15m, 15m, 12m, 35m
-- Trend: ↑ (pipeline work heavier than research)
+- Last 5 plans: 15m, 15m, 12m, 35m, 15m
+- Trend: → (stable)
 
 ## Accumulated Context
 
@@ -52,8 +53,10 @@ Recent decisions affecting current work:
 - Need Phase 2.1 to build game data extraction pipeline before Phase 3
 - scdatatools broken; using scunpacked-data repo for game data instead
 - Mission data NOT in scunpacked-data; Phase 3 needs wiki scraping for contract details
-- **NEW:** Using in-memory lazy caching (no disk serialization needed for ~50MB data)
-- **NEW:** LocalizationStore supports both labels.json and global.ini formats
+- Using in-memory lazy caching (no disk serialization needed for ~50MB data)
+- LocalizationStore supports both labels.json and global.ini formats
+- **NEW:** Import types from intel crate; wikelo-data depends on intel for types
+- **NEW:** Normalized key matching (lowercase, collapsed whitespace) for flexible lookups
 
 ### Deferred Issues
 
@@ -65,25 +68,19 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-01-17
-Stopped at: Completed 02.1-03-PLAN.md (Phase 2.1 complete)
-Resume file: .planning/phases/02.1-game-data-extraction/02.1-03-SUMMARY.md
+Last session: 2026-01-18
+Stopped at: Completed 03-01-PLAN.md
+Resume file: .planning/phases/03-wikelo-data-module/03-01-SUMMARY.md
 
 ### Critical Context for Next Session
 
-**Phase 2.1 COMPLETE.** Key deliverables:
+**Phase 3 in progress.** Plan 03-01 complete, plan 03-02 next.
 
-1. **DataForgeExtractor** — Typed access to scunpacked-data with lazy caching
-2. **GameItem/Ship types** — With Wikelo classification helpers
-3. **LocalizationStore** — i18n string lookups from labels.json or global.ini
-
-**Ready for Phase 3:**
-- Run `/gsd:plan-phase 3` to create plans for Wikelo Data Module
-- sc-data-extractor ready with `wikelo_items()`, `wikelo_ships()`, `localize()`
-- **Note:** Mission requirements need wiki scraping (not in scunpacked-data)
+1. **WikieloRegistry** — Bidirectional indexes (by_id, by_location, by_system, by_category)
+2. **Pattern established** — Follows ShipRegistry pattern with normalize() for flexible matching
+3. **Next step** — Plan 03-02 adds static data from research and from_static() constructor
 
 **Key Files:**
-- DataForge extractor: `crates/sc-data-extractor/src/dataforge/`
-- Localization: `crates/sc-data-extractor/src/localization.rs`
-- Wikelo findings: `.planning/phases/02.1-game-data-extraction/DATAFORGE-FINDINGS.md`
-- Extracted data: `extracted/scunpacked-data/`
+- WikieloRegistry: `crates/wikelo-data/src/registry.rs`
+- Types (imported): `crates/intel/src/wikelo/types.rs`
+- Research data: `.planning/phases/02-item-source-research/02-DATA-REFERENCE.md`
