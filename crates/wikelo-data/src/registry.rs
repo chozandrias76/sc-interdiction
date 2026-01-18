@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use intel::{ItemCategory, WikieloItem};
 
 /// Repository of Wikelo items with bidirectional indexes.
-#[derive(Clone, Default)]
+#[derive(Clone)]
 pub struct WikieloRegistry {
     /// Canonical item storage.
     items: Vec<WikieloItem>,
@@ -21,10 +21,10 @@ pub struct WikieloRegistry {
 }
 
 impl WikieloRegistry {
-    /// Create a new empty registry.
+    /// Create registry with all known Wikelo items from static data.
     #[must_use]
     pub fn new() -> Self {
-        Self::default()
+        Self::from_items(crate::items::all_items())
     }
 
     /// Build registry from a list of items.
@@ -142,6 +142,44 @@ impl WikieloRegistry {
     #[must_use]
     pub fn item_count(&self) -> usize {
         self.items.len()
+    }
+
+    // ==================== Confidence Filtering ====================
+
+    /// Get items with high confidence (reliability >= 4).
+    ///
+    /// These items have verified sources and can be relied upon for planning.
+    #[must_use]
+    pub fn high_confidence_items(&self) -> Vec<&WikieloItem> {
+        self.items
+            .iter()
+            .filter(|item| {
+                item.sources
+                    .iter()
+                    .any(|source| source.reliability >= 4)
+            })
+            .collect()
+    }
+
+    /// Get items that need validation (reliability <= 2).
+    ///
+    /// These items have uncertain sources and should be verified in-game.
+    #[must_use]
+    pub fn needs_validation(&self) -> Vec<&WikieloItem> {
+        self.items
+            .iter()
+            .filter(|item| {
+                item.sources
+                    .iter()
+                    .all(|source| source.reliability <= 2)
+            })
+            .collect()
+    }
+}
+
+impl Default for WikieloRegistry {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -375,7 +413,8 @@ mod tests {
 
     #[test]
     fn test_empty_registry() {
-        let registry = WikieloRegistry::new();
+        // Use from_items with empty vec to test empty registry behavior
+        let registry = WikieloRegistry::from_items(vec![]);
 
         // All methods should handle empty registry gracefully
         assert_eq!(registry.item_count(), 0);
@@ -388,5 +427,17 @@ mod tests {
             .is_empty());
         assert!(registry.all_locations().is_empty());
         assert!(registry.all_systems().is_empty());
+    }
+
+    #[test]
+    fn test_new_loads_static_data() {
+        let registry = WikieloRegistry::new();
+
+        // new() should load all 31 items from static data
+        assert_eq!(registry.item_count(), 31);
+
+        // Should be able to look up known items
+        assert!(registry.get("wikelo_favor").is_some());
+        assert!(registry.get("irradiated_valakkar_fang_apex").is_some());
     }
 }
