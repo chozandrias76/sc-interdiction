@@ -1,0 +1,15 @@
+[package]
+name = "wikelo-data"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+serde.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+# Import types from intel crate
+intel = { path = "../intel" }
+
+[lints]
+workspace = true
