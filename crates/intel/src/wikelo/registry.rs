@@ -2,8 +2,7 @@
 
 use std::collections::HashMap;
 
-// Import types from intel crate - do NOT redefine
-use intel::{ItemCategory, WikieloItem};
+use super::types::{ItemCategory, WikieloItem};
 
 /// Repository of Wikelo items with bidirectional indexes.
 #[derive(Clone)]
@@ -24,7 +23,7 @@ impl WikieloRegistry {
     /// Create registry with all known Wikelo items from static data.
     #[must_use]
     pub fn new() -> Self {
-        Self::from_items(crate::items::all_items())
+        Self::from_items(super::items::all_items())
     }
 
     /// Build registry from a list of items.
@@ -192,7 +191,7 @@ fn normalize_location(name: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use intel::{AcquisitionMethod, ItemSource, SourceLocation};
+    use crate::wikelo::types::{AcquisitionMethod, ItemSource, SourceLocation};
 
     /// Create a test item with the given parameters.
     fn make_test_item(
