@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-14)
 ## Current Position
 
 Phase: 4 of 7 (Source Intel Integration)
-Plan: 0 of 3 in current phase
-Status: Planning complete, ready for execution
-Last activity: 2026-01-19 — Created 04-01, 04-02, 04-03 PLAN.md
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2026-01-20 — Completed 04-01-PLAN.md
 
-Progress: ██████░░░░ 62% (8 of 13 plans complete)
+Progress: ███████░░░ 69% (9 of 13 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 8
-- Average duration: 17 min
-- Total execution time: 2.2 hours
+- Total plans completed: 9
+- Average duration: 16 min
+- Total execution time: 2.4 hours
 
 **By Phase:**
 
@@ -31,9 +31,10 @@ Progress: ██████░░░░ 62% (8 of 13 plans complete)
 | 2. Item Source Research | 1 | 15 min | 15 min |
 | 2.1. Game Data Extraction | 3 | 72 min | 24 min |
 | 3. Wikelo Data Module | 2 | 32 min | 16 min |
+| 4. Source Intel Integration | 1 | 10 min | 10 min |
 
 **Recent Trend:**
-- Last 5 plans: 15m, 12m, 35m, 15m, 17m
+- Last 5 plans: 12m, 35m, 15m, 17m, 10m
 - Trend: → (stable)
 
 ## Accumulated Context
@@ -55,8 +56,9 @@ Recent decisions affecting current work:
 - Mission data NOT in scunpacked-data; Phase 3 needs wiki scraping for contract details
 - Using in-memory lazy caching (no disk serialization needed for ~50MB data)
 - LocalizationStore supports both labels.json and global.ini formats
-- **NEW:** Import types from intel crate; wikelo-data depends on intel for types
-- **NEW:** Normalized key matching (lowercase, collapsed whitespace) for flexible lookups
+- Import types from intel crate; wikelo-data depends on intel for types
+- Normalized key matching (lowercase, collapsed whitespace) for flexible lookups
+- **NEW:** Moved registry/items from wikelo-data to intel to resolve cyclic dependency
 
 ### Deferred Issues
 
@@ -68,19 +70,20 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-01-19
-Stopped at: Created Phase 4 plans (04-01, 04-02, 04-03)
-Resume file: .planning/phases/04-source-intel-integration/04-01-PLAN.md
+Last session: 2026-01-20
+Stopped at: Completed 04-01-PLAN.md (WikieloIntel source flagging)
+Resume file: .planning/phases/04-source-intel-integration/04-02-PLAN.md
 
 ### Critical Context for Next Session
 
-**Phase 4 PLANNED.** 3 plans ready for execution.
+**Phase 4 IN PROGRESS.** 1 of 3 plans complete.
 
-1. **04-01:** Create WikieloIntel struct with source flagging methods
+1. **04-01:** ✓ WikieloIntel struct with source flagging methods
 2. **04-02:** Integrate WikieloIntel into TargetAnalyzer
 3. **04-03:** Add Wikelo scoring to HotRoute and InterdictionHotspot
 
 **Key Files:**
-- WikieloRegistry: `crates/wikelo-data/src/registry.rs`
+- WikieloIntel: `crates/intel/src/wikelo/intel.rs`
+- WikieloRegistry: `crates/intel/src/wikelo/registry.rs`
 - TargetAnalyzer: `crates/intel/src/targets.rs`
 - Wikelo types: `crates/intel/src/wikelo/types.rs`

@@ -74,7 +74,7 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 04-01: Add WikieloIntel trait/struct to intel crate
+- [x] 04-01: Add WikieloIntel trait/struct to intel crate
 - [ ] 04-02: Integrate source location flagging into TargetAnalyzer
 - [ ] 04-03: Add Wikelo scoring to route/target calculations
 
@@ -110,6 +110,6 @@ Phases execute in numeric order: 1 → 2 → 2.1 → 3 → 4 → 5 → 6
 | 2. Item Source Research | 1/1 | Complete | 2026-01-15 |
 | 2.1. Game Data Extraction | 3/3 | Complete | 2026-01-17 |
 | 3. Wikelo Data Module | 2/2 | Complete | 2026-01-18 |
-| 4. Source Intel Integration | 0/3 | Not started | - |
+| 4. Source Intel Integration | 1/3 | In progress | - |
 | 5. TUI Wikelo Views | 0/3 | Not started | - |
 | 6. Testing & Polish | 0/2 | Not started | - |
