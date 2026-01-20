@@ -3,6 +3,7 @@
 use std::sync::Arc;
 
 use crate::ships::{CargoShip, ShipRegistry};
+use crate::wikelo::WikieloIntel;
 use api_client::{TradeRoute, UexClient};
 use ordered_float::OrderedFloat;
 use route_graph::{
@@ -16,13 +17,34 @@ use std::collections::HashMap;
 pub struct TargetAnalyzer {
     uex: UexClient,
     registry: Arc<ShipRegistry>,
+    wikelo: Option<Arc<WikieloIntel>>,
 }
 
 impl TargetAnalyzer {
     /// Create a new target analyzer with a ship registry.
     #[must_use]
     pub fn new(uex: UexClient, registry: Arc<ShipRegistry>) -> Self {
-        Self { uex, registry }
+        Self {
+            uex,
+            registry,
+            wikelo: None,
+        }
+    }
+
+    /// Add Wikelo intelligence for source flagging.
+    ///
+    /// When enabled, departing targets from Wikelo source locations
+    /// will have their `wikelo_flag` populated with item information.
+    #[must_use]
+    pub fn with_wikelo(mut self, wikelo: Arc<WikieloIntel>) -> Self {
+        self.wikelo = Some(wikelo);
+        self
+    }
+
+    /// Get access to the Wikelo intelligence (if configured).
+    #[must_use]
+    pub fn wikelo(&self) -> Option<&WikieloIntel> {
+        self.wikelo.as_deref()
     }
 
     /// Get hot trade routes sorted by profitability.
