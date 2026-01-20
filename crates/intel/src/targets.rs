@@ -3,7 +3,7 @@
 use std::sync::Arc;
 
 use crate::ships::{CargoShip, ShipRegistry};
-use crate::wikelo::WikieloIntel;
+use crate::wikelo::{SourceFlag, WikieloIntel};
 use api_client::{TradeRoute, UexClient};
 use ordered_float::OrderedFloat;
 use route_graph::{
@@ -130,6 +130,16 @@ impl TargetAnalyzer {
                 let estimated_cargo_value = r.profit_for_scu(likely_ship.cargo_scu as f64)
                     + (r.price_origin * likely_ship.cargo_scu as f64);
 
+                // Flag departing targets from Wikelo source locations
+                // Arriving targets already have their cargo, so source flagging isn't useful
+                let wikelo_flag = if is_departing {
+                    self.wikelo
+                        .as_ref()
+                        .and_then(|w| w.flag_location(&r.terminal_destination_name))
+                } else {
+                    None
+                };
+
                 TargetPrediction {
                     direction: if is_departing {
                         TrafficDirection::Departing
@@ -144,6 +154,7 @@ impl TargetAnalyzer {
                     } else {
                         r.terminal_origin_name
                     },
+                    wikelo_flag,
                 }
             })
             .collect();
@@ -391,6 +402,11 @@ pub struct TargetPrediction {
     pub likely_ship: CargoShip,
     pub estimated_cargo_value: f64,
     pub destination: String,
+    /// Wikelo source flag if departing from a Wikelo item source location.
+    ///
+    /// Only populated for departing targets when WikieloIntel is configured.
+    /// Indicates the target may be carrying Wikelo-related items.
+    pub wikelo_flag: Option<SourceFlag>,
 }
 
 /// Direction of traffic flow.
