@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-14)
 ## Current Position
 
 Phase: 4 of 7 (Source Intel Integration)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-01-20 — Completed 04-01-PLAN.md
+Last activity: 2026-01-20 — Completed 04-02-PLAN.md
 
-Progress: ███████░░░ 69% (9 of 13 plans complete)
+Progress: ████████░░ 77% (10 of 13 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 9
-- Average duration: 16 min
-- Total execution time: 2.4 hours
+- Total plans completed: 10
+- Average duration: 15 min
+- Total execution time: 2.5 hours
 
 **By Phase:**
 
@@ -31,11 +31,11 @@ Progress: ███████░░░ 69% (9 of 13 plans complete)
 | 2. Item Source Research | 1 | 15 min | 15 min |
 | 2.1. Game Data Extraction | 3 | 72 min | 24 min |
 | 3. Wikelo Data Module | 2 | 32 min | 16 min |
-| 4. Source Intel Integration | 1 | 10 min | 10 min |
+| 4. Source Intel Integration | 2 | 15 min | 7.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 12m, 35m, 15m, 17m, 10m
-- Trend: → (stable)
+- Last 5 plans: 35m, 15m, 17m, 10m, 5m
+- Trend: ↓ (faster)
 
 ## Accumulated Context
 
@@ -59,6 +59,7 @@ Recent decisions affecting current work:
 - Import types from intel crate; wikelo-data depends on intel for types
 - Normalized key matching (lowercase, collapsed whitespace) for flexible lookups
 - **NEW:** Moved registry/items from wikelo-data to intel to resolve cyclic dependency
+- Only flag departing targets (arriving have cargo already on ship, source flagging not useful)
 
 ### Deferred Issues
 
@@ -71,15 +72,15 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-20
-Stopped at: Completed 04-01-PLAN.md (WikieloIntel source flagging)
-Resume file: .planning/phases/04-source-intel-integration/04-02-PLAN.md
+Stopped at: Completed 04-02-PLAN.md (TargetAnalyzer Wikelo integration)
+Resume file: .planning/phases/04-source-intel-integration/04-03-PLAN.md
 
 ### Critical Context for Next Session
 
-**Phase 4 IN PROGRESS.** 1 of 3 plans complete.
+**Phase 4 IN PROGRESS.** 2 of 3 plans complete.
 
 1. **04-01:** ✓ WikieloIntel struct with source flagging methods
-2. **04-02:** Integrate WikieloIntel into TargetAnalyzer
+2. **04-02:** ✓ TargetAnalyzer with WikieloIntel, TargetPrediction.wikelo_flag
 3. **04-03:** Add Wikelo scoring to HotRoute and InterdictionHotspot
 
 **Key Files:**
