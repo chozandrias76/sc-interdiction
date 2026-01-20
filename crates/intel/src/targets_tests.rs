@@ -204,3 +204,144 @@ fn test_trade_route_max_profitable_scu() {
     let max_scu = route.max_profitable_scu();
     assert_eq!(max_scu, 100.0); // min(100, 1000) = 100
 }
+
+// ===== Wikelo Integration Tests =====
+
+use crate::ships::ShipRole;
+use crate::wikelo::WikieloIntel;
+
+/// Helper to create a mock cargo ship for testing
+fn mock_cargo_ship() -> crate::ships::CargoShip {
+    crate::ships::CargoShip {
+        name: "Test Hauler".to_string(),
+        manufacturer: "RSI".to_string(),
+        cargo_scu: 100,
+        crew_size: 1,
+        threat_level: 2,
+        ship_value_uec: 1_000_000,
+        requires_freight_elevator: false,
+        quantum_fuel_capacity: 1000.0,
+        hydrogen_fuel_capacity: 500.0,
+        qt_drive_size: 2,
+        role: ShipRole::Cargo,
+        mining_capacity_scu: None,
+        mass_kg: Some(50_000.0),
+    }
+}
+
+#[test]
+fn test_target_prediction_without_wikelo() {
+    // Without WikieloIntel configured, wikelo_flag should always be None
+    let prediction = TargetPrediction {
+        direction: TrafficDirection::Departing,
+        commodity: "Gold".to_string(),
+        likely_ship: mock_cargo_ship(),
+        estimated_cargo_value: 100_000.0,
+        destination: "Pyro I".to_string(),
+        wikelo_flag: None,
+    };
+
+    assert!(
+        prediction.wikelo_flag.is_none(),
+        "Without WikieloIntel, wikelo_flag should be None"
+    );
+}
+
+#[test]
+fn test_target_prediction_departing_to_wikelo_source() {
+    // Create WikieloIntel from static data
+    let wikelo = WikieloIntel::from_static();
+
+    // Pyro I is a known Wikelo source (Valakkar)
+    let flag = wikelo.flag_location("Pyro I");
+    assert!(
+        flag.is_some(),
+        "Pyro I should be flagged as a Wikelo source"
+    );
+
+    let flag = flag.unwrap();
+    assert!(flag.item_count > 0, "Pyro I should have Wikelo items");
+
+    // Simulate a departing target to Pyro I
+    let prediction = TargetPrediction {
+        direction: TrafficDirection::Departing,
+        commodity: "Medical Supplies".to_string(),
+        likely_ship: mock_cargo_ship(),
+        estimated_cargo_value: 50_000.0,
+        destination: "Pyro I".to_string(),
+        wikelo_flag: Some(flag),
+    };
+
+    assert!(
+        prediction.wikelo_flag.is_some(),
+        "Departing to Wikelo source should have flag"
+    );
+    let wikelo_flag = prediction.wikelo_flag.unwrap();
+    assert_eq!(wikelo_flag.location, "Pyro I");
+    assert!(!wikelo_flag.top_items.is_empty());
+}
+
+#[test]
+fn test_target_prediction_arriving_no_wikelo_flag() {
+    // Arriving targets should never have wikelo_flag set
+    // (the cargo is already on the ship, source flagging isn't useful)
+    let prediction = TargetPrediction {
+        direction: TrafficDirection::Arriving,
+        commodity: "Gold".to_string(),
+        likely_ship: mock_cargo_ship(),
+        estimated_cargo_value: 100_000.0,
+        destination: "Pyro I".to_string(),
+        wikelo_flag: None, // Arriving targets don't get flagged
+    };
+
+    assert!(
+        prediction.wikelo_flag.is_none(),
+        "Arriving targets should not have wikelo_flag"
+    );
+}
+
+#[test]
+fn test_target_prediction_departing_to_non_wikelo_location() {
+    // Create WikieloIntel from static data
+    let wikelo = WikieloIntel::from_static();
+
+    // "Random Station" is not a Wikelo source
+    let flag = wikelo.flag_location("Random Station That Doesn't Exist");
+    assert!(
+        flag.is_none(),
+        "Non-Wikelo locations should not be flagged"
+    );
+
+    // Departing target to non-Wikelo location should have no flag
+    let prediction = TargetPrediction {
+        direction: TrafficDirection::Departing,
+        commodity: "Gold".to_string(),
+        likely_ship: mock_cargo_ship(),
+        estimated_cargo_value: 100_000.0,
+        destination: "Random Station".to_string(),
+        wikelo_flag: None,
+    };
+
+    assert!(
+        prediction.wikelo_flag.is_none(),
+        "Departing to non-Wikelo location should not have flag"
+    );
+}
+
+#[test]
+fn test_wikelo_flag_has_item_details() {
+    // Verify that wikelo flags include useful item information
+    let wikelo = WikieloIntel::from_static();
+
+    // Pyro I is known to have Valakkar items
+    let flag = wikelo.flag_location("Pyro I").expect("Pyro I should be a Wikelo source");
+
+    // Flag should have items
+    assert!(flag.item_count > 0, "Should have at least one item");
+    assert!(!flag.top_items.is_empty(), "Should have top items listed");
+
+    // Check that top_items have names
+    for item in &flag.top_items {
+        assert!(!item.name.is_empty(), "Item should have a name");
+    }
+}

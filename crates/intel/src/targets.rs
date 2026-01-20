@@ -404,7 +404,7 @@ pub struct TargetPrediction {
     pub destination: String,
     /// Wikelo source flag if departing from a Wikelo item source location.
     ///
-    /// Only populated for departing targets when WikieloIntel is configured.
+    /// Only populated for departing targets when `WikieloIntel` is configured.
     /// Indicates the target may be carrying Wikelo-related items.
     pub wikelo_flag: Option<SourceFlag>,
 }
