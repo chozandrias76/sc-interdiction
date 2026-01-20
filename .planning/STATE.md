@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-01-14)
 
 **Core value:** Identify where valuable targets are and what they're likely carrying
-**Current focus:** Phase 3 — Wikelo Data Module
+**Current focus:** Phase 4 — Source Intel Integration
 
 ## Current Position
 
-Phase: 3 of 7 (Wikelo Data Module)
-Plan: 2 of 2 in current phase
-Status: Phase complete
-Last activity: 2026-01-18 — Completed 03-02-PLAN.md
+Phase: 4 of 7 (Source Intel Integration)
+Plan: 0 of 3 in current phase
+Status: Planning complete, ready for execution
+Last activity: 2026-01-19 — Created 04-01, 04-02, 04-03 PLAN.md
 
 Progress: ██████░░░░ 62% (8 of 13 plans complete)
 
@@ -68,19 +68,19 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-01-18
-Stopped at: Completed 03-02-PLAN.md (Phase 3 complete)
-Resume file: .planning/phases/03-wikelo-data-module/03-02-SUMMARY.md
+Last session: 2026-01-19
+Stopped at: Created Phase 4 plans (04-01, 04-02, 04-03)
+Resume file: .planning/phases/04-source-intel-integration/04-01-PLAN.md
 
 ### Critical Context for Next Session
 
-**Phase 3 COMPLETE.** Ready for Phase 4 (Source Intel Integration).
+**Phase 4 PLANNED.** 3 plans ready for execution.
 
-1. **WikieloRegistry** — 31 items with bidirectional indexes, loaded via `WikieloRegistry::new()`
-2. **Confidence filtering** — `high_confidence_items()` (reliability >= 4), `needs_validation()` (reliability <= 2)
-3. **Next step** — Phase 4 integrates source flagging into intel crate's TargetAnalyzer
+1. **04-01:** Create WikieloIntel struct with source flagging methods
+2. **04-02:** Integrate WikieloIntel into TargetAnalyzer
+3. **04-03:** Add Wikelo scoring to HotRoute and InterdictionHotspot
 
 **Key Files:**
 - WikieloRegistry: `crates/wikelo-data/src/registry.rs`
-- Item definitions: `crates/wikelo-data/src/items.rs`
-- Types: `crates/intel/src/wikelo/types.rs`
+- TargetAnalyzer: `crates/intel/src/targets.rs`
+- Wikelo types: `crates/intel/src/wikelo/types.rs`
