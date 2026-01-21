@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-14)
 ## Current Position
 
 Phase: 5 of 7 (TUI Wikelo Views)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-01-21 — Completed 05-01-PLAN.md
+Last activity: 2026-01-21 — Completed 05-02-PLAN.md
 
-Progress: █████████░ 86% (12 of 14 plans complete)
+Progress: █████████░ 93% (13 of 14 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 11
-- Average duration: 14.5 min
-- Total execution time: 2.7 hours
+- Total plans completed: 13
+- Average duration: 13.5 min
+- Total execution time: 2.9 hours
 
 **By Phase:**
 
@@ -32,10 +32,10 @@ Progress: █████████░ 86% (12 of 14 plans complete)
 | 2.1. Game Data Extraction | 3 | 72 min | 24 min |
 | 3. Wikelo Data Module | 2 | 32 min | 16 min |
 | 4. Source Intel Integration | 3 | 25 min | 8 min |
-| 5. TUI Wikelo Views | 1 | 12 min | 12 min |
+| 5. TUI Wikelo Views | 2 | 18 min | 9 min |
 
 **Recent Trend:**
-- Last 5 plans: 17m, 10m, 5m, 10m, 12m
+- Last 5 plans: 10m, 5m, 10m, 12m, 6m
 - Trend: ↓ (faster)
 
 ## Accumulated Context
@@ -62,6 +62,10 @@ Recent decisions affecting current work:
 - **NEW:** Moved registry/items from wikelo-data to intel to resolve cyclic dependency
 - Only flag departing targets (arriving have cargo already on ship, source flagging not useful)
 
+### Roadmap Evolution
+
+- Phase 5.1 inserted after Phase 5: TUI Snapshot Test Coverage (URGENT) - discovered test gaps during 05-01 execution
+
 ### Deferred Issues
 
 None yet.
@@ -73,18 +77,18 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-21
-Stopped at: Completed 05-01-PLAN.md
-Resume file: None (ready for /gsd:execute-plan 05-02)
+Stopped at: Completed 05-02-PLAN.md
+Resume file: None (ready for /gsd:execute-plan 05-03)
 
 ### Critical Context for Next Session
 
-**Phase 5 IN PROGRESS.** 1 of 3 plans done.
+**Phase 5 IN PROGRESS.** 2 of 3 plans done.
 
 1. **05-01:** ✓ Wikelo column and detail panel in targets view
-2. **05-02:** Pending — Map view source highlighting
+2. **05-02:** ✓ Map view source highlighting (magenta rings, 'w' filter, hotspot items)
 3. **05-03:** Pending — Hotspot/detail panel enhancement
 
 **Key Files:**
-- Targets view: `crates/cli/src/tui/views/targets.rs` (Wikelo column + detail panel)
-- App state: `crates/cli/src/tui/app.rs` (target_detail_expanded field)
-- Key handlers: `crates/cli/src/tui/handlers/keys.rs` (Enter toggle)
+- Map view: `crates/cli/src/tui/views/map.rs` (Wikelo ring rendering, filter, hotspot items)
+- App state: `crates/cli/src/tui/app.rs` (wikelo_intel, wikelo_filter fields)
+- Key handlers: `crates/cli/src/tui/handlers/keys.rs` ('w' toggle)
