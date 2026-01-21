@@ -85,7 +85,7 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 05-01: Add Wikelo column/indicator to targets view
+- [x] 05-01: Add Wikelo column/indicator to targets view
 - [ ] 05-02: Add source location highlighting to map view
 - [ ] 05-03: Add Wikelo detail panel or hotspot enhancement
 
@@ -111,5 +111,5 @@ Phases execute in numeric order: 1 → 2 → 2.1 → 3 → 4 → 5 → 6
 | 2.1. Game Data Extraction | 3/3 | Complete | 2026-01-17 |
 | 3. Wikelo Data Module | 2/2 | Complete | 2026-01-18 |
 | 4. Source Intel Integration | 3/3 | Complete | 2026-01-20 |
-| 5. TUI Wikelo Views | 0/3 | Not started | - |
+| 5. TUI Wikelo Views | 1/3 | In progress | - |
 | 6. Testing & Polish | 0/2 | Not started | - |
