@@ -73,6 +73,10 @@ impl TargetAnalyzer {
                 let (fuel_sufficient, fuel_required, _) =
                     likely_ship.can_complete_route(distance_mkm);
 
+                // Calculate Wikelo score and items for origin
+                let (wikelo_score, wikelo_items) =
+                    calculate_wikelo_score(&self.wikelo, &r.terminal_origin_name);
+
                 HotRoute {
                     commodity: r.commodity_name.clone(),
                     commodity_code: r.commodity_code.clone(),
@@ -88,6 +92,8 @@ impl TargetAnalyzer {
                     distance_mkm,
                     fuel_sufficient,
                     fuel_required,
+                    wikelo_score,
+                    wikelo_items,
                 }
             })
             .collect();
@@ -361,6 +367,12 @@ pub struct HotRoute {
     pub fuel_sufficient: bool,
     /// Quantum fuel required for this route (units).
     pub fuel_required: f64,
+    /// Wikelo score 0-100 for origin location (None if no `WikieloIntel`).
+    ///
+    /// Indicates likelihood that cargo from this origin includes Wikelo items.
+    pub wikelo_score: Option<f64>,
+    /// Wikelo item names available at origin (empty if none or no `WikieloIntel`).
+    pub wikelo_items: Vec<String>,
 }
 
 /// A complete round-trip trade run (outbound + return with cargo).
@@ -707,6 +719,58 @@ fn calculate_risk_score(route: &TradeRoute) -> f64 {
 
     // Cap at 100
     score.min(100.0)
+}
+
+/// Calculate Wikelo score and item names for a location.
+///
+/// Returns `(Option<f64>, Vec<String>)` where:
+/// - score is None if no `WikieloIntel`, `Some(0-100)` otherwise
+/// - items is empty if no `WikieloIntel` or no items at location
+///
+/// Scoring formula:
+/// - Base: 20 points if `is_wikelo_source(location)`
+/// - +10 per high-value item (`estimated_value` > 10,000)
+/// - +5 per item up to 50 points
+/// - Cap at 100
+fn calculate_wikelo_score(
+    wikelo: &Option<Arc<WikieloIntel>>,
+    location: &str,
+) -> (Option<f64>, Vec<String>) {
+    let Some(wikelo) = wikelo.as_ref() else {
+        return (None, Vec::new());
+    };
+
+    let flag = wikelo.flag_location(location);
+    let Some(flag) = flag else {
+        return (Some(0.0), Vec::new());
+    };
+
+    // Calculate score
+    let mut score: f64 = 20.0; // Base for being a Wikelo source
+
+    // +10 per high-value item
+    let high_value_count = flag
+        .top_items
+        .iter()
+        .filter(|item| item.estimated_value.is_some_and(|v| v > 10_000))
+        .count();
+    score += (high_value_count as f64) * 10.0;
+
+    // +5 per item up to 50 points
+    let item_bonus = (flag.item_count as f64 * 5.0).min(50.0);
+    score += item_bonus;
+
+    // Cap at 100
+    score = score.min(100.0);
+
+    // Collect item names
+    let items: Vec<String> = flag
+        .top_items
+        .iter()
+        .map(|item| item.name.clone())
+        .collect();
+
+    (Some(score), items)
 }
 
 #[cfg(test)]

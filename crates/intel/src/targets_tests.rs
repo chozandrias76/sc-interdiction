@@ -307,10 +307,7 @@ fn test_target_prediction_departing_to_non_wikelo_location() {
 
     // "Random Station" is not a Wikelo source
     let flag = wikelo.flag_location("Random Station That Doesn't Exist");
-    assert!(
-        flag.is_none(),
-        "Non-Wikelo locations should not be flagged"
-    );
+    assert!(flag.is_none(), "Non-Wikelo locations should not be flagged");
 
     // Departing target to non-Wikelo location should have no flag
     let prediction = TargetPrediction {
@@ -334,7 +331,9 @@ fn test_wikelo_flag_has_item_details() {
     let wikelo = WikieloIntel::from_static();
 
     // Pyro I is known to have Valakkar items
-    let flag = wikelo.flag_location("Pyro I").expect("Pyro I should be a Wikelo source");
+    let flag = wikelo
+        .flag_location("Pyro I")
+        .expect("Pyro I should be a Wikelo source");
 
     // Flag should have items
     assert!(flag.item_count > 0, "Should have at least one item");
