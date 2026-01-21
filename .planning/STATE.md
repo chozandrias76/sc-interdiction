@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-14)
 ## Current Position
 
 Phase: 5 of 7 (TUI Wikelo Views)
-Plan: 2 of 3 in current phase
-Status: In progress
-Last activity: 2026-01-21 — Completed 05-02-PLAN.md
+Plan: 3 of 3 in current phase
+Status: Phase complete
+Last activity: 2026-01-21 — Completed 05-03-PLAN.md
 
-Progress: █████████░ 93% (13 of 14 plans complete)
+Progress: ██████████ 100% (14 of 14 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 13
-- Average duration: 13.5 min
-- Total execution time: 2.9 hours
+- Total plans completed: 14
+- Average duration: 13 min
+- Total execution time: 3.0 hours
 
 **By Phase:**
 
@@ -32,10 +32,10 @@ Progress: █████████░ 93% (13 of 14 plans complete)
 | 2.1. Game Data Extraction | 3 | 72 min | 24 min |
 | 3. Wikelo Data Module | 2 | 32 min | 16 min |
 | 4. Source Intel Integration | 3 | 25 min | 8 min |
-| 5. TUI Wikelo Views | 2 | 18 min | 9 min |
+| 5. TUI Wikelo Views | 3 | 23 min | 8 min |
 
 **Recent Trend:**
-- Last 5 plans: 10m, 5m, 10m, 12m, 6m
+- Last 5 plans: 5m, 10m, 12m, 6m, 5m
 - Trend: ↓ (faster)
 
 ## Accumulated Context
@@ -65,6 +65,7 @@ Recent decisions affecting current work:
 ### Roadmap Evolution
 
 - Phase 5.1 inserted after Phase 5: TUI Snapshot Test Coverage (URGENT) - discovered test gaps during 05-01 execution
+- Phase 5.2 inserted after Phase 5.1: Coverage to 80% - CI coverage threshold blocking pushes (61.74% < 80%)
 
 ### Deferred Issues
 
@@ -77,18 +78,15 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-21
-Stopped at: Completed 05-02-PLAN.md
-Resume file: None (ready for /gsd:execute-plan 05-03)
+Stopped at: Completed 05-03-PLAN.md (Phase 5 complete)
+Resume file: None (ready for /gsd:plan-phase 5.1)
 
 ### Critical Context for Next Session
 
-**Phase 5 IN PROGRESS.** 2 of 3 plans done.
+**Phase 5 COMPLETE.** Wikelo intel fully integrated into TUI.
 
 1. **05-01:** ✓ Wikelo column and detail panel in targets view
 2. **05-02:** ✓ Map view source highlighting (magenta rings, 'w' filter, hotspot items)
-3. **05-03:** Pending — Hotspot/detail panel enhancement
+3. **05-03:** ✓ Routes view Wikelo column, hotspot Wikelo item breakdown
 
-**Key Files:**
-- Map view: `crates/cli/src/tui/views/map.rs` (Wikelo ring rendering, filter, hotspot items)
-- App state: `crates/cli/src/tui/app.rs` (wikelo_intel, wikelo_filter fields)
-- Key handlers: `crates/cli/src/tui/handlers/keys.rs` ('w' toggle)
+**Next:** Phase 5.1 (TUI Snapshot Test Coverage) or Phase 5.2 (Coverage to 80%)

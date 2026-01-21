@@ -19,8 +19,9 @@ None
 - [ ] **Phase 2.1: Game Data Extraction** - INSERTED: Extract authoritative data from Data.p4k
 - [x] **Phase 3: Wikelo Data Module** - Create crate with static Wikelo item/source data
 - [x] **Phase 4: Source Intel Integration** - Integrate source flagging into intel crate
-- [ ] **Phase 5: TUI Wikelo Views** - Add Wikelo intel display to dashboard
+- [x] **Phase 5: TUI Wikelo Views** - Add Wikelo intel display to dashboard
 - [ ] **Phase 5.1: TUI Snapshot Test Coverage** - INSERTED: Comprehensive visual regression tests for Wikelo features
+- [ ] **Phase 5.2: Coverage to 80%** - INSERTED: Reach CI coverage threshold
 - [ ] **Phase 6: Testing & Polish** - Tests, edge cases, documentation
 
 ## Phase Details
@@ -88,7 +89,7 @@ Plans:
 Plans:
 - [x] 05-01: Add Wikelo column/indicator to targets view
 - [x] 05-02: Add source location highlighting to map view
-- [ ] 05-03: Add Wikelo detail panel or hotspot enhancement
+- [x] 05-03: Add Wikelo detail panel or hotspot enhancement
 
 ### Phase 5.1: TUI Snapshot Test Coverage (INSERTED)
 **Goal**: Add comprehensive visual regression and interaction tests for TUI
@@ -102,9 +103,29 @@ Plans:
 - [ ] 05.1-03: Add key handler unit tests for navigation and toggles
 - [ ] 05.1-04: Add map and hotspot view snapshots
 
+### Phase 5.2: Coverage to 80% (INSERTED)
+**Goal**: Reach 80% code coverage threshold for CI
+**Depends on**: Phase 5.1 (TUI snapshot tests provide foundation)
+**Research**: Unlikely (standard testing)
+**Plans**: TBD (run /gsd:plan-phase 5.2 to break down)
+
+Current coverage: 61.74%
+Target: 80%
+
+Key gaps to address:
+- `views/map.rs`: 0% (164 lines)
+- `handlers/keys.rs`: 0% (65 lines)
+- `data/hotspots.rs`: 0% (30 lines)
+- `handlers/navigation.rs`: 0% (13 lines)
+- `handlers/sorting.rs`: 0% (19 lines)
+- `event.rs`: 0% (17 lines)
+
+Plans:
+- [ ] TBD
+
 ### Phase 6: Testing & Polish
 **Goal**: Comprehensive tests, edge cases, and documentation
-**Depends on**: Phase 5.1 (need TUI tests complete)
+**Depends on**: Phase 5.2 (need coverage threshold met)
 **Research**: Unlikely (standard testing)
 **Plans**: 2 plans
 
@@ -115,7 +136,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 2.1 → 3 → 4 → 5 → 5.1 → 6
+Phases execute in numeric order: 1 → 2 → 2.1 → 3 → 4 → 5 → 5.1 → 5.2 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -124,6 +145,7 @@ Phases execute in numeric order: 1 → 2 → 2.1 → 3 → 4 → 5 → 5.1 → 6
 | 2.1. Game Data Extraction | 3/3 | Complete | 2026-01-17 |
 | 3. Wikelo Data Module | 2/2 | Complete | 2026-01-18 |
 | 4. Source Intel Integration | 3/3 | Complete | 2026-01-20 |
-| 5. TUI Wikelo Views | 2/3 | In progress | - |
+| 5. TUI Wikelo Views | 3/3 | Complete | 2026-01-21 |
 | 5.1. TUI Snapshot Test Coverage | 0/4 | Not started | - |
+| 5.2. Coverage to 80% | 0/? | Not started | - |
 | 6. Testing & Polish | 0/2 | Not started | - |
