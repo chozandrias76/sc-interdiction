@@ -23,6 +23,7 @@ pub fn render_targets(frame: &mut Frame, app: &mut App, area: Rect) {
         Cell::from("Ship").style(Style::default().fg(Color::Yellow)),
         Cell::from("Cargo").style(Style::default().fg(Color::Yellow)),
         Cell::from("Destination").style(Style::default().fg(Color::Yellow)),
+        Cell::from("Wikelo").style(Style::default().fg(Color::Yellow)),
         Cell::from("Value").style(Style::default().fg(Color::Yellow)),
         Cell::from("Threat").style(Style::default().fg(Color::Yellow)),
     ];
@@ -55,11 +56,21 @@ pub fn render_targets(frame: &mut Frame, app: &mut App, area: Rect) {
             // Use scroll_text for destination - scrolls when selected
             let dest = scroll_text(&target.destination, 35, i, "", &app.scroll);
 
+            // Wikelo indicator: "★3" for high-value with 3 items, "3" for regular, "-" for none
+            let (wikelo_text, wikelo_color) = match &target.wikelo_flag {
+                Some(flag) if flag.has_high_value => {
+                    (format!("★{}", flag.item_count), Color::Yellow)
+                }
+                Some(flag) => (format!("{}", flag.item_count), Color::Green),
+                None => ("-".to_string(), Color::DarkGray),
+            };
+
             let cells = vec![
                 Cell::from(dir).style(Style::default().fg(dir_color)),
                 Cell::from(target.likely_ship.name.clone()),
                 Cell::from(target.commodity.clone()),
                 Cell::from(dest),
+                Cell::from(wikelo_text).style(Style::default().fg(wikelo_color)),
                 Cell::from(format_value(target.estimated_cargo_value)),
                 Cell::from(threat_bar).style(Style::default().fg(threat_color)),
             ];
@@ -79,6 +90,7 @@ pub fn render_targets(frame: &mut Frame, app: &mut App, area: Rect) {
         Constraint::Length(22),
         Constraint::Length(20),
         Constraint::Min(20),
+        Constraint::Length(10),
         Constraint::Length(12),
         Constraint::Length(12),
     ];
