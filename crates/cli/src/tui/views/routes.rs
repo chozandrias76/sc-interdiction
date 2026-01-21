@@ -21,6 +21,7 @@ pub fn render_routes(frame: &mut Frame, app: &mut App, area: Rect) {
         Cell::from("Destination").style(Style::default().fg(Color::Yellow)),
         Cell::from("Profit/SCU").style(Style::default().fg(Color::Yellow)),
         Cell::from("Haul Value").style(Style::default().fg(Color::Yellow)),
+        Cell::from("Wikelo").style(Style::default().fg(Color::Yellow)),
         Cell::from("Ship").style(Style::default().fg(Color::Yellow)),
     ];
     let header = Row::new(header_cells).height(1).bottom_margin(1);
@@ -35,6 +36,14 @@ pub fn render_routes(frame: &mut Frame, app: &mut App, area: Rect) {
             let origin = scroll_text(&route.origin, 25, line_idx, "", &app.scroll);
             let dest = scroll_text(&route.destination, 25, line_idx, "", &app.scroll);
 
+            // Wikelo score with color coding
+            let (wikelo_text, wikelo_color) = match route.wikelo_score {
+                Some(s) if s > 50.0 => (format!("★{:.0}", s), Color::Magenta),
+                Some(s) if s > 20.0 => (format!("{:.0}", s), Color::LightMagenta),
+                Some(s) if s > 0.0 => (format!("{:.0}", s), Color::DarkGray),
+                _ => ("-".to_string(), Color::DarkGray),
+            };
+
             let cells = vec![
                 Cell::from(route.commodity.clone()),
                 Cell::from(origin),
@@ -42,6 +51,7 @@ pub fn render_routes(frame: &mut Frame, app: &mut App, area: Rect) {
                 Cell::from(format!("{:.0}", route.profit_per_scu))
                     .style(Style::default().fg(Color::Green)),
                 Cell::from(format_value(route.estimated_haul_value)),
+                Cell::from(wikelo_text).style(Style::default().fg(wikelo_color)),
                 Cell::from(route.likely_ship.name.clone()),
             ];
 
@@ -56,12 +66,13 @@ pub fn render_routes(frame: &mut Frame, app: &mut App, area: Rect) {
         .collect();
 
     let widths = [
-        Constraint::Length(20),
-        Constraint::Min(15),
-        Constraint::Min(15),
-        Constraint::Length(12),
-        Constraint::Length(14),
         Constraint::Length(18),
+        Constraint::Min(14),
+        Constraint::Min(14),
+        Constraint::Length(10),
+        Constraint::Length(12),
+        Constraint::Length(7),
+        Constraint::Length(16),
     ];
 
     let sort_indicator = match app.route_sort {
