@@ -270,8 +270,21 @@ fn render_hotspot_details_compact(frame: &mut Frame, app: &App, area: Rect) {
 
     // Hotspot info panel
     if let Some(hotspot) = app.hotspots.get(app.map_selected) {
-        // Look up Wikelo items for the jump destination
-        let wikelo_items = app.wikelo_intel.items_at(&hotspot.jump_to.destination);
+        // Collect Wikelo items from all intersecting routes' origins
+        // (these are the sources cargo is coming from)
+        let mut all_wikelo_items: std::collections::HashSet<&str> =
+            std::collections::HashSet::new();
+        let mut has_high_value = false;
+        for route in &hotspot.intersecting_routes {
+            let items = app.wikelo_intel.items_at(&route.origin);
+            for item in &items {
+                all_wikelo_items.insert(&item.name);
+                if item.estimated_value.is_some_and(|v| v > 10_000) {
+                    has_high_value = true;
+                }
+            }
+        }
+        let wikelo_item_names: Vec<_> = all_wikelo_items.into_iter().take(5).collect();
 
         let mut info_text = vec![
             Line::from(vec![
@@ -341,17 +354,25 @@ fn render_hotspot_details_compact(frame: &mut Frame, app: &App, area: Rect) {
             ]),
         ];
 
-        // Add Wikelo items if destination has any
-        if !wikelo_items.is_empty() {
+        // Add Wikelo items from route origins (cargo sources)
+        if !wikelo_item_names.is_empty() {
             info_text.push(Line::from(""));
-            let item_names: Vec<_> = wikelo_items
-                .iter()
-                .take(3)
-                .map(|i| i.name.as_str())
-                .collect();
+            let wikelo_label = if has_high_value {
+                Span::styled(
+                    "★ Wikelo: ",
+                    Style::default()
+                        .fg(Color::Magenta)
+                        .add_modifier(Modifier::BOLD),
+                )
+            } else {
+                Span::styled("Wikelo: ", Style::default().fg(Color::Magenta))
+            };
             info_text.push(Line::from(vec![
-                Span::styled("Wikelo: ", Style::default().fg(Color::Magenta)),
-                Span::raw(item_names.join(", ")),
+                wikelo_label,
+                Span::styled(
+                    wikelo_item_names.join(", "),
+                    Style::default().fg(Color::LightMagenta),
+                ),
             ]));
         }
 
@@ -434,7 +455,22 @@ fn render_hotspot_details_expanded(frame: &mut Frame, app: &App, area: Rect) {
 
     // Hotspot summary (condensed)
     if let Some(hotspot) = app.hotspots.get(app.map_selected) {
-        let info_text = vec![
+        // Collect Wikelo items from route origins for expanded view
+        let mut all_wikelo_items: std::collections::HashSet<&str> =
+            std::collections::HashSet::new();
+        let mut has_high_value = false;
+        for route in &hotspot.intersecting_routes {
+            let items = app.wikelo_intel.items_at(&route.origin);
+            for item in &items {
+                all_wikelo_items.insert(&item.name);
+                if item.estimated_value.is_some_and(|v| v > 10_000) {
+                    has_high_value = true;
+                }
+            }
+        }
+        let wikelo_item_names: Vec<_> = all_wikelo_items.into_iter().take(3).collect();
+
+        let mut info_text = vec![
             Line::from(vec![
                 Span::styled("Zone: ", Style::default().fg(Color::Yellow)),
                 Span::raw(&hotspot.name),
@@ -458,18 +494,36 @@ fn render_hotspot_details_expanded(frame: &mut Frame, app: &App, area: Rect) {
                     hotspot.jump_to.destination, hotspot.jump_to.exit_at_mm
                 )),
             ]),
-            Line::from(""),
-            Line::from(vec![
-                Span::styled("Press ", Style::default().fg(Color::DarkGray)),
-                Span::styled(
-                    "Enter",
-                    Style::default()
-                        .fg(Color::Cyan)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::styled(" to collapse", Style::default().fg(Color::DarkGray)),
-            ]),
         ];
+
+        // Add Wikelo line if items present
+        if !wikelo_item_names.is_empty() {
+            let label = if has_high_value {
+                "★ Wikelo: "
+            } else {
+                "Wikelo: "
+            };
+            info_text.push(Line::from(vec![
+                Span::styled(label, Style::default().fg(Color::Magenta)),
+                Span::styled(
+                    wikelo_item_names.join(", "),
+                    Style::default().fg(Color::LightMagenta),
+                ),
+            ]));
+        } else {
+            info_text.push(Line::from(""));
+        }
+
+        info_text.push(Line::from(vec![
+            Span::styled("Press ", Style::default().fg(Color::DarkGray)),
+            Span::styled(
+                "Enter",
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::styled(" to collapse", Style::default().fg(Color::DarkGray)),
+        ]));
 
         let info = Paragraph::new(info_text).block(
             Block::default()
