@@ -140,6 +140,8 @@ mod tests {
             detail_expanded: false,
             detail_selected: 0,
             target_detail_expanded: false,
+            wikelo_intel: intel::WikieloIntel::from_static(),
+            wikelo_filter: false,
         }
     }
 

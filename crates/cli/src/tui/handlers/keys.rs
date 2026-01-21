@@ -50,6 +50,9 @@ impl App {
             KeyCode::Char('N') => self.increase_hotspot_limit(),
             KeyCode::Char('a') => self.toggle_all_hotspots(),
 
+            // Wikelo filter (w to toggle)
+            KeyCode::Char('w') => self.toggle_wikelo_filter(),
+
             // Filtering
             KeyCode::Char('i') => self.toggle_inbound_filter(),
             KeyCode::Char('o') => self.toggle_outbound_filter(),
@@ -130,6 +133,13 @@ impl App {
             } else {
                 self.hotspot_limit = self.hotspots.len();
             }
+        }
+    }
+
+    fn toggle_wikelo_filter(&mut self) {
+        if self.view == View::Map {
+            self.wikelo_filter = !self.wikelo_filter;
+            self.map_selected = 0;
         }
     }
 
