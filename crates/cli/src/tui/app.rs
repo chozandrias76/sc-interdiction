@@ -60,6 +60,8 @@ pub struct App {
     pub detail_expanded: bool,
     /// Selected route index in expanded detail view.
     pub detail_selected: usize,
+    /// Wikelo detail expansion in targets view.
+    pub target_detail_expanded: bool,
 }
 
 impl App {
@@ -100,6 +102,7 @@ impl App {
             scroll: ScrollState::new(),
             detail_expanded: false,
             detail_selected: 0,
+            target_detail_expanded: false,
         };
 
         // Load data

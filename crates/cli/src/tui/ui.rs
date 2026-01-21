@@ -139,6 +139,7 @@ mod tests {
             scroll: ScrollState::new(),
             detail_expanded: false,
             detail_selected: 0,
+            target_detail_expanded: false,
         }
     }
 

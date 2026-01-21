@@ -60,6 +60,9 @@ impl App {
             KeyCode::Char('s') => self.cycle_sort(),
             KeyCode::Char('S') => self.toggle_sort_direction(),
 
+            // Detail expansion
+            KeyCode::Enter => self.toggle_target_detail(),
+
             _ => {}
         }
 
@@ -185,5 +188,21 @@ impl App {
         self.sort_asc = !self.sort_asc;
         self.sort_targets();
         self.sort_routes();
+    }
+
+    fn toggle_target_detail(&mut self) {
+        if self.view != View::Targets {
+            return;
+        }
+
+        // Only toggle if selected target has wikelo_flag
+        let has_wikelo = self
+            .filtered_targets()
+            .nth(self.selected)
+            .is_some_and(|t| t.wikelo_flag.is_some());
+
+        if has_wikelo {
+            self.target_detail_expanded = !self.target_detail_expanded;
+        }
     }
 }
