@@ -344,3 +344,108 @@ fn test_wikelo_flag_has_item_details() {
         assert!(!item.name.is_empty(), "Item should have a name");
     }
 }
+
+// ===== Wikelo Scoring Tests (Phase 4 Plan 3) =====
+
+#[test]
+fn test_hot_route_wikelo_score() {
+    // Test that routes from Wikelo sources get non-zero wikelo_score
+    use std::sync::Arc;
+
+    let wikelo = Arc::new(WikieloIntel::from_static());
+
+    // Pyro I is a known Wikelo source
+    let (score, items) = calculate_wikelo_score(&Some(wikelo), "Pyro I");
+
+    assert!(
+        score.is_some(),
+        "Should have Some score when WikieloIntel is present"
+    );
+    let score_val = score.unwrap();
+    assert!(
+        score_val > 0.0,
+        "Wikelo source should have positive score, got {}",
+        score_val
+    );
+    assert!(
+        score_val <= 100.0,
+        "Score should be capped at 100, got {}",
+        score_val
+    );
+    assert!(
+        !items.is_empty(),
+        "Wikelo source should have item names populated"
+    );
+
+    // Verify score includes base points (20) for being a Wikelo source
+    assert!(
+        score_val >= 20.0,
+        "Score should include base 20 points for Wikelo source, got {}",
+        score_val
+    );
+}
+
+#[test]
+fn test_hotspot_wikelo_potential() {
+    // Test that hotspots at Wikelo sources get non-zero wikelo_potential
+    use std::sync::Arc;
+
+    let wikelo = Arc::new(WikieloIntel::from_static());
+
+    // Use calculate_wikelo_score since hotspot uses same scoring
+    let (potential, items) = calculate_wikelo_score(&Some(wikelo), "Pyro I");
+
+    assert!(
+        potential.is_some(),
+        "Should have Some potential when WikieloIntel is present"
+    );
+    let potential_val = potential.unwrap();
+    assert!(
+        potential_val > 0.0,
+        "Wikelo location should have positive potential, got {}",
+        potential_val
+    );
+    assert!(
+        !items.is_empty(),
+        "Wikelo location should have item names populated"
+    );
+}
+
+#[test]
+fn test_wikelo_score_without_integration() {
+    // Test that wikelo scoring returns None/empty when no WikieloIntel configured
+
+    // No WikieloIntel
+    let (score, items) = calculate_wikelo_score(&None, "Pyro I");
+
+    assert!(
+        score.is_none(),
+        "Score should be None when no WikieloIntel configured"
+    );
+    assert!(
+        items.is_empty(),
+        "Items should be empty when no WikieloIntel configured"
+    );
+}
+
+#[test]
+fn test_wikelo_score_non_wikelo_location() {
+    // Test that non-Wikelo locations get zero score (not None)
+    use std::sync::Arc;
+
+    let wikelo = Arc::new(WikieloIntel::from_static());
+
+    // Random location that isn't a Wikelo source
+    let (score, items) = calculate_wikelo_score(&Some(wikelo), "Random Unknown Station");
+
+    assert!(
+        score.is_some(),
+        "Should have Some score even for non-Wikelo location"
+    );
+    assert_eq!(
+        score.unwrap(),
+        0.0,
+        "Non-Wikelo location should have zero score"
+    );
+    assert!(items.is_empty(), "Non-Wikelo location should have no items");
+}
