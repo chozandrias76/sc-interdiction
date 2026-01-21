@@ -18,7 +18,7 @@ None
 - [x] **Phase 2: Item Source Research** - Research and compile item→source mappings from wiki
 - [ ] **Phase 2.1: Game Data Extraction** - INSERTED: Extract authoritative data from Data.p4k
 - [x] **Phase 3: Wikelo Data Module** - Create crate with static Wikelo item/source data
-- [ ] **Phase 4: Source Intel Integration** - Integrate source flagging into intel crate
+- [x] **Phase 4: Source Intel Integration** - Integrate source flagging into intel crate
 - [ ] **Phase 5: TUI Wikelo Views** - Add Wikelo intel display to dashboard
 - [ ] **Phase 6: Testing & Polish** - Tests, edge cases, documentation
 
@@ -76,7 +76,7 @@ Plans:
 Plans:
 - [x] 04-01: Add WikieloIntel trait/struct to intel crate
 - [x] 04-02: Integrate source location flagging into TargetAnalyzer
-- [ ] 04-03: Add Wikelo scoring to route/target calculations
+- [x] 04-03: Add Wikelo scoring to route/target calculations
 
 ### Phase 5: TUI Wikelo Views
 **Goal**: Display Wikelo intel in existing TUI dashboard views
@@ -110,6 +110,6 @@ Phases execute in numeric order: 1 → 2 → 2.1 → 3 → 4 → 5 → 6
 | 2. Item Source Research | 1/1 | Complete | 2026-01-15 |
 | 2.1. Game Data Extraction | 3/3 | Complete | 2026-01-17 |
 | 3. Wikelo Data Module | 2/2 | Complete | 2026-01-18 |
-| 4. Source Intel Integration | 2/3 | In progress | - |
+| 4. Source Intel Integration | 3/3 | Complete | 2026-01-20 |
 | 5. TUI Wikelo Views | 0/3 | Not started | - |
 | 6. Testing & Polish | 0/2 | Not started | - |
