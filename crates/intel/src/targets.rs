@@ -458,6 +458,12 @@ pub struct InterdictionHotspot {
     pub likely_ships: Vec<ShipFrequency>,
     /// Suggested interdiction approach.
     pub suggested_position: String,
+    /// Wikelo potential 0-100 for this location (None if no `WikieloIntel`).
+    ///
+    /// Higher scores indicate more Wikelo items available at this location.
+    pub wikelo_potential: Option<f64>,
+    /// Wikelo item names available at this location (empty if none or no `WikieloIntel`).
+    pub wikelo_items: Vec<String>,
 }
 
 /// Commodity with estimated value.
@@ -517,7 +523,12 @@ impl TargetAnalyzer {
         // Convert to hotspots and sort by value
         let mut hotspots: Vec<InterdictionHotspot> = location_data
             .into_values()
-            .map(|agg| agg.into_hotspot())
+            .map(|agg| {
+                // Calculate Wikelo potential for this location
+                let (wikelo_potential, wikelo_items) =
+                    calculate_wikelo_score(&self.wikelo, &agg.location);
+                agg.into_hotspot(wikelo_potential, wikelo_items)
+            })
             .collect();
 
         hotspots.sort_by(|a, b| {
@@ -626,7 +637,11 @@ impl LocationAggregator {
         entry.0 += 1;
     }
 
-    fn into_hotspot(self) -> InterdictionHotspot {
+    fn into_hotspot(
+        self,
+        wikelo_potential: Option<f64>,
+        wikelo_items: Vec<String>,
+    ) -> InterdictionHotspot {
         // Calculate average threat
         let avg_threat = if self.threat_levels.is_empty() {
             5.0
@@ -678,6 +693,8 @@ impl LocationAggregator {
             top_commodities,
             likely_ships,
             suggested_position,
+            wikelo_potential,
+            wikelo_items,
         }
     }
 }
