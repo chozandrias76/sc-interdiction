@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-01-14)
 
 ## Current Position
 
-Phase: 5 of 7 (TUI Wikelo Views)
-Plan: 3 of 3 in current phase
-Status: Phase complete
-Last activity: 2026-01-21 — Completed 05-03-PLAN.md
+Phase: 5.1 of 7 (TUI Snapshot Test Coverage)
+Plan: 1 of 4 in current phase
+Status: In progress
+Last activity: 2026-01-22 — Completed 05.1-01-PLAN.md
 
-Progress: ██████████ 100% (14 of 14 plans complete)
+Progress: ██████████░░░░░░░░░░ 50% (15 of 30 plans complete)
 
 ## Performance Metrics
 
@@ -77,16 +77,17 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-01-21
-Stopped at: Completed 05-03-PLAN.md (Phase 5 complete)
-Resume file: None (ready for /gsd:plan-phase 5.1)
+Last session: 2026-01-22
+Stopped at: Completed 05.1-01-PLAN.md
+Resume file: None (ready for 05.1-02-PLAN.md)
 
 ### Critical Context for Next Session
 
-**Phase 5 COMPLETE.** Wikelo intel fully integrated into TUI.
+**Phase 5.1 IN PROGRESS.** TUI Snapshot Test Coverage.
 
-1. **05-01:** ✓ Wikelo column and detail panel in targets view
-2. **05-02:** ✓ Map view source highlighting (magenta rings, 'w' filter, hotspot items)
-3. **05-03:** ✓ Routes view Wikelo column, hotspot Wikelo item breakdown
+1. **05.1-01:** ✓ Wikelo test fixtures and 2 snapshot tests
+2. **05.1-02:** Pending - Wikelo detail panel expanded state snapshots
+3. **05.1-03:** Pending - Key handler unit tests
+4. **05.1-04:** Pending - Map and hotspot view snapshots
 
-**Next:** Phase 5.1 (TUI Snapshot Test Coverage) or Phase 5.2 (Coverage to 80%)
+**Next:** Execute 05.1-02-PLAN.md
