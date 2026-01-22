@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-14)
 ## Current Position
 
 Phase: 5.2 of 7 (Coverage to 80%)
-Plan: 1 of 6 in current phase
+Plan: 2 of 6 in current phase
 Status: In progress
-Last activity: 2026-01-22 — Completed 05.2-01-PLAN.md
+Last activity: 2026-01-22 — Completed 05.2-02-PLAN.md
 
-Progress: ████████████░░░░░░░░ 61% (19 of 31 plans complete)
+Progress: █████████████░░░░░░░ 65% (20 of 31 plans complete)
 
 ## Performance Metrics
 
@@ -80,7 +80,7 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-22
-Stopped at: Completed 05.2-01-PLAN.md
+Stopped at: Completed 05.2-02-PLAN.md
 Resume file: None
 
 ### Critical Context for Next Session
@@ -88,7 +88,8 @@ Resume file: None
 **Phase 5.2 IN PROGRESS.** Coverage to 80%.
 
 1. **05.2-01:** ✓ route-graph spatial.rs + fuel.rs unit tests (24 tests)
+2. **05.2-02:** ✓ intel ships/registry.rs + wikelo/contracts.rs tests (19 tests)
 
-**Phase 5.2 progress:** 1/6 plans complete
+**Phase 5.2 progress:** 2/6 plans complete
 
-**Next:** Execute 05.2-02-PLAN.md (intel ships/registry.rs + wikelo/contracts.rs tests)
+**Next:** Execute 05.2-03-PLAN.md (route-graph spatial helper + intersection tests)
