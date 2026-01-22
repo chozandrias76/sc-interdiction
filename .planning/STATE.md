@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-14)
 
 **Core value:** Identify where valuable targets are and what they're likely carrying
-**Current focus:** Phase 5.1 — TUI Snapshot Test Coverage
+**Current focus:** Phase 5.2 — Coverage to 80%
 
 ## Current Position
 
-Phase: 5.1 of 7 (TUI Snapshot Test Coverage)
-Plan: 3 of 4 in current phase
-Status: In progress
-Last activity: 2026-01-22 — Completed 05.1-03-PLAN.md
+Phase: 5.2 of 7 (Coverage to 80%)
+Plan: 0 of ? in current phase (not yet planned)
+Status: Ready to plan
+Last activity: 2026-01-22 — Completed Phase 5.1 (TUI Snapshot Test Coverage)
 
-Progress: ███████████░░░░░░░░░ 57% (17 of 30 plans complete)
+Progress: ████████████░░░░░░░░ 60% (18 of 30 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 17
+- Total plans completed: 18
 - Average duration: 12 min
-- Total execution time: 3.3 hours
+- Total execution time: 3.4 hours
 
 **By Phase:**
 
@@ -33,11 +33,11 @@ Progress: ███████████░░░░░░░░░ 57% (17 o
 | 3. Wikelo Data Module | 2 | 32 min | 16 min |
 | 4. Source Intel Integration | 3 | 25 min | 8 min |
 | 5. TUI Wikelo Views | 3 | 23 min | 8 min |
-| 5.1. TUI Snapshot Tests | 3 | 16 min | 5 min |
+| 5.1. TUI Snapshot Tests | 4 | 24 min | 6 min |
 
 **Recent Trend:**
-- Last 5 plans: 12m, 6m, 5m, 5m, 6m
-- Trend: ↓ (faster)
+- Last 5 plans: 6m, 5m, 5m, 6m, 8m
+- Trend: → (stable, fast)
 
 ## Accumulated Context
 
@@ -79,16 +79,18 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-22
-Stopped at: Completed 05.1-03-PLAN.md
-Resume file: None (ready for 05.1-04-PLAN.md)
+Stopped at: Completed Phase 5.1 (all 4 plans)
+Resume file: None (ready for Phase 5.2 planning)
 
 ### Critical Context for Next Session
 
-**Phase 5.1 IN PROGRESS.** TUI Snapshot Test Coverage.
+**Phase 5.1 COMPLETE.** TUI Snapshot Test Coverage.
 
 1. **05.1-01:** ✓ Wikelo test fixtures and 2 snapshot tests
-2. **05.1-02:** ✓ Wikelo detail panel expanded state snapshots (3 tests added)
-3. **05.1-03:** ✓ Key handler unit tests (33 tests added)
-4. **05.1-04:** Pending - Map and hotspot view snapshots
+2. **05.1-02:** ✓ Wikelo detail panel expanded state snapshots (3 tests)
+3. **05.1-03:** ✓ Key handler unit tests (33 tests)
+4. **05.1-04:** ✓ Map and hotspot view snapshots (2 tests)
 
-**Next:** Execute 05.1-04-PLAN.md
+**Phase 5.1 totals:** 4 plans, ~40 tests added, 3 factory functions
+
+**Next:** Plan Phase 5.2 (Coverage to 80%) with `/gsd:plan-phase 5.2`

@@ -20,7 +20,7 @@ None
 - [x] **Phase 3: Wikelo Data Module** - Create crate with static Wikelo item/source data
 - [x] **Phase 4: Source Intel Integration** - Integrate source flagging into intel crate
 - [x] **Phase 5: TUI Wikelo Views** - Add Wikelo intel display to dashboard
-- [ ] **Phase 5.1: TUI Snapshot Test Coverage** - INSERTED: Comprehensive visual regression tests for Wikelo features
+- [x] **Phase 5.1: TUI Snapshot Test Coverage** - INSERTED: Comprehensive visual regression tests for Wikelo features
 - [ ] **Phase 5.2: Coverage to 80%** - INSERTED: Reach CI coverage threshold
 - [ ] **Phase 6: Testing & Polish** - Tests, edge cases, documentation
 
@@ -101,7 +101,7 @@ Plans:
 - [x] 05.1-01: Add test fixtures with wikelo_flag data for realistic snapshots
 - [x] 05.1-02: Add Wikelo detail panel expanded state snapshots
 - [x] 05.1-03: Add key handler unit tests for navigation and toggles
-- [ ] 05.1-04: Add map and hotspot view snapshots
+- [x] 05.1-04: Add map and hotspot view snapshots
 
 ### Phase 5.2: Coverage to 80% (INSERTED)
 **Goal**: Reach 80% code coverage threshold for CI
@@ -146,6 +146,6 @@ Phases execute in numeric order: 1 → 2 → 2.1 → 3 → 4 → 5 → 5.1 → 5
 | 3. Wikelo Data Module | 2/2 | Complete | 2026-01-18 |
 | 4. Source Intel Integration | 3/3 | Complete | 2026-01-20 |
 | 5. TUI Wikelo Views | 3/3 | Complete | 2026-01-21 |
-| 5.1. TUI Snapshot Test Coverage | 3/4 | In progress | - |
+| 5.1. TUI Snapshot Test Coverage | 4/4 | Complete | 2026-01-22 |
 | 5.2. Coverage to 80% | 0/? | Not started | - |
 | 6. Testing & Polish | 0/2 | Not started | - |
