@@ -107,21 +107,28 @@ Plans:
 **Goal**: Reach 80% code coverage threshold for CI
 **Depends on**: Phase 5.1 (TUI snapshot tests provide foundation)
 **Research**: Unlikely (standard testing)
-**Plans**: TBD (run /gsd:plan-phase 5.2 to break down)
+**Plans**: 6 plans
 
-Current coverage: 61.74%
+Current coverage: 54.30%
 Target: 80%
 
-Key gaps to address:
-- `views/map.rs`: 0% (164 lines)
-- `handlers/keys.rs`: 0% (65 lines)
-- `data/hotspots.rs`: 0% (30 lines)
-- `handlers/navigation.rs`: 0% (13 lines)
-- `handlers/sorting.rs`: 0% (19 lines)
-- `event.rs`: 0% (17 lines)
+Key gaps addressed:
+- `spatial.rs`: 27/210 → comprehensive unit tests (Plans 01, 03)
+- `fuel.rs`: 23/98 → calculation tests (Plan 01)
+- `ships/registry.rs`: 14/62 → lookup tests (Plan 02)
+- `wikelo/contracts.rs`: 0/16 → helper tests (Plan 02)
+- `ships/types.rs`: 27/47 → method tests (Plan 04)
+- `graph.rs`: 56/77 → graph operation tests (Plan 05)
+- `refinery.rs`: 25/41 → index tests (Plan 05)
+- `uex.rs`: 48/108 → mock API tests (Plan 06)
 
 Plans:
-- [ ] TBD
+- [ ] 05.2-01: route-graph spatial.rs + fuel.rs unit tests
+- [ ] 05.2-02: intel ships/registry.rs + wikelo/contracts.rs unit tests
+- [ ] 05.2-03: route-graph spatial helper + intersection tests
+- [ ] 05.2-04: intel ships/types.rs + wikelo/types.rs unit tests
+- [ ] 05.2-05: route-graph graph.rs + refinery.rs unit tests
+- [ ] 05.2-06: api-client get_trade_routes mock tests
 
 ### Phase 6: Testing & Polish
 **Goal**: Comprehensive tests, edge cases, and documentation
@@ -147,5 +154,6 @@ Phases execute in numeric order: 1 → 2 → 2.1 → 3 → 4 → 5 → 5.1 → 5
 | 4. Source Intel Integration | 3/3 | Complete | 2026-01-20 |
 | 5. TUI Wikelo Views | 3/3 | Complete | 2026-01-21 |
 | 5.1. TUI Snapshot Test Coverage | 4/4 | Complete | 2026-01-22 |
+| 5.2. Coverage to 80% | 0/6 | Planned | - |
 | 5.2. Coverage to 80% | 0/? | Not started | - |
 | 6. Testing & Polish | 0/2 | Not started | - |
