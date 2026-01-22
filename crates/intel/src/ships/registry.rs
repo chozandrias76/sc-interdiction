@@ -235,8 +235,38 @@ fn normalize_ship_name(name: &str) -> String {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::*;
+
+    /// Create a mock cargo ship for testing.
+    fn mock_cargo_ship(name: &str, cargo_scu: u32) -> CargoShip {
+        CargoShip {
+            name: name.to_string(),
+            manufacturer: "Test".to_string(),
+            cargo_scu,
+            crew_size: 1,
+            threat_level: 3,
+            ship_value_uec: 100_000,
+            requires_freight_elevator: false,
+            quantum_fuel_capacity: 2500.0,
+            hydrogen_fuel_capacity: 500.0,
+            qt_drive_size: 2,
+            role: super::super::ShipRole::Cargo,
+            mining_capacity_scu: None,
+            mass_kg: None,
+        }
+    }
+
+    /// Create a registry from test ships.
+    fn test_registry(ships: Vec<CargoShip>) -> ShipRegistry {
+        let mut by_name = HashMap::new();
+        for (idx, ship) in ships.iter().enumerate() {
+            let name_key = normalize_ship_name(&ship.name);
+            by_name.insert(name_key, idx);
+        }
+        ShipRegistry { ships, by_name }
+    }
 
     #[test]
     fn test_normalize_ship_name() {
@@ -252,5 +282,101 @@ mod tests {
         assert_eq!(registry.all_ships().len(), 1);
         assert!(registry.find_by_name("aurora").is_some());
         assert!(registry.find_by_name("Aurora CL").is_some());
+    }
+
+    #[test]
+    fn test_find_by_name_exact_match() {
+        let ships = vec![
+            mock_cargo_ship("Caterpillar", 576),
+            mock_cargo_ship("Freelancer", 66),
+        ];
+        let registry = test_registry(ships);
+
+        let found = registry.find_by_name("Caterpillar");
+        assert!(found.is_some());
+        assert_eq!(found.unwrap().name, "Caterpillar");
+        assert_eq!(found.unwrap().cargo_scu, 576);
+    }
+
+    #[test]
+    fn test_find_by_name_case_insensitive() {
+        let ships = vec![mock_cargo_ship("Caterpillar", 576)];
+        let registry = test_registry(ships);
+
+        // Lowercase
+        assert!(registry.find_by_name("caterpillar").is_some());
+        // UPPERCASE
+        assert!(registry.find_by_name("CATERPILLAR").is_some());
+        // MixedCase
+        assert!(registry.find_by_name("CaTerPillaR").is_some());
+    }
+
+    #[test]
+    fn test_find_by_name_not_found() {
+        let ships = vec![mock_cargo_ship("Caterpillar", 576)];
+        let registry = test_registry(ships);
+
+        assert!(registry.find_by_name("NonExistent Ship").is_none());
+        assert!(registry.find_by_name("").is_none());
+    }
+
+    #[test]
+    fn test_find_by_min_cargo_filters() {
+        let ships = vec![
+            mock_cargo_ship("Small", 50),
+            mock_cargo_ship("Medium", 100),
+            mock_cargo_ship("Large", 200),
+        ];
+        let registry = test_registry(ships);
+
+        let result = registry.find_by_min_cargo(100);
+        assert_eq!(result.len(), 2);
+        assert!(result.iter().all(|s| s.cargo_scu >= 100));
+    }
+
+    #[test]
+    fn test_find_by_min_cargo_empty_when_too_high() {
+        let ships = vec![mock_cargo_ship("Small", 50), mock_cargo_ship("Medium", 100)];
+        let registry = test_registry(ships);
+
+        let result = registry.find_by_min_cargo(9999);
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_smallest_for_cargo_finds_minimum() {
+        let ships = vec![
+            mock_cargo_ship("Tiny", 50),
+            mock_cargo_ship("Medium", 100),
+            mock_cargo_ship("Large", 200),
+        ];
+        let registry = test_registry(ships);
+
+        // Need 75 SCU - smallest that fits is 100 SCU
+        let result = registry.smallest_for_cargo(75);
+        assert!(result.is_some());
+        assert_eq!(result.unwrap().cargo_scu, 100);
+    }
+
+    #[test]
+    fn test_smallest_for_cargo_none_when_insufficient() {
+        let ships = vec![mock_cargo_ship("Small", 50), mock_cargo_ship("Medium", 100)];
+        let registry = test_registry(ships);
+
+        // Need 500 SCU - no ship can carry this
+        let result = registry.smallest_for_cargo(500);
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_all_ships_returns_all() {
+        let ships = vec![
+            mock_cargo_ship("Ship1", 50),
+            mock_cargo_ship("Ship2", 100),
+            mock_cargo_ship("Ship3", 200),
+        ];
+        let registry = test_registry(ships);
+
+        assert_eq!(registry.all_ships().len(), 3);
     }
 }
