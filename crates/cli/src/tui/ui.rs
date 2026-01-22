@@ -282,4 +282,17 @@ mod tests {
 
         assert_snapshot!(terminal.backend());
     }
+
+    #[test]
+    fn test_render_targets_detail_expanded_high_value() {
+        let mut app = test_app_with_wikelo();
+        app.view = View::Targets;
+        app.selected = 0; // First target has high-value Wikelo
+        app.target_detail_expanded = true;
+
+        let mut terminal = Terminal::new(TestBackend::new(100, 25)).unwrap();
+        terminal.draw(|frame| render(frame, &mut app)).unwrap();
+
+        assert_snapshot!(terminal.backend());
+    }
 }
