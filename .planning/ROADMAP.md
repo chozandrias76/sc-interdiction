@@ -99,7 +99,7 @@ Plans:
 
 Plans:
 - [x] 05.1-01: Add test fixtures with wikelo_flag data for realistic snapshots
-- [ ] 05.1-02: Add Wikelo detail panel expanded state snapshots
+- [x] 05.1-02: Add Wikelo detail panel expanded state snapshots
 - [ ] 05.1-03: Add key handler unit tests for navigation and toggles
 - [ ] 05.1-04: Add map and hotspot view snapshots
 
@@ -146,6 +146,6 @@ Phases execute in numeric order: 1 → 2 → 2.1 → 3 → 4 → 5 → 5.1 → 5
 | 3. Wikelo Data Module | 2/2 | Complete | 2026-01-18 |
 | 4. Source Intel Integration | 3/3 | Complete | 2026-01-20 |
 | 5. TUI Wikelo Views | 3/3 | Complete | 2026-01-21 |
-| 5.1. TUI Snapshot Test Coverage | 1/4 | In progress | - |
+| 5.1. TUI Snapshot Test Coverage | 2/4 | In progress | - |
 | 5.2. Coverage to 80% | 0/? | Not started | - |
 | 6. Testing & Polish | 0/2 | Not started | - |
