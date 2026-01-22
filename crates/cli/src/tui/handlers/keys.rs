@@ -292,4 +292,224 @@ mod tests {
             "wikelo_filter should remain unchanged on non-Map view"
         );
     }
+
+    // ==================== Zoom Tests ====================
+
+    #[test]
+    fn test_zoom_in_increases_zoom() {
+        let mut app = test_app();
+        app.map_zoom = 1.0;
+
+        app.zoom_in();
+
+        assert!((app.map_zoom - 1.25).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_zoom_in_caps_at_max() {
+        let mut app = test_app();
+        app.map_zoom = 3.0;
+
+        app.zoom_in();
+
+        assert!((app.map_zoom - 3.0).abs() < 0.001, "zoom should cap at 3.0");
+    }
+
+    #[test]
+    fn test_zoom_out_decreases_zoom() {
+        let mut app = test_app();
+        app.map_zoom = 1.0;
+
+        app.zoom_out();
+
+        assert!((app.map_zoom - 0.8).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_zoom_out_caps_at_min() {
+        let mut app = test_app();
+        app.map_zoom = 0.2;
+
+        app.zoom_out();
+
+        assert!((app.map_zoom - 0.2).abs() < 0.001, "zoom should cap at 0.2");
+    }
+
+    #[test]
+    fn test_reset_zoom() {
+        let mut app = test_app();
+        app.map_zoom = 2.5;
+
+        app.reset_zoom();
+
+        assert!((app.map_zoom - 1.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_zoom_only_on_map_view() {
+        let mut app = test_app();
+        app.view = View::Targets;
+        app.map_zoom = 1.0;
+
+        app.zoom_in();
+        assert!(
+            (app.map_zoom - 1.0).abs() < 0.001,
+            "zoom_in should not change zoom on non-Map view"
+        );
+
+        app.zoom_out();
+        assert!(
+            (app.map_zoom - 1.0).abs() < 0.001,
+            "zoom_out should not change zoom on non-Map view"
+        );
+
+        app.map_zoom = 2.0;
+        app.reset_zoom();
+        assert!(
+            (app.map_zoom - 2.0).abs() < 0.001,
+            "reset_zoom should not change zoom on non-Map view"
+        );
+    }
+
+    // ==================== Hotspot Limit Tests ====================
+
+    /// Create an app with mock hotspots for hotspot limit testing.
+    fn test_app_with_hotspots(count: usize) -> App {
+        use route_graph::{JumpInstruction, Point3D, RouteIntersection};
+
+        let mut app = test_app();
+        app.hotspots = (0..count)
+            .map(|i| RouteIntersection {
+                position: Point3D::new(0.0, 0.0, 0.0),
+                name: format!("Hotspot {}", i),
+                system: "Stanton".to_string(),
+                is_cross_system: false,
+                intersecting_routes: Vec::new(),
+                total_cargo_value: 1_000_000.0,
+                route_pair_count: 2,
+                avg_threat_level: 3.0,
+                interdiction_value: 500_000.0,
+                suggested_tactics: "Test".to_string(),
+                jump_to: JumpInstruction {
+                    destination: "Test".to_string(),
+                    exit_at_mm: 1000,
+                    distance_from_dest_mm: 500,
+                    lateral_offset_km: 10.0,
+                    alternatives: Vec::new(),
+                },
+            })
+            .collect();
+        app
+    }
+
+    #[test]
+    fn test_decrease_hotspot_limit() {
+        let mut app = test_app_with_hotspots(5);
+        app.hotspot_limit = 3;
+
+        app.decrease_hotspot_limit();
+
+        assert_eq!(app.hotspot_limit, 2);
+    }
+
+    #[test]
+    fn test_decrease_hotspot_limit_min() {
+        let mut app = test_app_with_hotspots(5);
+        app.hotspot_limit = 1;
+
+        app.decrease_hotspot_limit();
+
+        assert_eq!(app.hotspot_limit, 1, "hotspot_limit should not go below 1");
+    }
+
+    #[test]
+    fn test_decrease_hotspot_limit_adjusts_selection() {
+        let mut app = test_app_with_hotspots(5);
+        app.hotspot_limit = 3;
+        app.map_selected = 2; // At the edge
+
+        app.decrease_hotspot_limit();
+
+        assert_eq!(app.hotspot_limit, 2);
+        assert_eq!(
+            app.map_selected, 1,
+            "map_selected should adjust when out of bounds"
+        );
+    }
+
+    #[test]
+    fn test_increase_hotspot_limit() {
+        let mut app = test_app_with_hotspots(5);
+        app.hotspot_limit = 3;
+
+        app.increase_hotspot_limit();
+
+        assert_eq!(app.hotspot_limit, 4);
+    }
+
+    #[test]
+    fn test_increase_hotspot_limit_max() {
+        let mut app = test_app_with_hotspots(5);
+        app.hotspot_limit = 5;
+
+        app.increase_hotspot_limit();
+
+        assert_eq!(
+            app.hotspot_limit, 5,
+            "hotspot_limit should not exceed hotspots.len()"
+        );
+    }
+
+    #[test]
+    fn test_toggle_all_hotspots_to_all() {
+        let mut app = test_app_with_hotspots(5);
+        app.hotspot_limit = 2;
+
+        app.toggle_all_hotspots();
+
+        assert_eq!(
+            app.hotspot_limit, 5,
+            "toggle_all should set limit to hotspots.len()"
+        );
+    }
+
+    #[test]
+    fn test_toggle_all_hotspots_to_one() {
+        let mut app = test_app_with_hotspots(5);
+        app.hotspot_limit = 5; // Already showing all
+        app.map_selected = 3;
+
+        app.toggle_all_hotspots();
+
+        assert_eq!(
+            app.hotspot_limit, 1,
+            "toggle_all should set limit to 1 when already showing all"
+        );
+        assert_eq!(app.map_selected, 0, "map_selected should reset to 0");
+    }
+
+    #[test]
+    fn test_hotspot_limit_only_on_map_view() {
+        let mut app = test_app_with_hotspots(5);
+        app.view = View::Targets;
+        app.hotspot_limit = 3;
+
+        app.decrease_hotspot_limit();
+        assert_eq!(
+            app.hotspot_limit, 3,
+            "decrease should not work on non-Map view"
+        );
+
+        app.increase_hotspot_limit();
+        assert_eq!(
+            app.hotspot_limit, 3,
+            "increase should not work on non-Map view"
+        );
+
+        app.toggle_all_hotspots();
+        assert_eq!(
+            app.hotspot_limit, 3,
+            "toggle_all should not work on non-Map view"
+        );
+    }
 }
