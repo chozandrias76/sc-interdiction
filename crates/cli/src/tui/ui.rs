@@ -193,6 +193,47 @@ mod tests {
         app
     }
 
+    /// Create a test app with many Wikelo items to test overflow indicator.
+    fn test_app_with_many_wikelo_items() -> App {
+        let mut app = test_app();
+
+        // Target 0: Location with 8 items (only 5 shown, overflow indicator for 3 more)
+        app.targets[0].wikelo_flag = Some(SourceFlag {
+            location: "Grim HEX".to_string(),
+            item_count: 8,
+            top_items: vec![
+                WikieloItemSummary {
+                    name: "Irradiated Valakkar Fang".to_string(),
+                    category: ItemCategory::CreaturePart,
+                    estimated_value: Some(75_000),
+                },
+                WikieloItemSummary {
+                    name: "Quantanium".to_string(),
+                    category: ItemCategory::MinedMaterial,
+                    estimated_value: Some(50_000),
+                },
+                WikieloItemSummary {
+                    name: "Carinite".to_string(),
+                    category: ItemCategory::MinedMaterial,
+                    estimated_value: Some(25_000),
+                },
+                WikieloItemSummary {
+                    name: "Hadanite".to_string(),
+                    category: ItemCategory::MinedMaterial,
+                    estimated_value: Some(20_000),
+                },
+                WikieloItemSummary {
+                    name: "Council Scrip".to_string(),
+                    category: ItemCategory::MissionCurrency,
+                    estimated_value: None,
+                },
+            ],
+            has_high_value: true,
+        });
+
+        app
+    }
+
     #[test]
     fn test_render_targets_view() {
         let mut app = test_app();
@@ -304,6 +345,20 @@ mod tests {
         app.target_detail_expanded = true;
 
         let mut terminal = Terminal::new(TestBackend::new(100, 25)).unwrap();
+        terminal.draw(|frame| render(frame, &mut app)).unwrap();
+
+        assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_render_targets_detail_expanded_many_items() {
+        let mut app = test_app_with_many_wikelo_items();
+        app.view = View::Targets;
+        app.selected = 0; // First target has 8 items
+        app.target_detail_expanded = true;
+
+        // Use taller terminal (35 lines) to show all 5 items + overflow indicator
+        let mut terminal = Terminal::new(TestBackend::new(100, 35)).unwrap();
         terminal.draw(|frame| render(frame, &mut app)).unwrap();
 
         assert_snapshot!(terminal.backend());
