@@ -216,6 +216,72 @@ mod tests {
         // Zero fuel = zero range
         assert_eq!(max_range_mkm(0.0, s2_efficiency), 0.0);
     }
+
+    #[test]
+    fn test_efficiency_for_size_returns_correct_values() {
+        // S1 (Size 1) - Small ships
+        let s1 = efficiency_for_size(1).unwrap();
+        assert_eq!(s1.name, "S1 (Small)");
+        assert_eq!(s1.fuel_per_mkm, 40.0);
+
+        // S2 (Size 2) - Medium ships
+        let s2 = efficiency_for_size(2).unwrap();
+        assert_eq!(s2.name, "S2 (Medium)");
+        assert_eq!(s2.fuel_per_mkm, 80.0);
+
+        // S3 (Size 3) - Large ships
+        let s3 = efficiency_for_size(3).unwrap();
+        assert_eq!(s3.name, "S3 (Large)");
+        assert_eq!(s3.fuel_per_mkm, 160.0);
+    }
+
+    #[test]
+    fn test_efficiency_for_size_out_of_range() {
+        // Size 0 - invalid
+        assert!(efficiency_for_size(0).is_none());
+
+        // Size 4+ - invalid
+        assert!(efficiency_for_size(4).is_none());
+        assert!(efficiency_for_size(255).is_none());
+    }
+
+    #[test]
+    fn test_large_distance_calculation() {
+        let s1 = efficiency_for_size(1).unwrap();
+
+        // Very large distance (100 Mkm - cross-galaxy scale)
+        let fuel = calculate_qt_fuel_consumption(100.0, s1);
+        assert_eq!(fuel, 4000.0); // 100 * 40
+
+        // Extremely large distance
+        let huge_fuel = calculate_qt_fuel_consumption(1000.0, s1);
+        assert_eq!(huge_fuel, 40000.0);
+    }
+
+    #[test]
+    fn test_can_complete_route_boundary() {
+        let s2 = efficiency_for_size(2).unwrap();
+
+        // Exactly enough fuel (boundary condition)
+        let (can_complete, fuel_required, remaining) = can_complete_route(25.0, 2000.0, s2);
+        assert!(can_complete);
+        assert_eq!(fuel_required, 2000.0);
+        assert_eq!(remaining, 0.0);
+
+        // Slightly not enough fuel
+        let (can_complete2, fuel_required2, remaining2) = can_complete_route(25.0, 1999.9, s2);
+        assert!(!can_complete2);
+        assert_eq!(fuel_required2, 2000.0);
+        assert_eq!(remaining2, 0.0); // Clamped to 0
+    }
+
+    #[test]
+    fn test_max_range_with_zero_efficiency() {
+        // Edge case: if somehow efficiency was 0 (shouldn't happen in practice)
+        let zero_efficiency = QtDriveEfficiency::new("Zero", 0.0);
+        let range = max_range_mkm(1000.0, &zero_efficiency);
+        assert_eq!(range, 0.0); // Protected against division by zero
+    }
 }
 
 /// A fuel station/refueling location.
