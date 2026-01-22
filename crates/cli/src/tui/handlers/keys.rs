@@ -512,4 +512,266 @@ mod tests {
             "toggle_all should not work on non-Map view"
         );
     }
+
+    // ==================== Filter Tests ====================
+
+    #[test]
+    fn test_toggle_inbound_filter() {
+        let mut app = test_app();
+        app.filter_inbound = false;
+
+        app.toggle_inbound_filter();
+
+        assert!(app.filter_inbound);
+    }
+
+    #[test]
+    fn test_toggle_inbound_disables_outbound() {
+        let mut app = test_app();
+        app.filter_outbound = true;
+        app.filter_inbound = false;
+
+        app.toggle_inbound_filter();
+
+        assert!(app.filter_inbound);
+        assert!(
+            !app.filter_outbound,
+            "outbound filter should be disabled when inbound is enabled"
+        );
+    }
+
+    #[test]
+    fn test_toggle_outbound_filter() {
+        let mut app = test_app();
+        app.filter_outbound = false;
+
+        app.toggle_outbound_filter();
+
+        assert!(app.filter_outbound);
+    }
+
+    #[test]
+    fn test_toggle_outbound_disables_inbound() {
+        let mut app = test_app();
+        app.filter_inbound = true;
+        app.filter_outbound = false;
+
+        app.toggle_outbound_filter();
+
+        assert!(app.filter_outbound);
+        assert!(
+            !app.filter_inbound,
+            "inbound filter should be disabled when outbound is enabled"
+        );
+    }
+
+    #[test]
+    fn test_threat_filter_increase() {
+        let mut app = test_app();
+        app.min_threat = 0;
+
+        app.increase_threat_filter();
+
+        assert_eq!(app.min_threat, 1);
+    }
+
+    #[test]
+    fn test_threat_filter_decrease() {
+        let mut app = test_app();
+        app.min_threat = 5;
+
+        app.decrease_threat_filter();
+
+        assert_eq!(app.min_threat, 4);
+    }
+
+    #[test]
+    fn test_threat_filter_max_bound() {
+        let mut app = test_app();
+        app.min_threat = 10;
+
+        app.increase_threat_filter();
+
+        assert_eq!(app.min_threat, 10, "threat filter should cap at 10");
+    }
+
+    #[test]
+    fn test_threat_filter_min_bound() {
+        let mut app = test_app();
+        app.min_threat = 0;
+
+        app.decrease_threat_filter();
+
+        assert_eq!(app.min_threat, 0, "threat filter should not go below 0");
+    }
+
+    // ==================== Map Navigation Tests ====================
+
+    #[test]
+    fn test_handle_map_left() {
+        let mut app = test_app_with_hotspots(5);
+        app.hotspot_limit = 5;
+        app.map_selected = 2;
+
+        app.handle_map_left();
+
+        assert_eq!(app.map_selected, 1);
+    }
+
+    #[test]
+    fn test_handle_map_left_at_zero() {
+        let mut app = test_app_with_hotspots(5);
+        app.hotspot_limit = 5;
+        app.map_selected = 0;
+
+        app.handle_map_left();
+
+        assert_eq!(app.map_selected, 0, "map_selected should stay at 0");
+    }
+
+    #[test]
+    fn test_handle_map_right() {
+        let mut app = test_app_with_hotspots(5);
+        app.hotspot_limit = 5;
+        app.map_selected = 1;
+
+        app.handle_map_right();
+
+        assert_eq!(app.map_selected, 2);
+    }
+
+    #[test]
+    fn test_handle_map_right_at_max() {
+        let mut app = test_app_with_hotspots(5);
+        app.hotspot_limit = 5;
+        app.map_selected = 4; // max is 4 (len - 1)
+
+        app.handle_map_right();
+
+        assert_eq!(app.map_selected, 4, "map_selected should stay at max");
+    }
+
+    #[test]
+    fn test_map_navigation_only_on_map_view() {
+        let mut app = test_app_with_hotspots(5);
+        app.hotspot_limit = 5;
+        app.view = View::Targets;
+        app.map_selected = 2;
+
+        app.handle_map_left();
+        assert_eq!(
+            app.map_selected, 2,
+            "map_left should not work on non-Map view"
+        );
+
+        app.handle_map_right();
+        assert_eq!(
+            app.map_selected, 2,
+            "map_right should not work on non-Map view"
+        );
+    }
+
+    // ==================== Target Detail Toggle Tests ====================
+
+    /// Create an app with targets for target detail testing.
+    fn test_app_with_targets() -> App {
+        use intel::{
+            CargoShip, ItemCategory, ShipRole, SourceFlag, TargetPrediction, TrafficDirection,
+            WikieloItemSummary,
+        };
+
+        let mut app = test_app();
+        app.view = View::Targets;
+
+        let mock_ship = CargoShip {
+            name: "Hull C".to_string(),
+            manufacturer: "MISC".to_string(),
+            cargo_scu: 4608,
+            crew_size: 1,
+            threat_level: 2,
+            ship_value_uec: 3_500_000,
+            requires_freight_elevator: true,
+            quantum_fuel_capacity: 1850.0,
+            hydrogen_fuel_capacity: 40000.0,
+            qt_drive_size: 3,
+            role: ShipRole::Cargo,
+            mining_capacity_scu: None,
+            mass_kg: Some(1_200_000.0),
+        };
+
+        // Target with wikelo_flag
+        let target_with_wikelo = TargetPrediction {
+            direction: TrafficDirection::Departing,
+            commodity: "Titanium".to_string(),
+            likely_ship: mock_ship.clone(),
+            estimated_cargo_value: 1_000_000.0,
+            destination: "ArcCorp".to_string(),
+            wikelo_flag: Some(SourceFlag {
+                location: "Lyria".to_string(),
+                item_count: 3,
+                top_items: vec![WikieloItemSummary {
+                    name: "Test Item".to_string(),
+                    category: ItemCategory::CreaturePart,
+                    estimated_value: Some(5000),
+                }],
+                has_high_value: true,
+            }),
+        };
+
+        // Target without wikelo_flag
+        let target_without_wikelo = TargetPrediction {
+            direction: TrafficDirection::Arriving,
+            commodity: "Agricium".to_string(),
+            likely_ship: mock_ship,
+            estimated_cargo_value: 500_000.0,
+            destination: "Crusader".to_string(),
+            wikelo_flag: None,
+        };
+
+        app.targets = vec![target_with_wikelo, target_without_wikelo];
+        app
+    }
+
+    #[test]
+    fn test_toggle_target_detail_with_wikelo() {
+        let mut app = test_app_with_targets();
+        app.selected = 0; // First target has wikelo_flag
+        app.target_detail_expanded = false;
+
+        app.toggle_target_detail();
+
+        assert!(
+            app.target_detail_expanded,
+            "detail should expand for target with wikelo_flag"
+        );
+    }
+
+    #[test]
+    fn test_toggle_target_detail_without_wikelo() {
+        let mut app = test_app_with_targets();
+        app.selected = 1; // Second target has no wikelo_flag
+        app.target_detail_expanded = false;
+
+        app.toggle_target_detail();
+
+        assert!(
+            !app.target_detail_expanded,
+            "detail should not expand for target without wikelo_flag"
+        );
+    }
+
+    #[test]
+    fn test_toggle_target_detail_only_on_targets_view() {
+        let mut app = test_app_with_targets();
+        app.selected = 0;
+        app.target_detail_expanded = false;
+        app.view = View::Map;
+
+        app.toggle_target_detail();
+
+        assert!(
+            !app.target_detail_expanded,
+            "detail should not expand on non-Targets view"
+        );
+    }
 }
