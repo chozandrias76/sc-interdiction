@@ -216,3 +216,80 @@ impl App {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::super::super::text::ScrollState;
+    use super::super::super::types::{RouteSort, TargetSort, View};
+    use super::*;
+    use intel::WikieloIntel;
+
+    fn test_app() -> App {
+        App {
+            view: View::Map,
+            location: "Test".to_string(),
+            targets: Vec::new(),
+            routes: Vec::new(),
+            hotspots: Vec::new(),
+            map_locations: Vec::new(),
+            map_system: "Stanton".to_string(),
+            map_selected: 0,
+            map_zoom: 1.0,
+            hotspot_limit: 3,
+            selected: 0,
+            filter_inbound: false,
+            filter_outbound: false,
+            min_threat: 0,
+            target_sort: TargetSort::Value,
+            route_sort: RouteSort::Profit,
+            sort_asc: false,
+            loading: false,
+            error: None,
+            status: String::new(),
+            scroll: ScrollState::new(),
+            detail_expanded: false,
+            detail_selected: 0,
+            target_detail_expanded: false,
+            wikelo_intel: WikieloIntel::from_static(),
+            wikelo_filter: false,
+        }
+    }
+
+    // ==================== Wikelo Filter Tests ====================
+
+    #[test]
+    fn test_toggle_wikelo_filter_enables() {
+        let mut app = test_app();
+        app.wikelo_filter = false;
+        app.map_selected = 5;
+
+        app.toggle_wikelo_filter();
+
+        assert!(app.wikelo_filter);
+        assert_eq!(app.map_selected, 0, "map_selected should reset to 0");
+    }
+
+    #[test]
+    fn test_toggle_wikelo_filter_disables() {
+        let mut app = test_app();
+        app.wikelo_filter = true;
+
+        app.toggle_wikelo_filter();
+
+        assert!(!app.wikelo_filter);
+    }
+
+    #[test]
+    fn test_toggle_wikelo_filter_only_on_map_view() {
+        let mut app = test_app();
+        app.wikelo_filter = false;
+        app.view = View::Targets;
+
+        app.toggle_wikelo_filter();
+
+        assert!(
+            !app.wikelo_filter,
+            "wikelo_filter should remain unchanged on non-Map view"
+        );
+    }
+}
