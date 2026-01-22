@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-14)
 ## Current Position
 
 Phase: 5.2 of 7 (Coverage to 80%)
-Plan: 0 of ? in current phase (not yet planned)
-Status: Ready to plan
-Last activity: 2026-01-22 — Completed Phase 5.1 (TUI Snapshot Test Coverage)
+Plan: 1 of 6 in current phase
+Status: In progress
+Last activity: 2026-01-22 — Completed 05.2-01-PLAN.md
 
-Progress: ████████████░░░░░░░░ 60% (18 of 30 plans complete)
+Progress: ████████████░░░░░░░░ 61% (19 of 31 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 18
+- Total plans completed: 19
 - Average duration: 12 min
-- Total execution time: 3.4 hours
+- Total execution time: 3.5 hours
 
 **By Phase:**
 
@@ -34,9 +34,10 @@ Progress: ████████████░░░░░░░░ 60% (18 o
 | 4. Source Intel Integration | 3 | 25 min | 8 min |
 | 5. TUI Wikelo Views | 3 | 23 min | 8 min |
 | 5.1. TUI Snapshot Tests | 4 | 24 min | 6 min |
+| 5.2. Coverage to 80% | 1 | 7 min | 7 min |
 
 **Recent Trend:**
-- Last 5 plans: 6m, 5m, 5m, 6m, 8m
+- Last 5 plans: 5m, 5m, 6m, 8m, 7m
 - Trend: → (stable, fast)
 
 ## Accumulated Context
@@ -79,18 +80,15 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-22
-Stopped at: Completed Phase 5.1 (all 4 plans)
-Resume file: None (ready for Phase 5.2 planning)
+Stopped at: Completed 05.2-01-PLAN.md
+Resume file: None
 
 ### Critical Context for Next Session
 
-**Phase 5.1 COMPLETE.** TUI Snapshot Test Coverage.
+**Phase 5.2 IN PROGRESS.** Coverage to 80%.
 
-1. **05.1-01:** ✓ Wikelo test fixtures and 2 snapshot tests
-2. **05.1-02:** ✓ Wikelo detail panel expanded state snapshots (3 tests)
-3. **05.1-03:** ✓ Key handler unit tests (33 tests)
-4. **05.1-04:** ✓ Map and hotspot view snapshots (2 tests)
+1. **05.2-01:** ✓ route-graph spatial.rs + fuel.rs unit tests (24 tests)
 
-**Phase 5.1 totals:** 4 plans, ~40 tests added, 3 factory functions
+**Phase 5.2 progress:** 1/6 plans complete
 
-**Next:** Plan Phase 5.2 (Coverage to 80%) with `/gsd:plan-phase 5.2`
+**Next:** Execute 05.2-02-PLAN.md (intel ships/registry.rs + wikelo/contracts.rs tests)
