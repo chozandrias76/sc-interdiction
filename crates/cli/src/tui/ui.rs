@@ -41,6 +41,7 @@ mod tests {
     use super::super::types::{RouteSort, TargetSort, View};
     use super::*;
     use insta::assert_snapshot;
+    use intel::{ItemCategory, SourceFlag, WikieloItemSummary};
     use ratatui::{backend::TestBackend, Terminal};
 
     /// Create a test app with sample data for snapshot testing.
@@ -145,6 +146,53 @@ mod tests {
         }
     }
 
+    /// Create a test app with Wikelo data for snapshot testing Wikelo-enabled views.
+    fn test_app_with_wikelo() -> App {
+        let mut app = test_app();
+
+        // Target 0: HDMS-Bezdek with high-value Wikelo items
+        app.targets[0].wikelo_flag = Some(SourceFlag {
+            location: "HDMS-Bezdek".to_string(),
+            item_count: 3,
+            top_items: vec![
+                WikieloItemSummary {
+                    name: "Irradiated Valakkar Fang".to_string(),
+                    category: ItemCategory::CreaturePart,
+                    estimated_value: Some(75_000),
+                },
+                WikieloItemSummary {
+                    name: "Quantanium".to_string(),
+                    category: ItemCategory::MinedMaterial,
+                    estimated_value: Some(50_000),
+                },
+                WikieloItemSummary {
+                    name: "Carinite".to_string(),
+                    category: ItemCategory::MinedMaterial,
+                    estimated_value: Some(25_000),
+                },
+            ],
+            has_high_value: true,
+        });
+
+        // Target 1: Port Olisar with low-value Wikelo items
+        app.targets[1].wikelo_flag = Some(SourceFlag {
+            location: "Port Olisar".to_string(),
+            item_count: 1,
+            top_items: vec![WikieloItemSummary {
+                name: "Council Scrip".to_string(),
+                category: ItemCategory::MissionCurrency,
+                estimated_value: None,
+            }],
+            has_high_value: false,
+        });
+
+        // Route 0: Add Wikelo score and items
+        app.routes[0].wikelo_score = Some(85.0);
+        app.routes[0].wikelo_items = vec!["Quantanium".to_string(), "Carinite".to_string()];
+
+        app
+    }
+
     #[test]
     fn test_render_targets_view() {
         let mut app = test_app();
@@ -206,6 +254,28 @@ mod tests {
         let mut app = test_app();
         app.loading = true;
         app.status = "Loading data...".to_string();
+
+        let mut terminal = Terminal::new(TestBackend::new(100, 25)).unwrap();
+        terminal.draw(|frame| render(frame, &mut app)).unwrap();
+
+        assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_render_targets_with_wikelo() {
+        let mut app = test_app_with_wikelo();
+        app.view = View::Targets;
+
+        let mut terminal = Terminal::new(TestBackend::new(100, 25)).unwrap();
+        terminal.draw(|frame| render(frame, &mut app)).unwrap();
+
+        assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_render_routes_with_wikelo() {
+        let mut app = test_app_with_wikelo();
+        app.view = View::Routes;
 
         let mut terminal = Terminal::new(TestBackend::new(100, 25)).unwrap();
         terminal.draw(|frame| render(frame, &mut app)).unwrap();
