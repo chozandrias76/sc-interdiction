@@ -1491,4 +1491,278 @@ mod tests {
         assert!(point.y > 4.0 && point.y < 6.0);
         assert!(distance < 1.0);
     }
+
+    // ---- Helper function tests (Task 1) ----
+
+    /// Helper to create RouteSegment for tests
+    fn test_route_segment(
+        origin: &str,
+        dest: &str,
+        origin_sys: Option<&str>,
+        dest_sys: Option<&str>,
+    ) -> RouteSegment {
+        RouteSegment {
+            origin: Point3D::new(0.0, 0.0, 0.0),
+            destination: Point3D::new(10.0, 0.0, 0.0),
+            origin_name: origin.to_string(),
+            destination_name: dest.to_string(),
+            origin_system: origin_sys.map(String::from),
+            destination_system: dest_sys.map(String::from),
+            cargo_value: 100_000.0,
+            commodity: "Test Commodity".to_string(),
+            ship_name: "Test Ship".to_string(),
+            threat_level: 3,
+        }
+    }
+
+    // ---- extract_system_name tests ----
+
+    #[test]
+    fn test_extract_system_name_standard() {
+        let result = extract_system_name("Port Olisar (Stanton > Crusader)");
+        assert_eq!(result, Some("Stanton".to_string()));
+    }
+
+    #[test]
+    fn test_extract_system_name_no_arrow() {
+        // No > means can't extract system
+        let result = extract_system_name("Location (SystemOnly)");
+        assert_eq!(result, None);
+    }
+
+    #[test]
+    fn test_extract_system_name_empty() {
+        let result = extract_system_name("");
+        assert_eq!(result, None);
+    }
+
+    #[test]
+    fn test_extract_system_name_no_parens() {
+        let result = extract_system_name("Plain Location");
+        assert_eq!(result, None);
+    }
+
+    #[test]
+    fn test_extract_system_name_pyro() {
+        let result = extract_system_name("Ruin Station (Pyro > Pyro I)");
+        assert_eq!(result, Some("Pyro".to_string()));
+    }
+
+    // ---- extract_short_location tests ----
+
+    #[test]
+    fn test_extract_short_location_port_olisar() {
+        // Note: returns first match from known_locations array, which is "Crusader" before "Port Olisar"
+        let result =
+            extract_short_location("Commodity Shop - Admin - Port Olisar (Stanton > Crusader)");
+        assert_eq!(result, Some("Crusader"));
+
+        // Test with only Port Olisar
+        let result2 = extract_short_location("Port Olisar Station");
+        assert_eq!(result2, Some("Port Olisar"));
+    }
+
+    #[test]
+    fn test_extract_short_location_area18() {
+        // Note: returns first match from known_locations array, which is "ArcCorp" before "Area18"
+        let result = extract_short_location("TDD - Area18 (Stanton > ArcCorp)");
+        assert_eq!(result, Some("ArcCorp"));
+
+        // Test with only Area18
+        let result2 = extract_short_location("Shop at Area18");
+        assert_eq!(result2, Some("Area18"));
+    }
+
+    #[test]
+    fn test_extract_short_location_case_insensitive() {
+        // Known location "Hurston" should match "HURSTON"
+        let result = extract_short_location("Some shop at HURSTON zone");
+        assert_eq!(result, Some("Hurston"));
+    }
+
+    #[test]
+    fn test_extract_short_location_not_found() {
+        let result = extract_short_location("Unknown Location XYZ");
+        assert_eq!(result, None);
+    }
+
+    #[test]
+    fn test_extract_short_location_microtech() {
+        let result = extract_short_location("New Deal - New Babbage (Stanton > microTech)");
+        // Both "New Babbage" and "microTech" are known, returns first match
+        assert!(result == Some("microTech") || result == Some("New Babbage"));
+    }
+
+    // ---- generate_intersection_name tests ----
+
+    #[test]
+    fn test_generate_name_cross_system() {
+        let route1 = test_route_segment(
+            "Station (Stanton > Crusader)",
+            "Gateway (Pyro > Pyro I)",
+            Some("Stanton"),
+            Some("Pyro"),
+        );
+        let route2 = test_route_segment(
+            "Station (Stanton > Hurston)",
+            "Gateway (Pyro > Pyro II)",
+            Some("Stanton"),
+            Some("Pyro"),
+        );
+        let routes: Vec<&RouteSegment> = vec![&route1, &route2];
+        let name = generate_intersection_name(&routes);
+        // Should be "X Jump Gate" format when cross-system
+        assert!(
+            name.contains("Jump Gate"),
+            "Expected Jump Gate, got: {}",
+            name
+        );
+    }
+
+    #[test]
+    fn test_generate_name_two_locations() {
+        let route1 = test_route_segment(
+            "Port Olisar (Stanton > Crusader)",
+            "Lorville (Stanton > Hurston)",
+            Some("Stanton"),
+            Some("Stanton"),
+        );
+        let route2 = test_route_segment(
+            "Port Olisar (Stanton > Crusader)",
+            "Area18 (Stanton > ArcCorp)",
+            Some("Stanton"),
+            Some("Stanton"),
+        );
+        let routes: Vec<&RouteSegment> = vec![&route1, &route2];
+        let name = generate_intersection_name(&routes);
+        // Should be "Loc1-Loc2 Corridor" format
+        assert!(
+            name.contains("Corridor"),
+            "Expected Corridor, got: {}",
+            name
+        );
+    }
+
+    #[test]
+    fn test_generate_name_one_location() {
+        let route1 = test_route_segment(
+            "Port Olisar (Stanton > Crusader)",
+            "Unknown Station A",
+            Some("Stanton"),
+            Some("Stanton"),
+        );
+        let route2 = test_route_segment(
+            "Unknown Station B",
+            "Unknown Station C",
+            Some("Stanton"),
+            Some("Stanton"),
+        );
+        let routes: Vec<&RouteSegment> = vec![&route1, &route2];
+        let name = generate_intersection_name(&routes);
+        // Should be "Loc Junction" when only one known location
+        assert!(
+            name.contains("Junction") || name.contains("Corridor"),
+            "Expected Junction or Corridor, got: {}",
+            name
+        );
+    }
+
+    #[test]
+    fn test_generate_name_unknown() {
+        let route1 = test_route_segment("Unknown A", "Unknown B", Some("Stanton"), Some("Stanton"));
+        let route2 = test_route_segment("Unknown C", "Unknown D", Some("Stanton"), Some("Stanton"));
+        let routes: Vec<&RouteSegment> = vec![&route1, &route2];
+        let name = generate_intersection_name(&routes);
+        assert_eq!(name, "Deep Space Intersection");
+    }
+
+    // ---- check_if_cross_system tests ----
+
+    #[test]
+    fn test_check_cross_system_true() {
+        let route = test_route_segment(
+            "Station (Stanton > Crusader)",
+            "Gateway (Pyro > Pyro I)",
+            Some("Stanton"),
+            Some("Pyro"),
+        );
+        let routes: Vec<&RouteSegment> = vec![&route];
+        assert!(check_if_cross_system(&routes));
+    }
+
+    #[test]
+    fn test_check_cross_system_false() {
+        let route = test_route_segment(
+            "Port Olisar (Stanton > Crusader)",
+            "Lorville (Stanton > Hurston)",
+            Some("Stanton"),
+            Some("Stanton"),
+        );
+        let routes: Vec<&RouteSegment> = vec![&route];
+        assert!(!check_if_cross_system(&routes));
+    }
+
+    #[test]
+    fn test_check_cross_system_missing_system() {
+        let route = test_route_segment("Unknown Origin", "Unknown Dest", None, None);
+        let routes: Vec<&RouteSegment> = vec![&route];
+        // Without system info in names, should return false
+        assert!(!check_if_cross_system(&routes));
+    }
+
+    // ---- infer_system_from_routes tests ----
+
+    #[test]
+    fn test_infer_system_single_system() {
+        let route1 =
+            test_route_segment("Port Olisar", "Lorville", Some("Stanton"), Some("Stanton"));
+        let route2 = test_route_segment("Area18", "New Babbage", Some("Stanton"), Some("Stanton"));
+        let routes: Vec<&RouteSegment> = vec![&route1, &route2];
+        assert_eq!(infer_system_from_routes(&routes), "Stanton");
+    }
+
+    #[test]
+    fn test_infer_system_cross_system_stanton_to_pyro() {
+        let route = test_route_segment(
+            "Stanton Station",
+            "Pyro Gateway",
+            Some("Stanton"),
+            Some("Pyro"),
+        );
+        let routes: Vec<&RouteSegment> = vec![&route];
+        // Cross-system from Stanton to Pyro = hotspot is near Pyro gateway
+        assert_eq!(infer_system_from_routes(&routes), "Pyro");
+    }
+
+    #[test]
+    fn test_infer_system_cross_system_pyro_to_stanton() {
+        let route = test_route_segment(
+            "Pyro Station",
+            "Stanton Gateway",
+            Some("Pyro"),
+            Some("Stanton"),
+        );
+        let routes: Vec<&RouteSegment> = vec![&route];
+        // Cross-system from Pyro to Stanton = hotspot is near Stanton gateway
+        assert_eq!(infer_system_from_routes(&routes), "Stanton");
+    }
+
+    #[test]
+    fn test_infer_system_unknown() {
+        let route = test_route_segment("Unknown Origin", "Unknown Dest", None, None);
+        let routes: Vec<&RouteSegment> = vec![&route];
+        assert_eq!(infer_system_from_routes(&routes), "Unknown");
+    }
+
+    #[test]
+    fn test_infer_system_pyro_only() {
+        let route = test_route_segment(
+            "Ruin Station",
+            "Checkmate Station",
+            Some("Pyro"),
+            Some("Pyro"),
+        );
+        let routes: Vec<&RouteSegment> = vec![&route];
+        assert_eq!(infer_system_from_routes(&routes), "Pyro");
+    }
 }
