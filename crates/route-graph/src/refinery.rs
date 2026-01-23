@@ -234,8 +234,9 @@ mod tests {
         }
     }
 
+    // RefineryIndex tests
     #[test]
-    fn test_refinery_index_from_terminals() {
+    fn test_from_terminals_filters_refineries() {
         let terminals = vec![
             create_test_terminal(1, "Refinery Alpha", "REFA", true),
             create_test_terminal(2, "Port Olisar", "PO", false),
@@ -244,7 +245,17 @@ mod tests {
 
         let index = RefineryIndex::from_terminals(&terminals);
 
+        // Only is_refinery=true terminals should be included
         assert_eq!(index.all_refineries().len(), 2);
+    }
+
+    #[test]
+    fn test_from_terminals_empty_input() {
+        let terminals: Vec<api_client::Terminal> = vec![];
+        let index = RefineryIndex::from_terminals(&terminals);
+
+        // Empty input → empty index
+        assert_eq!(index.all_refineries().len(), 0);
     }
 
     #[test]
@@ -262,6 +273,25 @@ mod tests {
     }
 
     #[test]
+    fn test_all_refineries_returns_all() {
+        let terminals = vec![
+            create_test_terminal(1, "Refinery Alpha", "REFA", true),
+            create_test_terminal(2, "Refinery Beta", "REFB", true),
+            create_test_terminal(3, "Refinery Gamma", "REFG", true),
+        ];
+
+        let index = RefineryIndex::from_terminals(&terminals);
+        let all = index.all_refineries();
+
+        assert_eq!(all.len(), 3);
+        // Verify all refineries are accessible
+        let names: Vec<&str> = all.iter().map(|r| r.name.as_str()).collect();
+        assert!(names.contains(&"Refinery Alpha"));
+        assert!(names.contains(&"Refinery Beta"));
+        assert!(names.contains(&"Refinery Gamma"));
+    }
+
+    #[test]
     fn test_refineries_in_system() {
         let terminals = vec![create_test_terminal(1, "Stanton Refinery", "SREF", true)];
 
@@ -272,10 +302,48 @@ mod tests {
         assert_eq!(stanton_refineries[0].name, "Stanton Refinery");
     }
 
+    // Static data tests for REFINERY_METHODS
     #[test]
-    fn test_refinery_methods() {
+    fn test_refinery_methods_count() {
         assert_eq!(REFINERY_METHODS.len(), 3);
+    }
 
+    #[test]
+    fn test_refinery_methods_yield_range() {
+        // All yields should be between 0.0 and 1.0
+        for method in REFINERY_METHODS.iter() {
+            assert!(
+                method.yield_percentage >= 0.0 && method.yield_percentage <= 1.0,
+                "Yield {} for method '{}' is out of range [0.0, 1.0]",
+                method.yield_percentage,
+                method.name
+            );
+        }
+    }
+
+    #[test]
+    fn test_refinery_methods_ordered_by_time() {
+        // Verify processing_time_hours ordering: Fast < Standard < Maximum
+        let fast = &REFINERY_METHODS[1]; // Fast Track
+        let standard = &REFINERY_METHODS[0]; // Standard
+        let max = &REFINERY_METHODS[2]; // Maximum Yield
+
+        assert!(
+            fast.processing_time_hours < standard.processing_time_hours,
+            "Fast Track ({}) should be faster than Standard ({})",
+            fast.processing_time_hours,
+            standard.processing_time_hours
+        );
+        assert!(
+            standard.processing_time_hours < max.processing_time_hours,
+            "Standard ({}) should be faster than Maximum Yield ({})",
+            standard.processing_time_hours,
+            max.processing_time_hours
+        );
+    }
+
+    #[test]
+    fn test_refinery_methods_values() {
         let standard = &REFINERY_METHODS[0];
         assert_eq!(standard.name, "Standard");
         assert_eq!(standard.yield_percentage, 0.75);
@@ -368,6 +436,23 @@ mod tests {
             position: Some(Point3D::new(x, y, z)),
             methods: REFINERY_METHODS.to_vec(),
         }
+    }
+
+    #[test]
+    fn test_find_nearest_single_refinery() {
+        // Single refinery should always be returned when position is valid
+        let index = RefineryIndex {
+            refineries: vec![create_refinery_with_position("Only Refinery", 10.0, 20.0, 30.0)],
+        };
+
+        let position = Point3D::new(0.0, 0.0, 0.0);
+        let result = index.find_nearest(&position);
+
+        assert!(result.is_some());
+        let (refinery, distance) = result.unwrap();
+        assert_eq!(refinery.name, "Only Refinery");
+        // Distance should be sqrt(10^2 + 20^2 + 30^2) = sqrt(1400) ≈ 37.42
+        assert!((distance - 37.416_573_867_739_41).abs() < 0.001);
     }
 
     #[test]
