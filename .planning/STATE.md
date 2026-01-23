@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-14)
 ## Current Position
 
 Phase: 5.2 of 7 (Coverage to 80%)
-Plan: 3 of 6 in current phase
+Plan: 4 of 6 in current phase
 Status: In progress
-Last activity: 2026-01-23 — Completed 05.2-03-PLAN.md
+Last activity: 2026-01-23 — Completed 05.2-04-PLAN.md
 
-Progress: █████████████░░░░░░░ 68% (21 of 31 plans complete)
+Progress: █████████████░░░░░░░ 71% (22 of 31 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 21
-- Average duration: 12 min
-- Total execution time: 3.8 hours
+- Total plans completed: 22
+- Average duration: 11 min
+- Total execution time: 3.9 hours
 
 **By Phase:**
 
@@ -34,10 +34,10 @@ Progress: █████████████░░░░░░░ 68% (21 o
 | 4. Source Intel Integration | 3 | 25 min | 8 min |
 | 5. TUI Wikelo Views | 3 | 23 min | 8 min |
 | 5.1. TUI Snapshot Tests | 4 | 24 min | 6 min |
-| 5.2. Coverage to 80% | 3 | 22 min | 7 min |
+| 5.2. Coverage to 80% | 4 | 27 min | 7 min |
 
 **Recent Trend:**
-- Last 5 plans: 5m, 6m, 8m, 7m, 8m
+- Last 5 plans: 6m, 8m, 7m, 8m, 5m
 - Trend: → (stable, fast)
 
 ## Accumulated Context
@@ -80,7 +80,7 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-23
-Stopped at: Completed 05.2-03-PLAN.md
+Stopped at: Completed 05.2-04-PLAN.md
 Resume file: None
 
 ### Critical Context for Next Session
@@ -90,7 +90,8 @@ Resume file: None
 1. **05.2-01:** ✓ route-graph spatial.rs + fuel.rs unit tests (24 tests)
 2. **05.2-02:** ✓ intel ships/registry.rs + wikelo/contracts.rs tests (19 tests)
 3. **05.2-03:** ✓ route-graph spatial helper + intersection tests (30 tests)
+4. **05.2-04:** ✓ intel ships/types.rs + wikelo/types.rs unit tests (34 tests)
 
-**Phase 5.2 progress:** 3/6 plans complete
+**Phase 5.2 progress:** 4/6 plans complete
 
-**Next:** Execute 05.2-04-PLAN.md (intel ships/types.rs + wikelo/types.rs unit tests)
+**Next:** Execute 05.2-05-PLAN.md (route-graph graph.rs + refinery.rs unit tests)
