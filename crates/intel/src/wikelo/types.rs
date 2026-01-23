@@ -98,3 +98,140 @@ impl WikieloItem {
             .collect()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Create a test item source with specified location and reliability.
+    fn test_source(name: &str, system: &str, reliability: u8) -> ItemSource {
+        ItemSource {
+            location: SourceLocation {
+                name: name.to_string(),
+                system: system.to_string(),
+                description: None,
+            },
+            method: AcquisitionMethod::Hunting,
+            reliability,
+            notes: None,
+        }
+    }
+
+    /// Create a test WikieloItem with specified sources.
+    fn test_item(sources: Vec<ItemSource>) -> WikieloItem {
+        WikieloItem {
+            id: "test_item".to_string(),
+            name: "Test Item".to_string(),
+            category: ItemCategory::CreaturePart,
+            sources,
+            estimated_value: Some(10_000),
+            stackable: true,
+            scu_per_unit: None,
+        }
+    }
+
+    // ========== WikieloItem::primary_source tests ==========
+
+    #[test]
+    fn primary_source_returns_none_for_empty_sources() {
+        let item = test_item(vec![]);
+        assert!(item.primary_source().is_none());
+    }
+
+    #[test]
+    fn primary_source_returns_single_source() {
+        let source = test_source("Pyro I", "Pyro", 3);
+        let item = test_item(vec![source]);
+
+        let primary = item.primary_source();
+        assert!(primary.is_some());
+        assert_eq!(primary.unwrap().location.name, "Pyro I");
+    }
+
+    #[test]
+    fn primary_source_returns_highest_reliability() {
+        let low = test_source("Low Spawn", "Stanton", 1);
+        let high = test_source("High Spawn", "Pyro", 5);
+        let medium = test_source("Medium Spawn", "Nyx", 3);
+
+        let item = test_item(vec![low, high, medium]);
+
+        let primary = item.primary_source();
+        assert!(primary.is_some());
+        assert_eq!(primary.unwrap().location.name, "High Spawn");
+        assert_eq!(primary.unwrap().reliability, 5);
+    }
+
+    #[test]
+    fn primary_source_with_equal_reliability_returns_one() {
+        let source1 = test_source("Location A", "Stanton", 3);
+        let source2 = test_source("Location B", "Pyro", 3);
+
+        let item = test_item(vec![source1, source2]);
+
+        // Should return one of them (max_by_key is stable but we just verify it returns something)
+        let primary = item.primary_source();
+        assert!(primary.is_some());
+        assert_eq!(primary.unwrap().reliability, 3);
+    }
+
+    // ========== WikieloItem::source_systems tests ==========
+
+    #[test]
+    fn source_systems_returns_empty_for_no_sources() {
+        let item = test_item(vec![]);
+        assert!(item.source_systems().is_empty());
+    }
+
+    #[test]
+    fn source_systems_returns_single_system() {
+        let source = test_source("Location", "Pyro", 3);
+        let item = test_item(vec![source]);
+
+        let systems = item.source_systems();
+        assert_eq!(systems.len(), 1);
+        assert!(systems.contains(&"Pyro"));
+    }
+
+    #[test]
+    fn source_systems_deduplicates_same_system() {
+        let source1 = test_source("Location A", "Pyro", 3);
+        let source2 = test_source("Location B", "Pyro", 4);
+        let source3 = test_source("Location C", "Pyro", 2);
+
+        let item = test_item(vec![source1, source2, source3]);
+
+        let systems = item.source_systems();
+        assert_eq!(systems.len(), 1);
+        assert!(systems.contains(&"Pyro"));
+    }
+
+    #[test]
+    fn source_systems_returns_multiple_unique_systems() {
+        let stanton = test_source("Crusader", "Stanton", 2);
+        let pyro = test_source("Pyro I", "Pyro", 4);
+        let nyx = test_source("Levski", "Nyx", 3);
+
+        let item = test_item(vec![stanton, pyro, nyx]);
+
+        let systems = item.source_systems();
+        assert_eq!(systems.len(), 3);
+        assert!(systems.contains(&"Stanton"));
+        assert!(systems.contains(&"Pyro"));
+        assert!(systems.contains(&"Nyx"));
+    }
+
+    #[test]
+    fn source_systems_mixed_unique_and_duplicate() {
+        let stanton1 = test_source("ArcCorp", "Stanton", 2);
+        let stanton2 = test_source("Crusader", "Stanton", 3);
+        let pyro = test_source("Pyro I", "Pyro", 4);
+
+        let item = test_item(vec![stanton1, stanton2, pyro]);
+
+        let systems = item.source_systems();
+        assert_eq!(systems.len(), 2);
+        assert!(systems.contains(&"Stanton"));
+        assert!(systems.contains(&"Pyro"));
+    }
+}
