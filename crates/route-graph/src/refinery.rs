@@ -442,7 +442,12 @@ mod tests {
     fn test_find_nearest_single_refinery() {
         // Single refinery should always be returned when position is valid
         let index = RefineryIndex {
-            refineries: vec![create_refinery_with_position("Only Refinery", 10.0, 20.0, 30.0)],
+            refineries: vec![create_refinery_with_position(
+                "Only Refinery",
+                10.0,
+                20.0,
+                30.0,
+            )],
         };
 
         let position = Point3D::new(0.0, 0.0, 0.0);
