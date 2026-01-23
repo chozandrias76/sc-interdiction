@@ -1765,4 +1765,270 @@ mod tests {
         let routes: Vec<&RouteSegment> = vec![&route];
         assert_eq!(infer_system_from_routes(&routes), "Pyro");
     }
+
+    // ---- find_route_intersections tests (Task 2) ----
+
+    /// Create a route segment with specific 3D coordinates for intersection testing
+    fn route_with_coords(
+        origin: Point3D,
+        dest: Point3D,
+        cargo_value: f64,
+        threat_level: u8,
+    ) -> RouteSegment {
+        RouteSegment {
+            origin,
+            destination: dest,
+            origin_name: "Origin Station".to_string(),
+            destination_name: "Destination Station".to_string(),
+            origin_system: Some("Stanton".to_string()),
+            destination_system: Some("Stanton".to_string()),
+            cargo_value,
+            commodity: "Gold".to_string(),
+            ship_name: "Caterpillar".to_string(),
+            threat_level,
+        }
+    }
+
+    /// Returns two routes that cross at approximately (5, 5, 0)
+    fn crossing_routes_pair() -> (RouteSegment, RouteSegment) {
+        // Route 1: (0,0,0) → (10,10,0) - diagonal going up-right
+        let route1 = route_with_coords(
+            Point3D::new(0.0, 0.0, 0.0),
+            Point3D::new(10.0, 10.0, 0.0),
+            100_000.0,
+            3,
+        );
+        // Route 2: (0,10,0) → (10,0,0) - diagonal going down-right
+        let route2 = route_with_coords(
+            Point3D::new(0.0, 10.0, 0.0),
+            Point3D::new(10.0, 0.0, 0.0),
+            150_000.0,
+            4,
+        );
+        (route1, route2)
+    }
+
+    #[test]
+    fn test_find_intersections_two_crossing_routes() {
+        let (route1, route2) = crossing_routes_pair();
+        let routes = vec![route1, route2];
+
+        // Use a large proximity threshold (1.0 Mkm) to ensure we find the intersection
+        let intersections = find_route_intersections(&routes, 1.0, 2);
+
+        assert_eq!(intersections.len(), 1, "Should find exactly 1 intersection");
+        assert_eq!(intersections[0].route_pair_count, 2);
+    }
+
+    #[test]
+    fn test_find_intersections_parallel_routes() {
+        // Two parallel routes that never get close
+        let route1 = route_with_coords(
+            Point3D::new(0.0, 0.0, 0.0),
+            Point3D::new(100.0, 0.0, 0.0),
+            100_000.0,
+            3,
+        );
+        let route2 = route_with_coords(
+            Point3D::new(0.0, 50.0, 0.0), // 50 units away in Y
+            Point3D::new(100.0, 50.0, 0.0),
+            100_000.0,
+            3,
+        );
+        let routes = vec![route1, route2];
+
+        // Proximity threshold of 10 - too small for routes 50 units apart
+        let intersections = find_route_intersections(&routes, 10.0, 2);
+
+        assert!(
+            intersections.is_empty(),
+            "Parallel routes should have no intersections"
+        );
+    }
+
+    #[test]
+    fn test_find_intersections_min_routes_filter() {
+        let (route1, route2) = crossing_routes_pair();
+        let routes = vec![route1, route2];
+
+        // Require 3 routes minimum, but only have 2
+        let intersections = find_route_intersections(&routes, 1.0, 3);
+
+        assert!(
+            intersections.is_empty(),
+            "Should be empty when min_routes > actual routes"
+        );
+    }
+
+    #[test]
+    fn test_find_intersections_proximity_threshold() {
+        let (route1, route2) = crossing_routes_pair();
+        let routes = vec![route1, route2];
+
+        // Very tiny threshold - routes may still intersect if they cross exactly
+        let _intersections_tiny = find_route_intersections(&routes, 0.0001, 2);
+
+        // Normal threshold - should definitely find the crossing
+        let intersections_normal = find_route_intersections(&routes, 0.5, 2);
+        assert_eq!(
+            intersections_normal.len(),
+            1,
+            "Should find intersection with reasonable threshold"
+        );
+
+        // Very large threshold - should still find exactly 1 zone
+        let intersections_large = find_route_intersections(&routes, 100.0, 2);
+        assert_eq!(
+            intersections_large.len(),
+            1,
+            "Large threshold should still find 1 zone (not create extras)"
+        );
+    }
+
+    #[test]
+    fn test_find_intersections_multiple_zones() {
+        // Create 4 routes that form 2 distinct crossing zones
+
+        // Zone 1: Two routes crossing near (5, 5, 0)
+        let route1a = route_with_coords(
+            Point3D::new(0.0, 0.0, 0.0),
+            Point3D::new(10.0, 10.0, 0.0),
+            100_000.0,
+            3,
+        );
+        let route1b = route_with_coords(
+            Point3D::new(0.0, 10.0, 0.0),
+            Point3D::new(10.0, 0.0, 0.0),
+            150_000.0,
+            4,
+        );
+
+        // Zone 2: Two routes crossing near (100, 100, 0) - far from Zone 1
+        let route2a = route_with_coords(
+            Point3D::new(95.0, 95.0, 0.0),
+            Point3D::new(105.0, 105.0, 0.0),
+            200_000.0,
+            2,
+        );
+        let route2b = route_with_coords(
+            Point3D::new(95.0, 105.0, 0.0),
+            Point3D::new(105.0, 95.0, 0.0),
+            250_000.0,
+            5,
+        );
+
+        let routes = vec![route1a, route1b, route2a, route2b];
+
+        // Use threshold that catches each crossing zone but doesn't merge them
+        let intersections = find_route_intersections(&routes, 5.0, 2);
+
+        assert_eq!(
+            intersections.len(),
+            2,
+            "Should find 2 distinct intersection zones"
+        );
+    }
+
+    #[test]
+    fn test_find_intersections_empty_input() {
+        let routes: Vec<RouteSegment> = vec![];
+        let intersections = find_route_intersections(&routes, 1.0, 2);
+
+        assert!(intersections.is_empty(), "Empty input should return empty");
+    }
+
+    #[test]
+    fn test_intersection_has_correct_fields() {
+        let (route1, route2) = crossing_routes_pair();
+        let routes = vec![route1, route2];
+
+        let intersections = find_route_intersections(&routes, 1.0, 2);
+        assert_eq!(intersections.len(), 1);
+
+        let intersection = &intersections[0];
+
+        // Verify key fields are populated
+        assert!(!intersection.name.is_empty(), "Name should be populated");
+        assert!(
+            !intersection.system.is_empty(),
+            "System should be populated"
+        );
+        assert_eq!(intersection.route_pair_count, 2);
+        assert_eq!(intersection.intersecting_routes.len(), 2);
+
+        // Verify cargo values are summed
+        // route1 = 100_000, route2 = 150_000
+        assert!(
+            (intersection.total_cargo_value - 250_000.0).abs() < 0.01,
+            "Total cargo should be sum of all route cargos"
+        );
+
+        // Verify average threat is calculated
+        // route1 threat = 3, route2 threat = 4, avg = 3.5
+        assert!(
+            (intersection.avg_threat_level - 3.5).abs() < 0.01,
+            "Average threat should be 3.5"
+        );
+
+        // Verify interdiction value is positive
+        assert!(
+            intersection.interdiction_value > 0.0,
+            "Interdiction value should be positive"
+        );
+
+        // Verify suggested tactics is not empty
+        assert!(
+            !intersection.suggested_tactics.is_empty(),
+            "Tactics should be suggested"
+        );
+    }
+
+    #[test]
+    fn test_intersection_sorted_by_interdiction_value() {
+        // Create zones with different interdiction values
+        // Interdiction value = cargo_value / threat_level
+
+        // Zone 1: High value, low threat = HIGH interdiction value
+        // cargo 200k, threat 2 → 100k per catch
+        let route1a = route_with_coords(
+            Point3D::new(0.0, 0.0, 0.0),
+            Point3D::new(10.0, 10.0, 0.0),
+            200_000.0,
+            2,
+        );
+        let route1b = route_with_coords(
+            Point3D::new(0.0, 10.0, 0.0),
+            Point3D::new(10.0, 0.0, 0.0),
+            200_000.0,
+            2,
+        );
+
+        // Zone 2: Low value, high threat = LOW interdiction value
+        // cargo 100k, threat 10 → 10k per catch
+        let route2a = route_with_coords(
+            Point3D::new(100.0, 100.0, 0.0),
+            Point3D::new(110.0, 110.0, 0.0),
+            100_000.0,
+            10,
+        );
+        let route2b = route_with_coords(
+            Point3D::new(100.0, 110.0, 0.0),
+            Point3D::new(110.0, 100.0, 0.0),
+            100_000.0,
+            10,
+        );
+
+        let routes = vec![route1a, route1b, route2a, route2b];
+        let intersections = find_route_intersections(&routes, 5.0, 2);
+
+        assert_eq!(intersections.len(), 2);
+
+        // First intersection should have higher interdiction value
+        assert!(
+            intersections[0].interdiction_value > intersections[1].interdiction_value,
+            "Results should be sorted by interdiction value descending: {} > {}",
+            intersections[0].interdiction_value,
+            intersections[1].interdiction_value
+        );
+    }
 }
