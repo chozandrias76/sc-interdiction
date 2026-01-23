@@ -125,7 +125,7 @@ Key gaps addressed:
 Plans:
 - [x] 05.2-01: route-graph spatial.rs + fuel.rs unit tests
 - [x] 05.2-02: intel ships/registry.rs + wikelo/contracts.rs unit tests
-- [ ] 05.2-03: route-graph spatial helper + intersection tests
+- [x] 05.2-03: route-graph spatial helper + intersection tests
 - [ ] 05.2-04: intel ships/types.rs + wikelo/types.rs unit tests
 - [ ] 05.2-05: route-graph graph.rs + refinery.rs unit tests
 - [ ] 05.2-06: api-client get_trade_routes mock tests
@@ -154,5 +154,5 @@ Phases execute in numeric order: 1 → 2 → 2.1 → 3 → 4 → 5 → 5.1 → 5
 | 4. Source Intel Integration | 3/3 | Complete | 2026-01-20 |
 | 5. TUI Wikelo Views | 3/3 | Complete | 2026-01-21 |
 | 5.1. TUI Snapshot Test Coverage | 4/4 | Complete | 2026-01-22 |
-| 5.2. Coverage to 80% | 2/6 | In progress | - |
+| 5.2. Coverage to 80% | 3/6 | In progress | - |
 | 6. Testing & Polish | 0/2 | Not started | - |
