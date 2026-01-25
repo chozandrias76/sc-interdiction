@@ -515,4 +515,177 @@ mod tests {
         assert!(result.is_some());
         assert_eq!(result.unwrap().0.name, "Near Start");
     }
+
+    #[test]
+    fn test_from_terminals_uses_nickname_fallback() {
+        let terminal = api_client::Terminal {
+            id: 1,
+            name: None,
+            nickname: Some("Nickname Refinery".to_string()),
+            code: Some("REF".to_string()),
+            terminal_type: None,
+            star_system_name: Some("Stanton".to_string()),
+            planet_name: None,
+            moon_name: None,
+            space_station_name: None,
+            outpost_name: None,
+            city_name: None,
+            has_freight_elevator: false,
+            has_loading_dock: false,
+            has_docking_port: false,
+            is_refuel: false,
+            is_refinery: true,
+        };
+
+        let index = RefineryIndex::from_terminals(&[terminal]);
+        assert_eq!(index.all_refineries()[0].name, "Nickname Refinery");
+    }
+
+    #[test]
+    fn test_from_terminals_uses_id_fallback() {
+        let terminal = api_client::Terminal {
+            id: 42,
+            name: None,
+            nickname: None,
+            code: Some("REF".to_string()),
+            terminal_type: None,
+            star_system_name: Some("Stanton".to_string()),
+            planet_name: None,
+            moon_name: None,
+            space_station_name: None,
+            outpost_name: None,
+            city_name: None,
+            has_freight_elevator: false,
+            has_loading_dock: false,
+            has_docking_port: false,
+            is_refuel: false,
+            is_refinery: true,
+        };
+
+        let index = RefineryIndex::from_terminals(&[terminal]);
+        assert_eq!(index.all_refineries()[0].name, "Refinery 42");
+    }
+
+    #[test]
+    fn test_refineries_in_system_case_insensitive() {
+        let terminals = vec![create_test_terminal(1, "Test Refinery", "REF", true)];
+        let index = RefineryIndex::from_terminals(&terminals);
+
+        assert_eq!(index.refineries_in_system("STANTON").len(), 1);
+        assert_eq!(index.refineries_in_system("stanton").len(), 1);
+        assert_eq!(index.refineries_in_system("StAnToN").len(), 1);
+    }
+
+    #[test]
+    fn test_refineries_in_system_no_match() {
+        let terminals = vec![create_test_terminal(1, "Test Refinery", "REF", true)];
+        let index = RefineryIndex::from_terminals(&terminals);
+
+        assert_eq!(index.refineries_in_system("Pyro").len(), 0);
+        assert_eq!(index.refineries_in_system("Unknown").len(), 0);
+    }
+
+    #[test]
+    fn test_find_nearest_multiple_refineries() {
+        let index = RefineryIndex {
+            refineries: vec![
+                create_refinery_with_position("Far", 100.0, 0.0, 0.0),
+                create_refinery_with_position("Close", 5.0, 0.0, 0.0),
+                create_refinery_with_position("Medium", 50.0, 0.0, 0.0),
+            ],
+        };
+
+        let position = Point3D::new(0.0, 0.0, 0.0);
+        let result = index.find_nearest(&position);
+
+        assert!(result.is_some());
+        let (refinery, distance) = result.unwrap();
+        assert_eq!(refinery.name, "Close");
+        assert!((distance - 5.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_find_nearest_empty_index() {
+        let index = RefineryIndex { refineries: vec![] };
+        let position = Point3D::new(0.0, 0.0, 0.0);
+
+        assert!(index.find_nearest(&position).is_none());
+    }
+
+    #[test]
+    fn test_find_nearest_no_positions() {
+        let refinery = Refinery {
+            name: "No Position".to_string(),
+            code: None,
+            system: Some("Stanton".to_string()),
+            position: None,
+            methods: REFINERY_METHODS.to_vec(),
+        };
+
+        let index = RefineryIndex {
+            refineries: vec![refinery],
+        };
+        let position = Point3D::new(0.0, 0.0, 0.0);
+
+        assert!(index.find_nearest(&position).is_none());
+    }
+
+    #[test]
+    fn test_find_nearest_on_route_empty_index() {
+        let index = RefineryIndex { refineries: vec![] };
+
+        let start = Point3D::new(0.0, 0.0, 0.0);
+        let end = Point3D::new(10.0, 0.0, 0.0);
+
+        assert!(index.find_nearest_on_route(&start, &end, 100.0).is_none());
+    }
+
+    #[test]
+    fn test_refinery_struct_debug() {
+        let refinery = create_refinery_with_position("Debug Test", 1.0, 2.0, 3.0);
+        let debug_str = format!("{:?}", refinery);
+
+        assert!(debug_str.contains("Debug Test"));
+        assert!(debug_str.contains("Refinery"));
+    }
+
+    #[test]
+    fn test_refinery_index_debug() {
+        let index = RefineryIndex {
+            refineries: vec![create_refinery_with_position("Test", 0.0, 0.0, 0.0)],
+        };
+        let debug_str = format!("{:?}", index);
+
+        assert!(debug_str.contains("RefineryIndex"));
+    }
+
+    #[test]
+    fn test_refinery_method_struct_debug() {
+        let method = &REFINERY_METHODS[0];
+        let debug_str = format!("{:?}", method);
+
+        assert!(debug_str.contains("Standard"));
+        assert!(debug_str.contains("RefineryMethod"));
+    }
+
+    #[test]
+    fn test_refinery_clone() {
+        let refinery = create_refinery_with_position("Clone Test", 5.0, 10.0, 15.0);
+        let cloned = refinery.clone();
+
+        assert_eq!(cloned.name, "Clone Test");
+        assert_eq!(cloned.system, Some("Stanton".to_string()));
+        assert!(cloned.position.is_some());
+    }
+
+    #[test]
+    fn test_refinery_index_clone() {
+        let index = RefineryIndex {
+            refineries: vec![create_refinery_with_position("Original", 0.0, 0.0, 0.0)],
+        };
+        let cloned = index.clone();
+
+        assert_eq!(cloned.all_refineries().len(), 1);
+        assert_eq!(cloned.all_refineries()[0].name, "Original");
+    }
 }

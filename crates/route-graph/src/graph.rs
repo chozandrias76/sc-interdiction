@@ -684,4 +684,81 @@ mod tests {
         // Travel time should be (6000000 / 60000) + 10 = 110 seconds
         assert!((edges[0].1.travel_time - 110.0).abs() < 0.01);
     }
+
+    #[test]
+    fn test_default_impl() {
+        let graph = RouteGraph::default();
+        assert_eq!(graph.node_count(), 0);
+        assert_eq!(graph.edge_count(), 0);
+    }
+
+    #[test]
+    fn test_node_degree_not_found() {
+        let graph = RouteGraph::new();
+        assert_eq!(graph.node_degree("INVALID"), 0);
+    }
+
+    #[test]
+    fn test_node_type_orbital_marker_fallback() {
+        // Unknown types should fall back to OrbitalMarker
+        assert_eq!(NodeType::parse("SETTLEMENT"), NodeType::OrbitalMarker);
+        assert_eq!(NodeType::parse("RANDOM"), NodeType::OrbitalMarker);
+    }
+
+    #[test]
+    fn test_node_debug() {
+        let mut graph = RouteGraph::new();
+        let terminal = create_test_terminal(1, "Port Olisar", "PO", "STATION", "Stanton", true);
+        graph.add_terminal(&terminal);
+
+        let node = graph.get_node("PO").unwrap();
+        let debug_str = format!("{:?}", node);
+        assert!(debug_str.contains("Port Olisar"));
+    }
+
+    #[test]
+    fn test_edge_debug() {
+        let edge = Edge {
+            distance: 1000.0,
+            travel_time: 20.0,
+            has_obstruction: false,
+        };
+        let debug_str = format!("{:?}", edge);
+        assert!(debug_str.contains("1000"));
+    }
+
+    #[test]
+    fn test_graph_error_display() {
+        let err = GraphError::NodeNotFound("TEST".to_string());
+        let display = format!("{}", err);
+        assert!(display.contains("TEST"));
+
+        let err2 = GraphError::NoPath {
+            from: "A".to_string(),
+            to: "B".to_string(),
+        };
+        let display2 = format!("{}", err2);
+        assert!(display2.contains("A"));
+        assert!(display2.contains("B"));
+    }
+
+    #[test]
+    fn test_find_path_invalid_from() {
+        let mut graph = RouteGraph::new();
+        let terminal = create_test_terminal(1, "Port Olisar", "PO", "STATION", "Stanton", true);
+        graph.add_terminal(&terminal);
+
+        let result = graph.find_path("INVALID", "PO");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_find_path_invalid_to() {
+        let mut graph = RouteGraph::new();
+        let terminal = create_test_terminal(1, "Port Olisar", "PO", "STATION", "Stanton", true);
+        graph.add_terminal(&terminal);
+
+        let result = graph.find_path("PO", "INVALID");
+        assert!(result.is_err());
+    }
 }

@@ -309,4 +309,69 @@ mod tests {
         assert_eq!(position.distance_km, 50.0);
         assert_eq!(position.direction, "Near OM marker");
     }
+
+    #[test]
+    fn test_suggest_interdict_position_landing_zone() {
+        let node = Node {
+            id: "5".to_string(),
+            name: "Lorville".to_string(),
+            node_type: NodeType::LandingZone,
+            system: "Stanton".to_string(),
+            parent_body: "Hurston".to_string(),
+            coords: None,
+            is_fuel_station: false,
+        };
+
+        let position = suggest_interdict_position(&node);
+
+        assert_eq!(position.distance_km, 200.0);
+        assert_eq!(position.direction, "Main approach corridor");
+    }
+
+    #[test]
+    fn test_chokepoint_debug() {
+        let graph = create_test_graph();
+        let trade_routes = vec![("PO".to_string(), "A18".to_string(), 100.0)];
+        let chokepoints = find_chokepoints(&graph, &trade_routes);
+
+        let debug_str = format!("{:?}", chokepoints[0]);
+        assert!(debug_str.contains("Chokepoint"));
+    }
+
+    #[test]
+    fn test_route_pair_debug() {
+        let route = RoutePair {
+            origin: "A".to_string(),
+            destination: "B".to_string(),
+            profit_per_scu: 50.0,
+        };
+
+        let debug_str = format!("{:?}", route);
+        assert!(debug_str.contains("RoutePair"));
+    }
+
+    #[test]
+    fn test_interdict_position_debug() {
+        let pos = InterdictPosition {
+            description: "Test position".to_string(),
+            distance_km: 100.0,
+            direction: "North".to_string(),
+        };
+
+        let debug_str = format!("{:?}", pos);
+        assert!(debug_str.contains("InterdictPosition"));
+    }
+
+    #[test]
+    fn test_find_chokepoints_unknown_node() {
+        let graph = create_test_graph();
+        // Route with a node code that doesn't exist in the graph
+        let trade_routes = vec![("UNKNOWN".to_string(), "A18".to_string(), 100.0)];
+
+        let chokepoints = find_chokepoints(&graph, &trade_routes);
+
+        // Should only include A18 (UNKNOWN is filtered out)
+        assert_eq!(chokepoints.len(), 1);
+        assert_eq!(chokepoints[0].node.id, "2"); // A18's id
+    }
 }

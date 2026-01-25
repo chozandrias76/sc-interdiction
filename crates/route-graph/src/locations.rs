@@ -485,6 +485,19 @@ mod tests {
     }
 
     #[test]
+    fn test_estimate_position_unknown() {
+        assert!(estimate_position("Unknown Location XYZ").is_none());
+        assert!(estimate_position("").is_none());
+    }
+
+    #[test]
+    fn test_estimate_position_partial_match() {
+        // Should match "hurston" via partial match
+        let pos = estimate_position("Terminal at Hurston");
+        assert!(pos.is_some());
+    }
+
+    #[test]
     fn test_distance_calculation() {
         // Hurston to Crusader distance check
         let dist = distance_between("Hurston", "Crusader");
@@ -492,5 +505,110 @@ mod tests {
         // Just verify it returns a reasonable positive distance
         let d = dist.unwrap();
         assert!(d > 0.0, "Distance should be positive, got {}", d);
+    }
+
+    #[test]
+    fn test_distance_unknown_origin() {
+        let dist = distance_between("Unknown123", "Crusader");
+        assert!(dist.is_none());
+    }
+
+    #[test]
+    fn test_distance_unknown_destination() {
+        let dist = distance_between("Hurston", "Unknown456");
+        assert!(dist.is_none());
+    }
+
+    #[test]
+    fn test_locations_in_system_stanton() {
+        let stanton_locs = locations_in_system("Stanton");
+        assert!(!stanton_locs.is_empty());
+
+        // Should contain major Stanton locations
+        let names: Vec<&str> = stanton_locs.iter().map(|l| l.name).collect();
+        assert!(names.contains(&"hurston"));
+        assert!(names.contains(&"crusader"));
+        assert!(names.contains(&"arccorp"));
+        assert!(names.contains(&"microtech"));
+    }
+
+    #[test]
+    fn test_locations_in_system_pyro() {
+        let pyro_locs = locations_in_system("Pyro");
+        assert!(!pyro_locs.is_empty());
+
+        let names: Vec<&str> = pyro_locs.iter().map(|l| l.name).collect();
+        assert!(names.contains(&"pyro i"));
+        assert!(names.contains(&"ruin station"));
+    }
+
+    #[test]
+    fn test_locations_in_system_case_insensitive() {
+        let lower = locations_in_system("stanton");
+        let upper = locations_in_system("STANTON");
+        let mixed = locations_in_system("Stanton");
+
+        assert_eq!(lower.len(), upper.len());
+        assert_eq!(lower.len(), mixed.len());
+    }
+
+    #[test]
+    fn test_locations_in_system_unknown() {
+        let unknown = locations_in_system("UnknownSystem");
+        assert!(unknown.is_empty());
+    }
+
+    #[test]
+    fn test_orbital_pos_angles() {
+        // Test that orbital_pos produces positions at correct angles
+        let pos_0 = orbital_pos(10.0, 0.0);
+        assert!((pos_0.x - 10.0).abs() < 0.001);
+        assert!(pos_0.y.abs() < 0.001);
+
+        let pos_90 = orbital_pos(10.0, 90.0);
+        assert!(pos_90.x.abs() < 0.001);
+        assert!((pos_90.y - 10.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_moon_pos_offset() {
+        let parent = Point3D::new(10.0, 0.0, 0.0);
+        let moon = moon_pos(parent, 5.0, 0.0);
+
+        // Moon at 0 degrees should be offset along x-axis
+        assert!((moon.x - 15.0).abs() < 0.001);
+        assert!(moon.y.abs() < 0.001);
+    }
+
+    #[test]
+    fn test_location_position_fields() {
+        let loc = LOCATION_POSITIONS.get("hurston").unwrap();
+        assert_eq!(loc.name, "hurston");
+        assert_eq!(loc.system, "Stanton");
+        assert!(loc.parent.is_none());
+    }
+
+    #[test]
+    fn test_location_position_with_parent() {
+        let loc = LOCATION_POSITIONS.get("lorville").unwrap();
+        assert_eq!(loc.name, "lorville");
+        assert_eq!(loc.system, "Stanton");
+        assert_eq!(loc.parent, Some("Hurston"));
+    }
+
+    #[test]
+    fn test_lagrange_points_exist() {
+        assert!(LOCATION_POSITIONS.get("hur-l1").is_some());
+        assert!(LOCATION_POSITIONS.get("hur-l2").is_some());
+        assert!(LOCATION_POSITIONS.get("cru-l1").is_some());
+        assert!(LOCATION_POSITIONS.get("arc-l1").is_some());
+        assert!(LOCATION_POSITIONS.get("mic-l1").is_some());
+    }
+
+    #[test]
+    fn test_mining_locations_exist() {
+        assert!(LOCATION_POSITIONS.get("aaron halo").is_some());
+        assert!(LOCATION_POSITIONS.get("yela asteroid belt").is_some());
+        assert!(LOCATION_POSITIONS.get("ama045").is_some());
     }
 }

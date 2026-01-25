@@ -560,4 +560,45 @@ mod tests {
         assert_eq!(source.location.system, "Stanton");
         assert_eq!(source.reliability, 5);
     }
+
+    #[test]
+    fn test_registry_default_impl() {
+        let registry = WikieloRegistry::default();
+        // Default should load the same items as new()
+        assert_eq!(registry.item_count(), 31);
+    }
+
+    #[test]
+    fn test_all_locations_returns_unique() {
+        let registry = WikieloRegistry::new();
+        let locations = registry.all_locations();
+        // Should have multiple unique locations
+        assert!(!locations.is_empty());
+    }
+
+    #[test]
+    fn test_all_systems_returns_unique() {
+        let registry = WikieloRegistry::new();
+        let systems = registry.all_systems();
+        // Should have at least Stanton and Pyro
+        assert!(systems.len() >= 2);
+    }
+
+    #[test]
+    fn test_normalize_location() {
+        // These are tested indirectly through lookups, but let's be explicit
+        let registry = WikieloRegistry::new();
+
+        // ARC-L1 should normalize to "arc l1"
+        let arc_items = registry.items_at_location("ARC-L1");
+        let arc_items_lower = registry.items_at_location("arc l1");
+        assert_eq!(arc_items.len(), arc_items_lower.len());
+    }
+
+    #[test]
+    fn test_registry_clone() {
+        let registry = WikieloRegistry::new();
+        let cloned = registry.clone();
+        assert_eq!(cloned.item_count(), registry.item_count());
+    }
 }

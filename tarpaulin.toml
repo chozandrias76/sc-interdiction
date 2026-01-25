@@ -1,0 +1,17 @@
+[default]
+# Exclude the sc-data-extractor crate from coverage
+exclude = ["sc-data-extractor"]
+
+# Exclude specific file patterns from coverage
+exclude-files = [
+    "crates/sc-data-extractor/src/*",
+    "crates/cli/src/main.rs",
+]
+
+# Output format
+out = ["Stdout"]
+
+# Fail if coverage drops below threshold
+# Target is 80%, but we allow 79% as a buffer for static initialization code
+# that's difficult to cover in tests (LazyLock, helper functions called once)
+fail-under = 79.0

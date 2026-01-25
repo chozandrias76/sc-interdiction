@@ -722,4 +722,203 @@ mod tests {
             "Destruction should increase salvage value"
         );
     }
+
+    // ========== Additional coverage tests ==========
+
+    #[test]
+    fn ship_role_equality() {
+        assert_eq!(ShipRole::Cargo, ShipRole::Cargo);
+        assert_ne!(ShipRole::Cargo, ShipRole::Combat);
+        assert_ne!(ShipRole::Mining, ShipRole::Salvage);
+    }
+
+    #[test]
+    fn ship_role_debug() {
+        let role = ShipRole::Mining;
+        let debug_str = format!("{:?}", role);
+        assert!(debug_str.contains("Mining"));
+    }
+
+    #[test]
+    fn cargo_ship_debug() {
+        let ship = test_cargo_ship();
+        let debug_str = format!("{:?}", ship);
+        assert!(debug_str.contains("Test Hauler"));
+        assert!(debug_str.contains("RSI"));
+    }
+
+    #[test]
+    fn cargo_ship_clone() {
+        let ship = test_cargo_ship();
+        let cloned = ship.clone();
+        assert_eq!(cloned.name, ship.name);
+        assert_eq!(cloned.cargo_scu, ship.cargo_scu);
+    }
+
+    #[test]
+    fn salvage_value_debug() {
+        let ship = test_cargo_ship();
+        let salvage = ship.salvage_value(100.0);
+        let debug_str = format!("{:?}", salvage);
+        assert!(debug_str.contains("SalvageValue"));
+    }
+
+    #[test]
+    fn salvage_value_clone() {
+        let ship = test_cargo_ship();
+        let salvage = ship.salvage_value(100.0);
+        let cloned = salvage.clone();
+        assert_eq!(cloned.component_value, salvage.component_value);
+    }
+
+    #[test]
+    fn loot_estimate_debug() {
+        let ship = test_cargo_ship();
+        let loot = LootEstimate::calculate_disable(100_000.0, &ship);
+        let debug_str = format!("{:?}", loot);
+        assert!(debug_str.contains("LootEstimate"));
+    }
+
+    #[test]
+    fn loot_estimate_clone() {
+        let ship = test_cargo_ship();
+        let loot = LootEstimate::calculate_disable(100_000.0, &ship);
+        let cloned = loot.clone();
+        assert_eq!(cloned.cargo_value, loot.cargo_value);
+    }
+
+    #[test]
+    fn estimate_component_value_greycat_manufacturer() {
+        let mut ship = test_cargo_ship();
+        ship.manufacturer = "Greycat".to_string();
+        let val = ship.salvage_value(100.0).component_value;
+        assert!(val > 0);
+    }
+
+    #[test]
+    fn estimate_component_value_misc_manufacturer() {
+        let mut ship = test_cargo_ship();
+        ship.manufacturer = "MISC".to_string();
+        let val = ship.salvage_value(100.0).component_value;
+        assert!(val > 0);
+    }
+
+    #[test]
+    fn estimate_component_value_argo_manufacturer() {
+        let mut ship = test_cargo_ship();
+        ship.manufacturer = "Argo".to_string();
+        let val = ship.salvage_value(100.0).component_value;
+        assert!(val > 0);
+    }
+
+    #[test]
+    fn estimate_component_value_anvil_manufacturer() {
+        let mut ship = test_cargo_ship();
+        ship.manufacturer = "Anvil".to_string();
+        let val_anvil = ship.salvage_value(100.0).component_value;
+
+        ship.manufacturer = "Aegis".to_string();
+        let val_aegis = ship.salvage_value(100.0).component_value;
+
+        // Both military-grade should have same multiplier
+        assert_eq!(val_anvil, val_aegis);
+    }
+
+    #[test]
+    fn estimate_component_value_all_roles() {
+        let mut ship = test_cargo_ship();
+
+        for role in [
+            ShipRole::Cargo,
+            ShipRole::Combat,
+            ShipRole::Mining,
+            ShipRole::Salvage,
+            ShipRole::Transport,
+            ShipRole::Exploration,
+            ShipRole::Support,
+        ] {
+            ship.role = role;
+            let val = ship.salvage_value(100.0).component_value;
+            assert!(
+                val > 0,
+                "Role {:?} should have positive component value",
+                role
+            );
+        }
+    }
+
+    #[test]
+    fn estimate_component_value_fallback_qt_size() {
+        let mut ship = test_cargo_ship();
+        ship.qt_drive_size = 99; // Invalid, should use fallback
+
+        let val = ship.salvage_value(100.0).component_value;
+        assert!(val > 0, "Should use fallback base value");
+    }
+
+    #[test]
+    fn estimate_ship_value_freight_elevator_multiplier() {
+        let mut regular = test_cargo_ship();
+        regular.requires_freight_elevator = false;
+
+        let mut freight = test_cargo_ship();
+        freight.requires_freight_elevator = true;
+
+        let regular_val = estimate_ship_value(&regular);
+        let freight_val = estimate_ship_value(&freight);
+
+        assert!(
+            freight_val > regular_val,
+            "Ships with freight elevator should have higher estimated value"
+        );
+    }
+
+    #[test]
+    fn estimate_ship_value_by_cargo_size() {
+        let mut tiny = test_cargo_ship();
+        tiny.cargo_scu = 20;
+
+        let mut small = test_cargo_ship();
+        small.cargo_scu = 80;
+
+        let mut medium = test_cargo_ship();
+        medium.cargo_scu = 150;
+
+        let mut large = test_cargo_ship();
+        large.cargo_scu = 350;
+
+        let mut huge = test_cargo_ship();
+        huge.cargo_scu = 600;
+
+        // Larger ships should have higher value (even with lower price per SCU)
+        let tiny_val = estimate_ship_value(&tiny);
+        let huge_val = estimate_ship_value(&huge);
+
+        assert!(huge_val > tiny_val);
+    }
+
+    #[test]
+    fn qt_drive_efficiency_returns_some_for_valid_sizes() {
+        let mut ship = test_cargo_ship();
+
+        for size in 1..=3 {
+            ship.qt_drive_size = size;
+            assert!(
+                ship.qt_drive_efficiency().is_some(),
+                "Size {} should return efficiency",
+                size
+            );
+        }
+    }
+
+    #[test]
+    fn qt_drive_efficiency_returns_none_for_invalid_sizes() {
+        let mut ship = test_cargo_ship();
+
+        ship.qt_drive_size = 0;
+        assert!(ship.qt_drive_efficiency().is_none());
+
+        ship.qt_drive_size = 4;
+        assert!(ship.qt_drive_efficiency().is_none());
+    }
 }

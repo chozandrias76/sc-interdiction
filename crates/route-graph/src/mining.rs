@@ -208,4 +208,97 @@ mod tests {
         let nearest = nearest_mining_site(&pos);
         assert!(nearest.is_some());
     }
+
+    #[test]
+    fn test_is_unstable_quantainium() {
+        assert!(ResourceType::Quantainium.is_unstable());
+    }
+
+    #[test]
+    fn test_is_unstable_stable_resources() {
+        assert!(!ResourceType::Bexalite.is_unstable());
+        assert!(!ResourceType::Taranite.is_unstable());
+        assert!(!ResourceType::Gold.is_unstable());
+        assert!(!ResourceType::Copper.is_unstable());
+        assert!(!ResourceType::Diamond.is_unstable());
+        assert!(!ResourceType::Agricium.is_unstable());
+        assert!(!ResourceType::Laranite.is_unstable());
+        assert!(!ResourceType::Borase.is_unstable());
+        assert!(!ResourceType::Hephaestanite.is_unstable());
+    }
+
+    #[test]
+    fn test_all_resource_value_ranges() {
+        let resources = [
+            ResourceType::Quantainium,
+            ResourceType::Bexalite,
+            ResourceType::Taranite,
+            ResourceType::Gold,
+            ResourceType::Copper,
+            ResourceType::Diamond,
+            ResourceType::Agricium,
+            ResourceType::Laranite,
+            ResourceType::Borase,
+            ResourceType::Hephaestanite,
+        ];
+
+        for resource in resources {
+            let (min, max) = resource.typical_value_range();
+            assert!(min > 0.0, "{:?} should have positive min value", resource);
+            assert!(max > min, "{:?} max should be greater than min", resource);
+        }
+    }
+
+    #[test]
+    fn test_sites_with_resource_no_match() {
+        // All our defined sites have at least one of the common resources
+        // but we can test that the filtering works
+        let sites = sites_with_resource(ResourceType::Copper);
+        // Copper isn't in any of our defined sites
+        assert!(sites.is_empty());
+    }
+
+    #[test]
+    fn test_mining_site_fields() {
+        let site = &MINING_SITES[0]; // Aaron Halo
+        assert_eq!(site.name, "Aaron Halo");
+        assert_eq!(site.system, "Stanton");
+        assert!(!site.is_surface);
+        assert!(site.avg_yield_quality > 0.0);
+        assert!(site.avg_yield_quality <= 1.0);
+    }
+
+    #[test]
+    fn test_surface_vs_asteroid_sites() {
+        let surface_sites: Vec<_> = MINING_SITES.iter().filter(|s| s.is_surface).collect();
+        let asteroid_sites: Vec<_> = MINING_SITES.iter().filter(|s| !s.is_surface).collect();
+
+        assert!(
+            !surface_sites.is_empty(),
+            "Should have surface mining sites"
+        );
+        assert!(
+            !asteroid_sites.is_empty(),
+            "Should have asteroid belt sites"
+        );
+    }
+
+    #[test]
+    fn test_resource_type_equality() {
+        assert_eq!(ResourceType::Quantainium, ResourceType::Quantainium);
+        assert_ne!(ResourceType::Quantainium, ResourceType::Gold);
+    }
+
+    #[test]
+    fn test_resource_type_debug() {
+        let debug_str = format!("{:?}", ResourceType::Quantainium);
+        assert!(debug_str.contains("Quantainium"));
+    }
+
+    #[test]
+    fn test_mining_site_debug() {
+        let site = &MINING_SITES[0];
+        let debug_str = format!("{:?}", site);
+        assert!(debug_str.contains("Aaron Halo"));
+    }
 }
