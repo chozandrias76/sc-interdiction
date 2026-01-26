@@ -71,6 +71,7 @@ fn render_system_canvas(frame: &mut Frame, app: &App, area: Rect) {
     let map_selected = app.map_selected;
     let hotspot_limit = app.hotspot_limit;
     let total_hotspots = app.hotspots.len();
+    let wikelo_filter = app.wikelo_filter;
 
     let zoom_pct = (app.map_zoom * 100.0) as u32;
     let hotspot_info = if hotspot_limit == total_hotspots {
@@ -78,16 +79,25 @@ fn render_system_canvas(frame: &mut Frame, app: &App, area: Rect) {
     } else {
         format!("top {} of {} hotspots", hotspot_limit, total_hotspots)
     };
+    let wikelo_indicator = if wikelo_filter {
+        " [WIKELO SOURCES] "
+    } else {
+        ""
+    };
     let canvas = Canvas::default()
         .block(
             Block::default()
                 .borders(Borders::ALL)
                 .title(format!(
-                    " {} System Map | {} | {}% zoom ",
-                    app.map_system, hotspot_info, zoom_pct
+                    " {} System Map{} | {} | {}% zoom ",
+                    app.map_system, wikelo_indicator, hotspot_info, zoom_pct
                 ))
                 .title_bottom(Line::from(vec![
                     Span::raw(" "),
+                    Span::styled("◎", Style::default().fg(Color::Magenta)),
+                    Span::raw(":Wikelo │ "),
+                    Span::styled("w", Style::default().fg(Color::Yellow)),
+                    Span::raw(":filter │ "),
                     Span::styled("n", Style::default().fg(Color::Yellow)),
                     Span::raw("/"),
                     Span::styled("N", Style::default().fg(Color::Yellow)),
@@ -97,11 +107,11 @@ fn render_system_canvas(frame: &mut Frame, app: &App, area: Rect) {
                     Span::styled("Z", Style::default().fg(Color::Yellow)),
                     Span::raw(":zoom │ "),
                     Span::styled("a", Style::default().fg(Color::Yellow)),
-                    Span::raw(":toggle all │ "),
+                    Span::raw(":all │ "),
                     Span::styled("h", Style::default().fg(Color::Yellow)),
                     Span::raw("/"),
                     Span::styled("l", Style::default().fg(Color::Yellow)),
-                    Span::raw(":navigate "),
+                    Span::raw(":nav "),
                 ]))
                 .title_style(Style::default().fg(Color::Cyan).bold()),
         )
@@ -141,6 +151,11 @@ fn render_system_canvas(frame: &mut Frame, app: &App, area: Rect) {
 
             // Draw locations using their x,y coordinates directly
             for loc in &map_locations {
+                // Skip non-Wikelo locations when filter is active
+                if wikelo_filter && loc.wikelo_items.is_empty() {
+                    continue;
+                }
+
                 let (x, y) = (loc.x, loc.y);
 
                 let (color, radius) = match loc.loc_type {
@@ -149,6 +164,28 @@ fn render_system_canvas(frame: &mut Frame, app: &App, area: Rect) {
                     MapLocationType::Moon => (Color::Gray, 0.8),
                     MapLocationType::Station => (Color::Green, 0.5),
                 };
+
+                // Draw Wikelo source ring (outer ring before location circle)
+                if !loc.wikelo_items.is_empty() {
+                    let ring_color = if loc.wikelo_high_value {
+                        Color::Magenta
+                    } else {
+                        Color::LightMagenta
+                    };
+                    let ring_radius = radius + 0.8;
+                    let segments = 16;
+                    for i in 0..segments {
+                        let a1 = 2.0 * std::f64::consts::PI * i as f64 / segments as f64;
+                        let a2 = 2.0 * std::f64::consts::PI * (i + 1) as f64 / segments as f64;
+                        ctx.draw(&CanvasLine {
+                            x1: x + ring_radius * a1.cos(),
+                            y1: y + ring_radius * a1.sin(),
+                            x2: x + ring_radius * a2.cos(),
+                            y2: y + ring_radius * a2.sin(),
+                            color: ring_color,
+                        });
+                    }
+                }
 
                 ctx.draw(&Circle {
                     x,
@@ -228,12 +265,28 @@ fn render_hotspot_details(frame: &mut Frame, app: &App, area: Rect) {
 fn render_hotspot_details_compact(frame: &mut Frame, app: &App, area: Rect) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Length(12), Constraint::Min(0)])
+        .constraints([Constraint::Length(14), Constraint::Min(0)])
         .split(area);
 
     // Hotspot info panel
     if let Some(hotspot) = app.hotspots.get(app.map_selected) {
-        let info_text = vec![
+        // Collect Wikelo items from all intersecting routes' origins
+        // (these are the sources cargo is coming from)
+        let mut all_wikelo_items: std::collections::HashSet<&str> =
+            std::collections::HashSet::new();
+        let mut has_high_value = false;
+        for route in &hotspot.intersecting_routes {
+            let items = app.wikelo_intel.items_at(&route.origin);
+            for item in &items {
+                all_wikelo_items.insert(&item.name);
+                if item.estimated_value.is_some_and(|v| v > 10_000) {
+                    has_high_value = true;
+                }
+            }
+        }
+        let wikelo_item_names: Vec<_> = all_wikelo_items.into_iter().take(5).collect();
+
+        let mut info_text = vec![
             Line::from(vec![
                 Span::styled("Zone: ", Style::default().fg(Color::Yellow)),
                 Span::raw(&hotspot.name),
@@ -300,6 +353,28 @@ fn render_hotspot_details_compact(frame: &mut Frame, app: &App, area: Rect) {
                 },
             ]),
         ];
+
+        // Add Wikelo items from route origins (cargo sources)
+        if !wikelo_item_names.is_empty() {
+            info_text.push(Line::from(""));
+            let wikelo_label = if has_high_value {
+                Span::styled(
+                    "★ Wikelo: ",
+                    Style::default()
+                        .fg(Color::Magenta)
+                        .add_modifier(Modifier::BOLD),
+                )
+            } else {
+                Span::styled("Wikelo: ", Style::default().fg(Color::Magenta))
+            };
+            info_text.push(Line::from(vec![
+                wikelo_label,
+                Span::styled(
+                    wikelo_item_names.join(", "),
+                    Style::default().fg(Color::LightMagenta),
+                ),
+            ]));
+        }
 
         let visible_count = app.visible_hotspot_count();
         let info = Paragraph::new(info_text).block(
@@ -380,7 +455,22 @@ fn render_hotspot_details_expanded(frame: &mut Frame, app: &App, area: Rect) {
 
     // Hotspot summary (condensed)
     if let Some(hotspot) = app.hotspots.get(app.map_selected) {
-        let info_text = vec![
+        // Collect Wikelo items from route origins for expanded view
+        let mut all_wikelo_items: std::collections::HashSet<&str> =
+            std::collections::HashSet::new();
+        let mut has_high_value = false;
+        for route in &hotspot.intersecting_routes {
+            let items = app.wikelo_intel.items_at(&route.origin);
+            for item in &items {
+                all_wikelo_items.insert(&item.name);
+                if item.estimated_value.is_some_and(|v| v > 10_000) {
+                    has_high_value = true;
+                }
+            }
+        }
+        let wikelo_item_names: Vec<_> = all_wikelo_items.into_iter().take(3).collect();
+
+        let mut info_text = vec![
             Line::from(vec![
                 Span::styled("Zone: ", Style::default().fg(Color::Yellow)),
                 Span::raw(&hotspot.name),
@@ -404,18 +494,36 @@ fn render_hotspot_details_expanded(frame: &mut Frame, app: &App, area: Rect) {
                     hotspot.jump_to.destination, hotspot.jump_to.exit_at_mm
                 )),
             ]),
-            Line::from(""),
-            Line::from(vec![
-                Span::styled("Press ", Style::default().fg(Color::DarkGray)),
-                Span::styled(
-                    "Enter",
-                    Style::default()
-                        .fg(Color::Cyan)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::styled(" to collapse", Style::default().fg(Color::DarkGray)),
-            ]),
         ];
+
+        // Add Wikelo line if items present
+        if !wikelo_item_names.is_empty() {
+            let label = if has_high_value {
+                "★ Wikelo: "
+            } else {
+                "Wikelo: "
+            };
+            info_text.push(Line::from(vec![
+                Span::styled(label, Style::default().fg(Color::Magenta)),
+                Span::styled(
+                    wikelo_item_names.join(", "),
+                    Style::default().fg(Color::LightMagenta),
+                ),
+            ]));
+        } else {
+            info_text.push(Line::from(""));
+        }
+
+        info_text.push(Line::from(vec![
+            Span::styled("Press ", Style::default().fg(Color::DarkGray)),
+            Span::styled(
+                "Enter",
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::styled(" to collapse", Style::default().fg(Color::DarkGray)),
+        ]));
 
         let info = Paragraph::new(info_text).block(
             Block::default()

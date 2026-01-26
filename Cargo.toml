@@ -55,6 +55,7 @@ chrono = { version = "0.4", features = ["serde"] }
 api-client = { path = "crates/api-client" }
 route-graph = { path = "crates/route-graph" }
 intel = { path = "crates/intel" }
+wikelo-data = { path = "crates/wikelo-data" }
 sc-data-extractor = { path = "crates/sc-data-extractor" }
 
 [workspace.lints.rust]

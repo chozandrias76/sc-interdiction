@@ -693,7 +693,7 @@ fn main() {
 fn generate_default_schema() {
     let out_dir = PathBuf::from(env::var("OUT_DIR").expect("OUT_DIR not set"));
 
-    // Generate minimal default Rust schema
+    // Generate minimal default Rust schema with all required types
     let rust_path = out_dir.join("generated_schema.rs");
     let mut rust_file =
         BufWriter::new(File::create(&rust_path).expect("Failed to create rust file"));
@@ -701,6 +701,8 @@ fn generate_default_schema() {
     writeln!(rust_file, "// Default schema (SCLOGISTICS_PATH not set)").unwrap();
     writeln!(rust_file, "use serde::{{Deserialize, Serialize}};").unwrap();
     writeln!(rust_file).unwrap();
+
+    // StarmapLocation
     writeln!(
         rust_file,
         "#[derive(Debug, Clone, Serialize, Deserialize, Default)]"
@@ -709,10 +711,80 @@ fn generate_default_schema() {
     writeln!(rust_file, "pub struct StarmapLocation {{").unwrap();
     writeln!(rust_file, "    #[serde(rename = \"@__ref\")]").unwrap();
     writeln!(rust_file, "    #[serde(default)]").unwrap();
-    writeln!(rust_file, "    pub ref_attr: Option<String>,").unwrap();
+    writeln!(rust_file, "    pub ref_field: Option<String>,").unwrap();
     writeln!(rust_file, "    #[serde(rename = \"@name\")]").unwrap();
     writeln!(rust_file, "    #[serde(default)]").unwrap();
     writeln!(rust_file, "    pub name: Option<String>,").unwrap();
+    writeln!(rust_file, "}}").unwrap();
+    writeln!(rust_file).unwrap();
+
+    // QuantumTravelData
+    writeln!(
+        rust_file,
+        "#[derive(Debug, Clone, Serialize, Deserialize, Default)]"
+    )
+    .unwrap();
+    writeln!(rust_file, "pub struct QuantumTravelData {{").unwrap();
+    writeln!(rust_file, "    #[serde(default)]").unwrap();
+    writeln!(rust_file, "    pub obstruction_radius: Option<f64>,").unwrap();
+    writeln!(rust_file, "    #[serde(default)]").unwrap();
+    writeln!(rust_file, "    pub arrival_radius: Option<f64>,").unwrap();
+    writeln!(rust_file, "}}").unwrap();
+    writeln!(rust_file).unwrap();
+
+    // ShopInventory and related types
+    writeln!(
+        rust_file,
+        "#[derive(Debug, Clone, Serialize, Deserialize, Default)]"
+    )
+    .unwrap();
+    writeln!(rust_file, "pub struct ShopInventory {{").unwrap();
+    writeln!(rust_file, "    #[serde(rename = \"ShopID\")]").unwrap();
+    writeln!(rust_file, "    #[serde(default)]").unwrap();
+    writeln!(rust_file, "    pub shop_id: Option<String>,").unwrap();
+    writeln!(rust_file, "    #[serde(rename = \"Collection\")]").unwrap();
+    writeln!(rust_file, "    #[serde(default)]").unwrap();
+    writeln!(
+        rust_file,
+        "    pub collection: Option<InventoryCollection>,"
+    )
+    .unwrap();
+    writeln!(rust_file, "}}").unwrap();
+    writeln!(rust_file).unwrap();
+
+    writeln!(
+        rust_file,
+        "#[derive(Debug, Clone, Serialize, Deserialize, Default)]"
+    )
+    .unwrap();
+    writeln!(rust_file, "pub struct InventoryCollection {{").unwrap();
+    writeln!(rust_file, "    #[serde(rename = \"Inventory\")]").unwrap();
+    writeln!(rust_file, "    #[serde(default)]").unwrap();
+    writeln!(rust_file, "    pub inventory: Vec<InventoryItem>,").unwrap();
+    writeln!(rust_file, "}}").unwrap();
+    writeln!(rust_file).unwrap();
+
+    writeln!(
+        rust_file,
+        "#[derive(Debug, Clone, Serialize, Deserialize, Default)]"
+    )
+    .unwrap();
+    writeln!(rust_file, "pub struct InventoryItem {{").unwrap();
+    writeln!(rust_file, "    #[serde(rename = \"ID\")]").unwrap();
+    writeln!(rust_file, "    #[serde(default)]").unwrap();
+    writeln!(rust_file, "    pub id: Option<ItemId>,").unwrap();
+    writeln!(rust_file, "}}").unwrap();
+    writeln!(rust_file).unwrap();
+
+    writeln!(
+        rust_file,
+        "#[derive(Debug, Clone, Serialize, Deserialize, Default)]"
+    )
+    .unwrap();
+    writeln!(rust_file, "pub struct ItemId {{").unwrap();
+    writeln!(rust_file, "    #[serde(rename = \"ID\")]").unwrap();
+    writeln!(rust_file, "    #[serde(default)]").unwrap();
+    writeln!(rust_file, "    pub id: Vec<String>,").unwrap();
     writeln!(rust_file, "}}").unwrap();
 
     // Generate minimal default SQL schema
@@ -729,7 +801,7 @@ fn generate_default_schema() {
     let mut info_file =
         BufWriter::new(File::create(&info_path).expect("Failed to create info file"));
     writeln!(info_file, "pub const STARMAP_FIELD_COUNT: usize = 2;").unwrap();
-    writeln!(info_file, "pub const SHOP_FIELD_COUNT: usize = 0;").unwrap();
+    writeln!(info_file, "pub const SHOP_FIELD_COUNT: usize = 2;").unwrap();
     writeln!(
         info_file,
         "pub const GENERATED_SQL: &str = include_str!(concat!(env!(\"OUT_DIR\"), \"/generated_schema.sql\"));"

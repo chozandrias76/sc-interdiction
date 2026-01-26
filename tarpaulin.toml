@@ -1,0 +1,24 @@
+[default]
+# Exclude crates from coverage that are CLI tools or have external dependencies
+exclude = [
+    "sc-data-extractor",
+    "dataforge-explorer",
+    "sc-logistics-importer",
+    "scunpacked-explorer",
+]
+
+# Exclude specific file patterns from coverage
+exclude-files = [
+    "crates/sc-data-extractor/src/*",
+    "crates/cli/src/main.rs",
+    "crates/dataforge-explorer/src/*",
+    "crates/sc-logistics-importer/src/*",
+    "crates/scunpacked-explorer/src/*",
+]
+
+# Output format
+out = ["Stdout"]
+
+# Note: Coverage threshold enforcement moved to pre-push hook only.
+# CI generates coverage report for Codecov but doesn't enforce threshold,
+# allowing feature PRs to be merged while coverage is improved separately.

@@ -1059,8 +1059,43 @@ fn perpendicular_distance_to_line(
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::*;
+    use crate::chokepoint::{Chokepoint, InterdictPosition, RoutePair};
+    use crate::graph::{Node, NodeType};
+
+    /// Helper to create a test Chokepoint with specified coords
+    fn make_chokepoint(
+        name: &str,
+        system: &str,
+        coords: Option<(f64, f64, f64)>,
+        traffic: f64,
+    ) -> Chokepoint {
+        Chokepoint {
+            node: Node {
+                id: format!("{}-id", name),
+                name: name.to_string(),
+                node_type: NodeType::Station,
+                system: system.to_string(),
+                parent_body: "Test Body".to_string(),
+                coords,
+                is_fuel_station: false,
+            },
+            route_count: 3,
+            traffic_score: traffic,
+            routes: vec![RoutePair {
+                origin: "Origin".to_string(),
+                destination: "Dest".to_string(),
+                profit_per_scu: 100.0,
+            }],
+            suggested_position: InterdictPosition {
+                description: "Test position".to_string(),
+                distance_km: 500.0,
+                direction: "outward".to_string(),
+            },
+        }
+    }
 
     #[test]
     fn test_distance() {
@@ -1070,12 +1105,355 @@ mod tests {
     }
 
     #[test]
+    fn test_distance_3d() {
+        let p1 = Point3D::new(1.0, 2.0, 3.0);
+        let p2 = Point3D::new(4.0, 6.0, 3.0);
+        // Distance should be sqrt((4-1)^2 + (6-2)^2 + 0^2) = sqrt(9 + 16) = 5
+        assert!((p1.distance_to(&p2) - 5.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_distance_squared() {
+        let p1 = Point3D::new(0.0, 0.0, 0.0);
+        let p2 = Point3D::new(3.0, 4.0, 0.0);
+        assert!((p1.distance_squared(&p2) - 25.0).abs() < 0.001);
+    }
+
+    #[test]
     fn test_nearest() {
         let index = SpatialIndex::new();
 
         // Would need actual Chokepoint data for full test
         // This is a placeholder structure test
         assert!(index.is_empty());
+    }
+
+    // ---- SpatialIndex tests ----
+
+    #[test]
+    fn test_from_chokepoints_builds_index() {
+        let chokepoints = vec![
+            make_chokepoint("Station A", "Stanton", Some((10.0, 0.0, 0.0)), 100.0),
+            make_chokepoint("Station B", "Stanton", Some((20.0, 0.0, 0.0)), 200.0),
+            make_chokepoint("Station C", "Pyro", Some((100.0, 0.0, 0.0)), 150.0),
+        ];
+
+        let index = SpatialIndex::from_chokepoints(chokepoints);
+
+        assert_eq!(index.len(), 3);
+        assert!(!index.is_empty());
+    }
+
+    #[test]
+    fn test_find_nearest_returns_sorted() {
+        let mut index = SpatialIndex::new();
+
+        // Insert 3 hotspots at different distances from origin
+        index.insert(IndexedHotspot {
+            position: Point3D::new(30.0, 0.0, 0.0),
+            name: "Far".to_string(),
+            system: "Stanton".to_string(),
+            traffic_score: 100.0,
+            chokepoint: make_chokepoint("Far", "Stanton", Some((30.0, 0.0, 0.0)), 100.0),
+        });
+        index.insert(IndexedHotspot {
+            position: Point3D::new(10.0, 0.0, 0.0),
+            name: "Near".to_string(),
+            system: "Stanton".to_string(),
+            traffic_score: 50.0,
+            chokepoint: make_chokepoint("Near", "Stanton", Some((10.0, 0.0, 0.0)), 50.0),
+        });
+        index.insert(IndexedHotspot {
+            position: Point3D::new(20.0, 0.0, 0.0),
+            name: "Medium".to_string(),
+            system: "Stanton".to_string(),
+            traffic_score: 75.0,
+            chokepoint: make_chokepoint("Medium", "Stanton", Some((20.0, 0.0, 0.0)), 75.0),
+        });
+
+        let query_point = Point3D::new(0.0, 0.0, 0.0);
+        let nearest = index.find_nearest(&query_point, 2);
+
+        assert_eq!(nearest.len(), 2);
+        assert_eq!(nearest[0].hotspot.name, "Near");
+        assert_eq!(nearest[1].hotspot.name, "Medium");
+        assert!(nearest[0].distance < nearest[1].distance);
+    }
+
+    #[test]
+    fn test_find_within_radius_filters() {
+        let mut index = SpatialIndex::new();
+
+        // Insert hotspots at various distances
+        index.insert(IndexedHotspot {
+            position: Point3D::new(5.0, 0.0, 0.0),
+            name: "Inside".to_string(),
+            system: "Stanton".to_string(),
+            traffic_score: 100.0,
+            chokepoint: make_chokepoint("Inside", "Stanton", Some((5.0, 0.0, 0.0)), 100.0),
+        });
+        index.insert(IndexedHotspot {
+            position: Point3D::new(15.0, 0.0, 0.0),
+            name: "Outside".to_string(),
+            system: "Stanton".to_string(),
+            traffic_score: 100.0,
+            chokepoint: make_chokepoint("Outside", "Stanton", Some((15.0, 0.0, 0.0)), 100.0),
+        });
+        index.insert(IndexedHotspot {
+            position: Point3D::new(10.0, 0.0, 0.0),
+            name: "OnBoundary".to_string(),
+            system: "Stanton".to_string(),
+            traffic_score: 100.0,
+            chokepoint: make_chokepoint("OnBoundary", "Stanton", Some((10.0, 0.0, 0.0)), 100.0),
+        });
+
+        let query_point = Point3D::new(0.0, 0.0, 0.0);
+        let within = index.find_within_radius(&query_point, 10.0);
+
+        assert_eq!(within.len(), 2);
+        let names: Vec<_> = within.iter().map(|h| h.hotspot.name.as_str()).collect();
+        assert!(names.contains(&"Inside"));
+        assert!(names.contains(&"OnBoundary"));
+        assert!(!names.contains(&"Outside"));
+    }
+
+    #[test]
+    fn test_find_in_system_case_insensitive() {
+        let mut index = SpatialIndex::new();
+
+        index.insert(IndexedHotspot {
+            position: Point3D::new(10.0, 0.0, 0.0),
+            name: "Stanton Station".to_string(),
+            system: "Stanton".to_string(),
+            traffic_score: 100.0,
+            chokepoint: make_chokepoint(
+                "Stanton Station",
+                "Stanton",
+                Some((10.0, 0.0, 0.0)),
+                100.0,
+            ),
+        });
+        index.insert(IndexedHotspot {
+            position: Point3D::new(100.0, 0.0, 0.0),
+            name: "Pyro Station".to_string(),
+            system: "Pyro".to_string(),
+            traffic_score: 100.0,
+            chokepoint: make_chokepoint("Pyro Station", "Pyro", Some((100.0, 0.0, 0.0)), 100.0),
+        });
+
+        // Test case-insensitive matching
+        assert_eq!(index.find_in_system("STANTON").len(), 1);
+        assert_eq!(index.find_in_system("stanton").len(), 1);
+        assert_eq!(index.find_in_system("Stanton").len(), 1);
+        assert_eq!(index.find_in_system("PYRO").len(), 1);
+        assert_eq!(index.find_in_system("Unknown").len(), 0);
+    }
+
+    #[test]
+    fn test_by_traffic_sorted_descending() {
+        let mut index = SpatialIndex::new();
+
+        index.insert(IndexedHotspot {
+            position: Point3D::new(10.0, 0.0, 0.0),
+            name: "Low Traffic".to_string(),
+            system: "Stanton".to_string(),
+            traffic_score: 50.0,
+            chokepoint: make_chokepoint("Low", "Stanton", Some((10.0, 0.0, 0.0)), 50.0),
+        });
+        index.insert(IndexedHotspot {
+            position: Point3D::new(20.0, 0.0, 0.0),
+            name: "High Traffic".to_string(),
+            system: "Stanton".to_string(),
+            traffic_score: 200.0,
+            chokepoint: make_chokepoint("High", "Stanton", Some((20.0, 0.0, 0.0)), 200.0),
+        });
+        index.insert(IndexedHotspot {
+            position: Point3D::new(30.0, 0.0, 0.0),
+            name: "Medium Traffic".to_string(),
+            system: "Stanton".to_string(),
+            traffic_score: 100.0,
+            chokepoint: make_chokepoint("Medium", "Stanton", Some((30.0, 0.0, 0.0)), 100.0),
+        });
+
+        let sorted = index.by_traffic();
+
+        assert_eq!(sorted.len(), 3);
+        assert_eq!(sorted[0].name, "High Traffic");
+        assert_eq!(sorted[1].name, "Medium Traffic");
+        assert_eq!(sorted[2].name, "Low Traffic");
+    }
+
+    // ---- estimate_position tests ----
+
+    #[test]
+    fn test_estimate_position_stanton_locations() {
+        // Hurston
+        let hurston = estimate_position("Stanton", "Hurston");
+        assert!((hurston.x - 12.0).abs() < 0.01);
+        assert!((hurston.y - 0.0).abs() < 0.01);
+
+        // Crusader/Orison
+        let crusader = estimate_position("Stanton", "Orison");
+        assert!((crusader.x - (-6.0)).abs() < 0.01);
+        assert!((crusader.y - 8.0).abs() < 0.01);
+
+        // ArcCorp/Area18
+        let arccorp = estimate_position("Stanton", "Area18");
+        assert!((arccorp.x - (-18.0)).abs() < 0.01);
+        assert!((arccorp.y - 0.0).abs() < 0.01);
+
+        // microTech/New Babbage
+        let microtech = estimate_position("Stanton", "New Babbage");
+        assert!((microtech.x - 0.0).abs() < 0.01);
+        assert!((microtech.y - 22.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_estimate_position_pyro() {
+        let pyro = estimate_position("Pyro", "SomeLocation");
+        assert!((pyro.x - 100.0).abs() < 0.01);
+        assert!((pyro.y - 0.0).abs() < 0.01);
+        assert!((pyro.z - 0.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_estimate_position_unknown_system() {
+        let unknown = estimate_position("Terra", "SomeLocation");
+        assert!((unknown.x - 0.0).abs() < 0.01);
+        assert!((unknown.y - 0.0).abs() < 0.01);
+        assert!((unknown.z - 0.0).abs() < 0.01);
+    }
+
+    // ---- RouteSegment tests ----
+
+    #[test]
+    fn test_midpoint_calculation() {
+        let route = RouteSegment {
+            origin: Point3D::new(0.0, 0.0, 0.0),
+            destination: Point3D::new(10.0, 20.0, 30.0),
+            origin_name: "A".to_string(),
+            destination_name: "B".to_string(),
+            origin_system: Some("Stanton".to_string()),
+            destination_system: Some("Stanton".to_string()),
+            cargo_value: 100000.0,
+            commodity: "Gold".to_string(),
+            ship_name: "Caterpillar".to_string(),
+            threat_level: 4,
+        };
+
+        let mid = route.midpoint();
+        assert!((mid.x - 5.0).abs() < 0.001);
+        assert!((mid.y - 10.0).abs() < 0.001);
+        assert!((mid.z - 15.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_is_cross_system_true() {
+        let route = RouteSegment {
+            origin: Point3D::new(0.0, 0.0, 0.0),
+            destination: Point3D::new(100.0, 0.0, 0.0),
+            origin_name: "Stanton Station".to_string(),
+            destination_name: "Pyro Station".to_string(),
+            origin_system: Some("Stanton".to_string()),
+            destination_system: Some("Pyro".to_string()),
+            cargo_value: 500000.0,
+            commodity: "Refined Quantanium".to_string(),
+            ship_name: "Hull C".to_string(),
+            threat_level: 3,
+        };
+
+        assert!(route.is_cross_system());
+    }
+
+    #[test]
+    fn test_is_cross_system_false() {
+        let route = RouteSegment {
+            origin: Point3D::new(0.0, 0.0, 0.0),
+            destination: Point3D::new(20.0, 0.0, 0.0),
+            origin_name: "Hurston".to_string(),
+            destination_name: "microTech".to_string(),
+            origin_system: Some("Stanton".to_string()),
+            destination_system: Some("Stanton".to_string()),
+            cargo_value: 100000.0,
+            commodity: "Gold".to_string(),
+            ship_name: "Caterpillar".to_string(),
+            threat_level: 4,
+        };
+
+        assert!(!route.is_cross_system());
+    }
+
+    #[test]
+    fn test_is_cross_system_none() {
+        let route = RouteSegment {
+            origin: Point3D::new(0.0, 0.0, 0.0),
+            destination: Point3D::new(20.0, 0.0, 0.0),
+            origin_name: "Unknown A".to_string(),
+            destination_name: "Unknown B".to_string(),
+            origin_system: None,
+            destination_system: None,
+            cargo_value: 100000.0,
+            commodity: "Unknown".to_string(),
+            ship_name: "Unknown Ship".to_string(),
+            threat_level: 5,
+        };
+
+        // When systems are unknown, should return false (conservative)
+        assert!(!route.is_cross_system());
+    }
+
+    #[test]
+    fn test_length_calculation() {
+        let route = RouteSegment {
+            origin: Point3D::new(0.0, 0.0, 0.0),
+            destination: Point3D::new(3.0, 4.0, 0.0),
+            origin_name: "A".to_string(),
+            destination_name: "B".to_string(),
+            origin_system: Some("Stanton".to_string()),
+            destination_system: Some("Stanton".to_string()),
+            cargo_value: 100000.0,
+            commodity: "Gold".to_string(),
+            ship_name: "Caterpillar".to_string(),
+            threat_level: 4,
+        };
+
+        assert!((route.length() - 5.0).abs() < 0.001);
+        // Verify it matches distance_to
+        assert!((route.length() - route.origin.distance_to(&route.destination)).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_closest_approach_parallel_segments() {
+        // Two parallel routes, offset from each other
+        let route1 = RouteSegment {
+            origin: Point3D::new(0.0, 0.0, 0.0),
+            destination: Point3D::new(10.0, 0.0, 0.0),
+            origin_name: "A".to_string(),
+            destination_name: "B".to_string(),
+            origin_system: Some("Stanton".to_string()),
+            destination_system: Some("Stanton".to_string()),
+            cargo_value: 100000.0,
+            commodity: "Gold".to_string(),
+            ship_name: "Caterpillar".to_string(),
+            threat_level: 4,
+        };
+
+        let route2 = RouteSegment {
+            origin: Point3D::new(0.0, 5.0, 0.0),
+            destination: Point3D::new(10.0, 5.0, 0.0),
+            origin_name: "C".to_string(),
+            destination_name: "D".to_string(),
+            origin_system: Some("Stanton".to_string()),
+            destination_system: Some("Stanton".to_string()),
+            cargo_value: 150000.0,
+            commodity: "Silver".to_string(),
+            ship_name: "C2 Hercules".to_string(),
+            threat_level: 5,
+        };
+
+        let (_point, distance) = route1.closest_approach_to(&route2);
+        // Parallel routes 5 units apart, distance should be 5
+        assert!((distance - 5.0).abs() < 0.5);
     }
 
     #[test]
@@ -1112,5 +1490,545 @@ mod tests {
         assert!(point.x > 4.0 && point.x < 6.0);
         assert!(point.y > 4.0 && point.y < 6.0);
         assert!(distance < 1.0);
+    }
+
+    // ---- Helper function tests (Task 1) ----
+
+    /// Helper to create RouteSegment for tests
+    fn test_route_segment(
+        origin: &str,
+        dest: &str,
+        origin_sys: Option<&str>,
+        dest_sys: Option<&str>,
+    ) -> RouteSegment {
+        RouteSegment {
+            origin: Point3D::new(0.0, 0.0, 0.0),
+            destination: Point3D::new(10.0, 0.0, 0.0),
+            origin_name: origin.to_string(),
+            destination_name: dest.to_string(),
+            origin_system: origin_sys.map(String::from),
+            destination_system: dest_sys.map(String::from),
+            cargo_value: 100_000.0,
+            commodity: "Test Commodity".to_string(),
+            ship_name: "Test Ship".to_string(),
+            threat_level: 3,
+        }
+    }
+
+    // ---- extract_system_name tests ----
+
+    #[test]
+    fn test_extract_system_name_standard() {
+        let result = extract_system_name("Port Olisar (Stanton > Crusader)");
+        assert_eq!(result, Some("Stanton".to_string()));
+    }
+
+    #[test]
+    fn test_extract_system_name_no_arrow() {
+        // No > means can't extract system
+        let result = extract_system_name("Location (SystemOnly)");
+        assert_eq!(result, None);
+    }
+
+    #[test]
+    fn test_extract_system_name_empty() {
+        let result = extract_system_name("");
+        assert_eq!(result, None);
+    }
+
+    #[test]
+    fn test_extract_system_name_no_parens() {
+        let result = extract_system_name("Plain Location");
+        assert_eq!(result, None);
+    }
+
+    #[test]
+    fn test_extract_system_name_pyro() {
+        let result = extract_system_name("Ruin Station (Pyro > Pyro I)");
+        assert_eq!(result, Some("Pyro".to_string()));
+    }
+
+    // ---- extract_short_location tests ----
+
+    #[test]
+    fn test_extract_short_location_port_olisar() {
+        // Note: returns first match from known_locations array, which is "Crusader" before "Port Olisar"
+        let result =
+            extract_short_location("Commodity Shop - Admin - Port Olisar (Stanton > Crusader)");
+        assert_eq!(result, Some("Crusader"));
+
+        // Test with only Port Olisar
+        let result2 = extract_short_location("Port Olisar Station");
+        assert_eq!(result2, Some("Port Olisar"));
+    }
+
+    #[test]
+    fn test_extract_short_location_area18() {
+        // Note: returns first match from known_locations array, which is "ArcCorp" before "Area18"
+        let result = extract_short_location("TDD - Area18 (Stanton > ArcCorp)");
+        assert_eq!(result, Some("ArcCorp"));
+
+        // Test with only Area18
+        let result2 = extract_short_location("Shop at Area18");
+        assert_eq!(result2, Some("Area18"));
+    }
+
+    #[test]
+    fn test_extract_short_location_case_insensitive() {
+        // Known location "Hurston" should match "HURSTON"
+        let result = extract_short_location("Some shop at HURSTON zone");
+        assert_eq!(result, Some("Hurston"));
+    }
+
+    #[test]
+    fn test_extract_short_location_not_found() {
+        let result = extract_short_location("Unknown Location XYZ");
+        assert_eq!(result, None);
+    }
+
+    #[test]
+    fn test_extract_short_location_microtech() {
+        let result = extract_short_location("New Deal - New Babbage (Stanton > microTech)");
+        // Both "New Babbage" and "microTech" are known, returns first match
+        assert!(result == Some("microTech") || result == Some("New Babbage"));
+    }
+
+    // ---- generate_intersection_name tests ----
+
+    #[test]
+    fn test_generate_name_cross_system() {
+        let route1 = test_route_segment(
+            "Station (Stanton > Crusader)",
+            "Gateway (Pyro > Pyro I)",
+            Some("Stanton"),
+            Some("Pyro"),
+        );
+        let route2 = test_route_segment(
+            "Station (Stanton > Hurston)",
+            "Gateway (Pyro > Pyro II)",
+            Some("Stanton"),
+            Some("Pyro"),
+        );
+        let routes: Vec<&RouteSegment> = vec![&route1, &route2];
+        let name = generate_intersection_name(&routes);
+        // Should be "X Jump Gate" format when cross-system
+        assert!(
+            name.contains("Jump Gate"),
+            "Expected Jump Gate, got: {}",
+            name
+        );
+    }
+
+    #[test]
+    fn test_generate_name_two_locations() {
+        let route1 = test_route_segment(
+            "Port Olisar (Stanton > Crusader)",
+            "Lorville (Stanton > Hurston)",
+            Some("Stanton"),
+            Some("Stanton"),
+        );
+        let route2 = test_route_segment(
+            "Port Olisar (Stanton > Crusader)",
+            "Area18 (Stanton > ArcCorp)",
+            Some("Stanton"),
+            Some("Stanton"),
+        );
+        let routes: Vec<&RouteSegment> = vec![&route1, &route2];
+        let name = generate_intersection_name(&routes);
+        // Should be "Loc1-Loc2 Corridor" format
+        assert!(
+            name.contains("Corridor"),
+            "Expected Corridor, got: {}",
+            name
+        );
+    }
+
+    #[test]
+    fn test_generate_name_one_location() {
+        let route1 = test_route_segment(
+            "Port Olisar (Stanton > Crusader)",
+            "Unknown Station A",
+            Some("Stanton"),
+            Some("Stanton"),
+        );
+        let route2 = test_route_segment(
+            "Unknown Station B",
+            "Unknown Station C",
+            Some("Stanton"),
+            Some("Stanton"),
+        );
+        let routes: Vec<&RouteSegment> = vec![&route1, &route2];
+        let name = generate_intersection_name(&routes);
+        // Should be "Loc Junction" when only one known location
+        assert!(
+            name.contains("Junction") || name.contains("Corridor"),
+            "Expected Junction or Corridor, got: {}",
+            name
+        );
+    }
+
+    #[test]
+    fn test_generate_name_unknown() {
+        let route1 = test_route_segment("Unknown A", "Unknown B", Some("Stanton"), Some("Stanton"));
+        let route2 = test_route_segment("Unknown C", "Unknown D", Some("Stanton"), Some("Stanton"));
+        let routes: Vec<&RouteSegment> = vec![&route1, &route2];
+        let name = generate_intersection_name(&routes);
+        assert_eq!(name, "Deep Space Intersection");
+    }
+
+    // ---- check_if_cross_system tests ----
+
+    #[test]
+    fn test_check_cross_system_true() {
+        let route = test_route_segment(
+            "Station (Stanton > Crusader)",
+            "Gateway (Pyro > Pyro I)",
+            Some("Stanton"),
+            Some("Pyro"),
+        );
+        let routes: Vec<&RouteSegment> = vec![&route];
+        assert!(check_if_cross_system(&routes));
+    }
+
+    #[test]
+    fn test_check_cross_system_false() {
+        let route = test_route_segment(
+            "Port Olisar (Stanton > Crusader)",
+            "Lorville (Stanton > Hurston)",
+            Some("Stanton"),
+            Some("Stanton"),
+        );
+        let routes: Vec<&RouteSegment> = vec![&route];
+        assert!(!check_if_cross_system(&routes));
+    }
+
+    #[test]
+    fn test_check_cross_system_missing_system() {
+        let route = test_route_segment("Unknown Origin", "Unknown Dest", None, None);
+        let routes: Vec<&RouteSegment> = vec![&route];
+        // Without system info in names, should return false
+        assert!(!check_if_cross_system(&routes));
+    }
+
+    // ---- infer_system_from_routes tests ----
+
+    #[test]
+    fn test_infer_system_single_system() {
+        let route1 =
+            test_route_segment("Port Olisar", "Lorville", Some("Stanton"), Some("Stanton"));
+        let route2 = test_route_segment("Area18", "New Babbage", Some("Stanton"), Some("Stanton"));
+        let routes: Vec<&RouteSegment> = vec![&route1, &route2];
+        assert_eq!(infer_system_from_routes(&routes), "Stanton");
+    }
+
+    #[test]
+    fn test_infer_system_cross_system_stanton_to_pyro() {
+        let route = test_route_segment(
+            "Stanton Station",
+            "Pyro Gateway",
+            Some("Stanton"),
+            Some("Pyro"),
+        );
+        let routes: Vec<&RouteSegment> = vec![&route];
+        // Cross-system from Stanton to Pyro = hotspot is near Pyro gateway
+        assert_eq!(infer_system_from_routes(&routes), "Pyro");
+    }
+
+    #[test]
+    fn test_infer_system_cross_system_pyro_to_stanton() {
+        let route = test_route_segment(
+            "Pyro Station",
+            "Stanton Gateway",
+            Some("Pyro"),
+            Some("Stanton"),
+        );
+        let routes: Vec<&RouteSegment> = vec![&route];
+        // Cross-system from Pyro to Stanton = hotspot is near Stanton gateway
+        assert_eq!(infer_system_from_routes(&routes), "Stanton");
+    }
+
+    #[test]
+    fn test_infer_system_unknown() {
+        let route = test_route_segment("Unknown Origin", "Unknown Dest", None, None);
+        let routes: Vec<&RouteSegment> = vec![&route];
+        assert_eq!(infer_system_from_routes(&routes), "Unknown");
+    }
+
+    #[test]
+    fn test_infer_system_pyro_only() {
+        let route = test_route_segment(
+            "Ruin Station",
+            "Checkmate Station",
+            Some("Pyro"),
+            Some("Pyro"),
+        );
+        let routes: Vec<&RouteSegment> = vec![&route];
+        assert_eq!(infer_system_from_routes(&routes), "Pyro");
+    }
+
+    // ---- find_route_intersections tests (Task 2) ----
+
+    /// Create a route segment with specific 3D coordinates for intersection testing
+    fn route_with_coords(
+        origin: Point3D,
+        dest: Point3D,
+        cargo_value: f64,
+        threat_level: u8,
+    ) -> RouteSegment {
+        RouteSegment {
+            origin,
+            destination: dest,
+            origin_name: "Origin Station".to_string(),
+            destination_name: "Destination Station".to_string(),
+            origin_system: Some("Stanton".to_string()),
+            destination_system: Some("Stanton".to_string()),
+            cargo_value,
+            commodity: "Gold".to_string(),
+            ship_name: "Caterpillar".to_string(),
+            threat_level,
+        }
+    }
+
+    /// Returns two routes that cross at approximately (5, 5, 0)
+    fn crossing_routes_pair() -> (RouteSegment, RouteSegment) {
+        // Route 1: (0,0,0) → (10,10,0) - diagonal going up-right
+        let route1 = route_with_coords(
+            Point3D::new(0.0, 0.0, 0.0),
+            Point3D::new(10.0, 10.0, 0.0),
+            100_000.0,
+            3,
+        );
+        // Route 2: (0,10,0) → (10,0,0) - diagonal going down-right
+        let route2 = route_with_coords(
+            Point3D::new(0.0, 10.0, 0.0),
+            Point3D::new(10.0, 0.0, 0.0),
+            150_000.0,
+            4,
+        );
+        (route1, route2)
+    }
+
+    #[test]
+    fn test_find_intersections_two_crossing_routes() {
+        let (route1, route2) = crossing_routes_pair();
+        let routes = vec![route1, route2];
+
+        // Use a large proximity threshold (1.0 Mkm) to ensure we find the intersection
+        let intersections = find_route_intersections(&routes, 1.0, 2);
+
+        assert_eq!(intersections.len(), 1, "Should find exactly 1 intersection");
+        assert_eq!(intersections[0].route_pair_count, 2);
+    }
+
+    #[test]
+    fn test_find_intersections_parallel_routes() {
+        // Two parallel routes that never get close
+        let route1 = route_with_coords(
+            Point3D::new(0.0, 0.0, 0.0),
+            Point3D::new(100.0, 0.0, 0.0),
+            100_000.0,
+            3,
+        );
+        let route2 = route_with_coords(
+            Point3D::new(0.0, 50.0, 0.0), // 50 units away in Y
+            Point3D::new(100.0, 50.0, 0.0),
+            100_000.0,
+            3,
+        );
+        let routes = vec![route1, route2];
+
+        // Proximity threshold of 10 - too small for routes 50 units apart
+        let intersections = find_route_intersections(&routes, 10.0, 2);
+
+        assert!(
+            intersections.is_empty(),
+            "Parallel routes should have no intersections"
+        );
+    }
+
+    #[test]
+    fn test_find_intersections_min_routes_filter() {
+        let (route1, route2) = crossing_routes_pair();
+        let routes = vec![route1, route2];
+
+        // Require 3 routes minimum, but only have 2
+        let intersections = find_route_intersections(&routes, 1.0, 3);
+
+        assert!(
+            intersections.is_empty(),
+            "Should be empty when min_routes > actual routes"
+        );
+    }
+
+    #[test]
+    fn test_find_intersections_proximity_threshold() {
+        let (route1, route2) = crossing_routes_pair();
+        let routes = vec![route1, route2];
+
+        // Very tiny threshold - routes may still intersect if they cross exactly
+        let _intersections_tiny = find_route_intersections(&routes, 0.0001, 2);
+
+        // Normal threshold - should definitely find the crossing
+        let intersections_normal = find_route_intersections(&routes, 0.5, 2);
+        assert_eq!(
+            intersections_normal.len(),
+            1,
+            "Should find intersection with reasonable threshold"
+        );
+
+        // Very large threshold - should still find exactly 1 zone
+        let intersections_large = find_route_intersections(&routes, 100.0, 2);
+        assert_eq!(
+            intersections_large.len(),
+            1,
+            "Large threshold should still find 1 zone (not create extras)"
+        );
+    }
+
+    #[test]
+    fn test_find_intersections_multiple_zones() {
+        // Create 4 routes that form 2 distinct crossing zones
+
+        // Zone 1: Two routes crossing near (5, 5, 0)
+        let route1a = route_with_coords(
+            Point3D::new(0.0, 0.0, 0.0),
+            Point3D::new(10.0, 10.0, 0.0),
+            100_000.0,
+            3,
+        );
+        let route1b = route_with_coords(
+            Point3D::new(0.0, 10.0, 0.0),
+            Point3D::new(10.0, 0.0, 0.0),
+            150_000.0,
+            4,
+        );
+
+        // Zone 2: Two routes crossing near (100, 100, 0) - far from Zone 1
+        let route2a = route_with_coords(
+            Point3D::new(95.0, 95.0, 0.0),
+            Point3D::new(105.0, 105.0, 0.0),
+            200_000.0,
+            2,
+        );
+        let route2b = route_with_coords(
+            Point3D::new(95.0, 105.0, 0.0),
+            Point3D::new(105.0, 95.0, 0.0),
+            250_000.0,
+            5,
+        );
+
+        let routes = vec![route1a, route1b, route2a, route2b];
+
+        // Use threshold that catches each crossing zone but doesn't merge them
+        let intersections = find_route_intersections(&routes, 5.0, 2);
+
+        assert_eq!(
+            intersections.len(),
+            2,
+            "Should find 2 distinct intersection zones"
+        );
+    }
+
+    #[test]
+    fn test_find_intersections_empty_input() {
+        let routes: Vec<RouteSegment> = vec![];
+        let intersections = find_route_intersections(&routes, 1.0, 2);
+
+        assert!(intersections.is_empty(), "Empty input should return empty");
+    }
+
+    #[test]
+    fn test_intersection_has_correct_fields() {
+        let (route1, route2) = crossing_routes_pair();
+        let routes = vec![route1, route2];
+
+        let intersections = find_route_intersections(&routes, 1.0, 2);
+        assert_eq!(intersections.len(), 1);
+
+        let intersection = &intersections[0];
+
+        // Verify key fields are populated
+        assert!(!intersection.name.is_empty(), "Name should be populated");
+        assert!(
+            !intersection.system.is_empty(),
+            "System should be populated"
+        );
+        assert_eq!(intersection.route_pair_count, 2);
+        assert_eq!(intersection.intersecting_routes.len(), 2);
+
+        // Verify cargo values are summed
+        // route1 = 100_000, route2 = 150_000
+        assert!(
+            (intersection.total_cargo_value - 250_000.0).abs() < 0.01,
+            "Total cargo should be sum of all route cargos"
+        );
+
+        // Verify average threat is calculated
+        // route1 threat = 3, route2 threat = 4, avg = 3.5
+        assert!(
+            (intersection.avg_threat_level - 3.5).abs() < 0.01,
+            "Average threat should be 3.5"
+        );
+
+        // Verify interdiction value is positive
+        assert!(
+            intersection.interdiction_value > 0.0,
+            "Interdiction value should be positive"
+        );
+
+        // Verify suggested tactics is not empty
+        assert!(
+            !intersection.suggested_tactics.is_empty(),
+            "Tactics should be suggested"
+        );
+    }
+
+    #[test]
+    fn test_intersection_sorted_by_interdiction_value() {
+        // Create zones with different interdiction values
+        // Interdiction value = cargo_value / threat_level
+
+        // Zone 1: High value, low threat = HIGH interdiction value
+        // cargo 200k, threat 2 → 100k per catch
+        let route1a = route_with_coords(
+            Point3D::new(0.0, 0.0, 0.0),
+            Point3D::new(10.0, 10.0, 0.0),
+            200_000.0,
+            2,
+        );
+        let route1b = route_with_coords(
+            Point3D::new(0.0, 10.0, 0.0),
+            Point3D::new(10.0, 0.0, 0.0),
+            200_000.0,
+            2,
+        );
+
+        // Zone 2: Low value, high threat = LOW interdiction value
+        // cargo 100k, threat 10 → 10k per catch
+        let route2a = route_with_coords(
+            Point3D::new(100.0, 100.0, 0.0),
+            Point3D::new(110.0, 110.0, 0.0),
+            100_000.0,
+            10,
+        );
+        let route2b = route_with_coords(
+            Point3D::new(100.0, 110.0, 0.0),
+            Point3D::new(110.0, 100.0, 0.0),
+            100_000.0,
+            10,
+        );
+
+        let routes = vec![route1a, route1b, route2a, route2b];
+        let intersections = find_route_intersections(&routes, 5.0, 2);
+
+        assert_eq!(intersections.len(), 2);
+
+        // First intersection should have higher interdiction value
+        assert!(
+            intersections[0].interdiction_value > intersections[1].interdiction_value,
+            "Results should be sorted by interdiction value descending: {} > {}",
+            intersections[0].interdiction_value,
+            intersections[1].interdiction_value
+        );
     }
 }

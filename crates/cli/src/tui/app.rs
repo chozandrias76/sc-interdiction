@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use api_client::UexClient;
 use eyre::Result;
-use intel::{HotRoute, TargetAnalyzer, TargetPrediction, TrafficDirection};
+use intel::{HotRoute, TargetAnalyzer, TargetPrediction, TrafficDirection, WikieloIntel};
 use route_graph::RouteIntersection;
 
 use super::data::hotspots::load_hotspots;
@@ -60,6 +60,12 @@ pub struct App {
     pub detail_expanded: bool,
     /// Selected route index in expanded detail view.
     pub detail_selected: usize,
+    /// Wikelo detail expansion in targets view.
+    pub target_detail_expanded: bool,
+    /// Wikelo intel for source flagging.
+    pub wikelo_intel: WikieloIntel,
+    /// Filter: show only Wikelo source locations on map.
+    pub wikelo_filter: bool,
 }
 
 impl App {
@@ -74,7 +80,10 @@ impl App {
 
         // Determine system from location
         let map_system = infer_system(&location);
-        let map_locations = build_map_locations(&map_system);
+
+        // Initialize Wikelo intel first (needed for map locations)
+        let wikelo_intel = WikieloIntel::from_static();
+        let map_locations = build_map_locations(&map_system, &wikelo_intel);
 
         let mut app = Self {
             view: View::Targets,
@@ -100,6 +109,9 @@ impl App {
             scroll: ScrollState::new(),
             detail_expanded: false,
             detail_selected: 0,
+            target_detail_expanded: false,
+            wikelo_intel,
+            wikelo_filter: false,
         };
 
         // Load data

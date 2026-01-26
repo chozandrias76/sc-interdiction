@@ -43,6 +43,10 @@ pub struct MapLocation {
     pub y: f64,
     pub loc_type: MapLocationType,
     pub parent: Option<String>,
+    /// Wikelo items available at this location (empty if not a source).
+    pub wikelo_items: Vec<String>,
+    /// Whether this location has high-value Wikelo items.
+    pub wikelo_high_value: bool,
 }
 
 /// Type of location for map rendering.

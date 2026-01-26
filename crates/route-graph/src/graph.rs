@@ -351,11 +351,57 @@ mod tests {
         }
     }
 
+    // RouteGraph tests
     #[test]
-    fn test_new_graph_is_empty() {
+    fn test_new_creates_empty_graph() {
         let graph = RouteGraph::new();
         assert_eq!(graph.node_count(), 0);
         assert_eq!(graph.edge_count(), 0);
+    }
+
+    fn create_test_station(
+        id: &str,
+        name: &str,
+        code: &str,
+        station_type: &str,
+        system: &str,
+    ) -> Station {
+        Station {
+            id: id.to_string(),
+            code: code.to_string(),
+            name: name.to_string(),
+            station_type: station_type.to_string(),
+            parent_name: "TestBody".to_string(),
+            system_code: system.to_string(),
+        }
+    }
+
+    #[test]
+    fn test_add_station_returns_index() {
+        let mut graph = RouteGraph::new();
+        let station = create_test_station("1", "Port Olisar", "PO", "STATION", "Stanton");
+
+        let idx = graph.add_station(&station);
+
+        // Verify we got a valid index and node is accessible
+        assert_eq!(graph.node_count(), 1);
+        let node = graph.get_node("PO").unwrap();
+        assert_eq!(node.name, "Port Olisar");
+        // The NodeIndex should be valid (we can use it to verify the internal graph)
+        assert!(idx.index() < graph.node_count());
+    }
+
+    #[test]
+    fn test_add_station_deduplicates() {
+        let mut graph = RouteGraph::new();
+        let station = create_test_station("1", "Port Olisar", "PO", "STATION", "Stanton");
+
+        let idx1 = graph.add_station(&station);
+        let idx2 = graph.add_station(&station);
+
+        // Same station added twice should return same index
+        assert_eq!(idx1, idx2);
+        assert_eq!(graph.node_count(), 1);
     }
 
     #[test]
@@ -383,13 +429,41 @@ mod tests {
         assert_eq!(graph.node_count(), 1);
     }
 
+    // NodeType parsing tests
     #[test]
-    fn test_node_type_parse() {
+    fn test_node_type_parse_station() {
         assert_eq!(NodeType::parse("STATION"), NodeType::Station);
+    }
+
+    #[test]
+    fn test_node_type_parse_outpost() {
         assert_eq!(NodeType::parse("OUTPOST"), NodeType::Outpost);
+    }
+
+    #[test]
+    fn test_node_type_parse_landing_zone() {
         assert_eq!(NodeType::parse("LANDING_ZONE"), NodeType::LandingZone);
+    }
+
+    #[test]
+    fn test_node_type_parse_city() {
         assert_eq!(NodeType::parse("CITY"), NodeType::City);
+    }
+
+    #[test]
+    fn test_node_type_parse_unknown() {
         assert_eq!(NodeType::parse("UNKNOWN"), NodeType::OrbitalMarker);
+    }
+
+    #[test]
+    fn test_node_type_parse_case_insensitive() {
+        // Lowercase should also work due to to_uppercase()
+        assert_eq!(NodeType::parse("station"), NodeType::Station);
+        assert_eq!(NodeType::parse("outpost"), NodeType::Outpost);
+        assert_eq!(NodeType::parse("landing_zone"), NodeType::LandingZone);
+        assert_eq!(NodeType::parse("city"), NodeType::City);
+        // Mixed case
+        assert_eq!(NodeType::parse("StAtIoN"), NodeType::Station);
     }
 
     #[test]
@@ -421,7 +495,7 @@ mod tests {
     }
 
     #[test]
-    fn test_connect_system() {
+    fn test_connect_system_adds_edges() {
         let mut graph = RouteGraph::new();
         let terminal1 = create_test_terminal(1, "Port Olisar", "PO", "STATION", "Stanton", true);
         let terminal2 = create_test_terminal(2, "Area18", "A18", "CITY", "Stanton", false);
@@ -435,6 +509,36 @@ mod tests {
 
         // 3 nodes should create 6 edges (3 pairs × 2 directions)
         assert_eq!(graph.edge_count(), 6);
+        // Verify edges exist by checking node degrees
+        assert_eq!(graph.node_degree("PO"), 2);
+        assert_eq!(graph.node_degree("A18"), 2);
+        assert_eq!(graph.node_degree("LOR"), 2);
+    }
+
+    #[test]
+    fn test_node_count_and_edge_count() {
+        let mut graph = RouteGraph::new();
+
+        // Initial state
+        assert_eq!(graph.node_count(), 0);
+        assert_eq!(graph.edge_count(), 0);
+
+        // Add first node
+        let terminal1 = create_test_terminal(1, "Port Olisar", "PO", "STATION", "Stanton", true);
+        graph.add_terminal(&terminal1);
+        assert_eq!(graph.node_count(), 1);
+        assert_eq!(graph.edge_count(), 0);
+
+        // Add second node
+        let terminal2 = create_test_terminal(2, "Area18", "A18", "CITY", "Stanton", false);
+        graph.add_terminal(&terminal2);
+        assert_eq!(graph.node_count(), 2);
+        assert_eq!(graph.edge_count(), 0);
+
+        // Connect them (bidirectional)
+        graph.connect("PO", "A18", 1000.0).unwrap();
+        assert_eq!(graph.node_count(), 2);
+        assert_eq!(graph.edge_count(), 2); // Bidirectional = 2 edges
     }
 
     #[test]
@@ -579,5 +683,82 @@ mod tests {
 
         // Travel time should be (6000000 / 60000) + 10 = 110 seconds
         assert!((edges[0].1.travel_time - 110.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_default_impl() {
+        let graph = RouteGraph::default();
+        assert_eq!(graph.node_count(), 0);
+        assert_eq!(graph.edge_count(), 0);
+    }
+
+    #[test]
+    fn test_node_degree_not_found() {
+        let graph = RouteGraph::new();
+        assert_eq!(graph.node_degree("INVALID"), 0);
+    }
+
+    #[test]
+    fn test_node_type_orbital_marker_fallback() {
+        // Unknown types should fall back to OrbitalMarker
+        assert_eq!(NodeType::parse("SETTLEMENT"), NodeType::OrbitalMarker);
+        assert_eq!(NodeType::parse("RANDOM"), NodeType::OrbitalMarker);
+    }
+
+    #[test]
+    fn test_node_debug() {
+        let mut graph = RouteGraph::new();
+        let terminal = create_test_terminal(1, "Port Olisar", "PO", "STATION", "Stanton", true);
+        graph.add_terminal(&terminal);
+
+        let node = graph.get_node("PO").unwrap();
+        let debug_str = format!("{:?}", node);
+        assert!(debug_str.contains("Port Olisar"));
+    }
+
+    #[test]
+    fn test_edge_debug() {
+        let edge = Edge {
+            distance: 1000.0,
+            travel_time: 20.0,
+            has_obstruction: false,
+        };
+        let debug_str = format!("{:?}", edge);
+        assert!(debug_str.contains("1000"));
+    }
+
+    #[test]
+    fn test_graph_error_display() {
+        let err = GraphError::NodeNotFound("TEST".to_string());
+        let display = format!("{}", err);
+        assert!(display.contains("TEST"));
+
+        let err2 = GraphError::NoPath {
+            from: "A".to_string(),
+            to: "B".to_string(),
+        };
+        let display2 = format!("{}", err2);
+        assert!(display2.contains("A"));
+        assert!(display2.contains("B"));
+    }
+
+    #[test]
+    fn test_find_path_invalid_from() {
+        let mut graph = RouteGraph::new();
+        let terminal = create_test_terminal(1, "Port Olisar", "PO", "STATION", "Stanton", true);
+        graph.add_terminal(&terminal);
+
+        let result = graph.find_path("INVALID", "PO");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_find_path_invalid_to() {
+        let mut graph = RouteGraph::new();
+        let terminal = create_test_terminal(1, "Port Olisar", "PO", "STATION", "Stanton", true);
+        graph.add_terminal(&terminal);
+
+        let result = graph.find_path("PO", "INVALID");
+        assert!(result.is_err());
     }
 }

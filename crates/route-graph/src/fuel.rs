@@ -216,6 +216,72 @@ mod tests {
         // Zero fuel = zero range
         assert_eq!(max_range_mkm(0.0, s2_efficiency), 0.0);
     }
+
+    #[test]
+    fn test_efficiency_for_size_returns_correct_values() {
+        // S1 (Size 1) - Small ships
+        let s1 = efficiency_for_size(1).unwrap();
+        assert_eq!(s1.name, "S1 (Small)");
+        assert_eq!(s1.fuel_per_mkm, 40.0);
+
+        // S2 (Size 2) - Medium ships
+        let s2 = efficiency_for_size(2).unwrap();
+        assert_eq!(s2.name, "S2 (Medium)");
+        assert_eq!(s2.fuel_per_mkm, 80.0);
+
+        // S3 (Size 3) - Large ships
+        let s3 = efficiency_for_size(3).unwrap();
+        assert_eq!(s3.name, "S3 (Large)");
+        assert_eq!(s3.fuel_per_mkm, 160.0);
+    }
+
+    #[test]
+    fn test_efficiency_for_size_out_of_range() {
+        // Size 0 - invalid
+        assert!(efficiency_for_size(0).is_none());
+
+        // Size 4+ - invalid
+        assert!(efficiency_for_size(4).is_none());
+        assert!(efficiency_for_size(255).is_none());
+    }
+
+    #[test]
+    fn test_large_distance_calculation() {
+        let s1 = efficiency_for_size(1).unwrap();
+
+        // Very large distance (100 Mkm - cross-galaxy scale)
+        let fuel = calculate_qt_fuel_consumption(100.0, s1);
+        assert_eq!(fuel, 4000.0); // 100 * 40
+
+        // Extremely large distance
+        let huge_fuel = calculate_qt_fuel_consumption(1000.0, s1);
+        assert_eq!(huge_fuel, 40000.0);
+    }
+
+    #[test]
+    fn test_can_complete_route_boundary() {
+        let s2 = efficiency_for_size(2).unwrap();
+
+        // Exactly enough fuel (boundary condition)
+        let (can_complete, fuel_required, remaining) = can_complete_route(25.0, 2000.0, s2);
+        assert!(can_complete);
+        assert_eq!(fuel_required, 2000.0);
+        assert_eq!(remaining, 0.0);
+
+        // Slightly not enough fuel
+        let (can_complete2, fuel_required2, remaining2) = can_complete_route(25.0, 1999.9, s2);
+        assert!(!can_complete2);
+        assert_eq!(fuel_required2, 2000.0);
+        assert_eq!(remaining2, 0.0); // Clamped to 0
+    }
+
+    #[test]
+    fn test_max_range_with_zero_efficiency() {
+        // Edge case: if somehow efficiency was 0 (shouldn't happen in practice)
+        let zero_efficiency = QtDriveEfficiency::new("Zero", 0.0);
+        let range = max_range_mkm(1000.0, &zero_efficiency);
+        assert_eq!(range, 0.0); // Protected against division by zero
+    }
 }
 
 /// A fuel station/refueling location.
@@ -802,5 +868,517 @@ mod refuel_cost_tests {
         // Start with 2500, use 1600 (20 * 80), refuel 1600
         let cost = calculate_route_refuel_cost(&waypoints, 2500.0, efficiency, None);
         assert_eq!(cost, 2400.0); // 1600 units * 1.5
+    }
+}
+
+#[cfg(test)]
+#[allow(clippy::unwrap_used)]
+mod perpendicular_distance_tests {
+    use super::*;
+    use crate::Point3D;
+
+    #[test]
+    fn test_perpendicular_distance_point_on_line() {
+        // Point exactly on the line
+        let start = Point3D::new(0.0, 0.0, 0.0);
+        let end = Point3D::new(10.0, 0.0, 0.0);
+        let point = Point3D::new(5.0, 0.0, 0.0);
+
+        let dist = perpendicular_distance_to_line(&point, &start, &end);
+        assert!(
+            (dist - 0.0).abs() < 0.001,
+            "Point on line should have 0 distance"
+        );
+    }
+
+    #[test]
+    fn test_perpendicular_distance_point_above_line() {
+        // Point 3 units above the midpoint of a horizontal line
+        let start = Point3D::new(0.0, 0.0, 0.0);
+        let end = Point3D::new(10.0, 0.0, 0.0);
+        let point = Point3D::new(5.0, 3.0, 0.0);
+
+        let dist = perpendicular_distance_to_line(&point, &start, &end);
+        assert!((dist - 3.0).abs() < 0.001, "Expected 3.0, got {}", dist);
+    }
+
+    #[test]
+    fn test_perpendicular_distance_point_before_segment() {
+        // Point before the start of the segment
+        let start = Point3D::new(0.0, 0.0, 0.0);
+        let end = Point3D::new(10.0, 0.0, 0.0);
+        let point = Point3D::new(-5.0, 0.0, 0.0);
+
+        let dist = perpendicular_distance_to_line(&point, &start, &end);
+        assert!((dist - 5.0).abs() < 0.001, "Expected 5.0, got {}", dist);
+    }
+
+    #[test]
+    fn test_perpendicular_distance_point_after_segment() {
+        // Point after the end of the segment
+        let start = Point3D::new(0.0, 0.0, 0.0);
+        let end = Point3D::new(10.0, 0.0, 0.0);
+        let point = Point3D::new(15.0, 0.0, 0.0);
+
+        let dist = perpendicular_distance_to_line(&point, &start, &end);
+        assert!((dist - 5.0).abs() < 0.001, "Expected 5.0, got {}", dist);
+    }
+
+    #[test]
+    fn test_perpendicular_distance_zero_length_segment() {
+        // Line segment is actually a point (start == end)
+        let start = Point3D::new(5.0, 5.0, 5.0);
+        let end = Point3D::new(5.0, 5.0, 5.0);
+        let point = Point3D::new(8.0, 5.0, 5.0);
+
+        let dist = perpendicular_distance_to_line(&point, &start, &end);
+        assert!((dist - 3.0).abs() < 0.001, "Expected 3.0, got {}", dist);
+    }
+
+    #[test]
+    fn test_perpendicular_distance_3d() {
+        // 3D perpendicular distance
+        let start = Point3D::new(0.0, 0.0, 0.0);
+        let end = Point3D::new(10.0, 0.0, 0.0);
+        let point = Point3D::new(5.0, 3.0, 4.0); // 5 units perpendicular (3-4-5 triangle)
+
+        let dist = perpendicular_distance_to_line(&point, &start, &end);
+        assert!((dist - 5.0).abs() < 0.001, "Expected 5.0, got {}", dist);
+    }
+
+    #[test]
+    fn test_perpendicular_distance_diagonal_line() {
+        // Diagonal line from origin to (10, 10, 0)
+        let start = Point3D::new(0.0, 0.0, 0.0);
+        let end = Point3D::new(10.0, 10.0, 0.0);
+        let point = Point3D::new(5.0, 5.0, 0.0); // On the line
+
+        let dist = perpendicular_distance_to_line(&point, &start, &end);
+        assert!(
+            dist < 0.001,
+            "Point on diagonal should have ~0 distance, got {}",
+            dist
+        );
+    }
+}
+
+#[cfg(test)]
+#[allow(clippy::unwrap_used)]
+mod find_nearest_on_route_tests {
+    use super::*;
+    use crate::Point3D;
+
+    fn make_terminal(
+        id: i64,
+        code: &str,
+        name: &str,
+        system: &str,
+        is_refuel: bool,
+    ) -> api_client::Terminal {
+        api_client::Terminal {
+            id,
+            code: Some(code.to_string()),
+            name: Some(name.to_string()),
+            nickname: None,
+            star_system_name: Some(system.to_string()),
+            planet_name: None,
+            moon_name: None,
+            space_station_name: None,
+            outpost_name: None,
+            city_name: None,
+            terminal_type: None,
+            has_freight_elevator: false,
+            has_loading_dock: false,
+            has_docking_port: true,
+            is_refuel,
+            is_refinery: false,
+        }
+    }
+
+    #[test]
+    fn test_find_nearest_on_route_within_deviation() {
+        // Create fuel stations with known positions
+        let terminals = vec![
+            make_terminal(1, "Hurston", "Hurston Station", "Stanton", true),
+            make_terminal(2, "Crusader", "Crusader Station", "Stanton", true),
+        ];
+
+        let index = FuelStationIndex::from_terminals(&terminals);
+
+        // Route from (0,0,0) to (20,0,0)
+        let start = Point3D::new(0.0, 0.0, 0.0);
+        let end = Point3D::new(20.0, 0.0, 0.0);
+
+        // Find station within 20 Mkm deviation
+        let result = index.find_nearest_on_route(&start, &end, 20.0);
+
+        // Should find at least one station (Hurston is at ~12.85 Mkm from origin)
+        if let Some((station, _deviation)) = result {
+            assert!(station.name.contains("Hurston") || station.name.contains("Crusader"));
+        }
+    }
+
+    #[test]
+    fn test_find_nearest_on_route_no_stations_in_range() {
+        let terminals = vec![make_terminal(
+            1,
+            "Hurston",
+            "Hurston Station",
+            "Stanton",
+            true,
+        )];
+
+        let index = FuelStationIndex::from_terminals(&terminals);
+
+        // Route far from any stations
+        let start = Point3D::new(1000.0, 1000.0, 1000.0);
+        let end = Point3D::new(2000.0, 1000.0, 1000.0);
+
+        // Very small deviation threshold
+        let result = index.find_nearest_on_route(&start, &end, 0.001);
+
+        // Should find nothing
+        assert!(result.is_none(), "Should not find stations far from route");
+    }
+
+    #[test]
+    fn test_find_nearest_empty_index() {
+        let terminals: Vec<api_client::Terminal> = vec![];
+        let index = FuelStationIndex::from_terminals(&terminals);
+
+        let start = Point3D::new(0.0, 0.0, 0.0);
+        let end = Point3D::new(10.0, 0.0, 0.0);
+
+        let result = index.find_nearest_on_route(&start, &end, 100.0);
+        assert!(result.is_none(), "Empty index should return None");
+    }
+}
+
+#[cfg(test)]
+#[allow(clippy::unwrap_used)]
+mod waypoint_tests {
+    use super::*;
+
+    #[test]
+    fn test_waypoint_creation() {
+        let wp = Waypoint {
+            location: "Port Olisar".to_string(),
+            needs_refuel: true,
+            distance_from_prev: 15.5,
+            cumulative_distance: 30.0,
+        };
+
+        assert_eq!(wp.location, "Port Olisar");
+        assert!(wp.needs_refuel);
+        assert!((wp.distance_from_prev - 15.5).abs() < 0.001);
+        assert!((wp.cumulative_distance - 30.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_waypoint_clone() {
+        let wp = Waypoint {
+            location: "ArcCorp".to_string(),
+            needs_refuel: false,
+            distance_from_prev: 8.2,
+            cumulative_distance: 8.2,
+        };
+
+        let wp2 = wp.clone();
+        assert_eq!(wp2.location, "ArcCorp");
+        assert!(!wp2.needs_refuel);
+        assert!((wp2.distance_from_prev - 8.2).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_waypoint_debug() {
+        let wp = Waypoint {
+            location: "Test".to_string(),
+            needs_refuel: true,
+            distance_from_prev: 5.0,
+            cumulative_distance: 10.0,
+        };
+
+        let debug_str = format!("{:?}", wp);
+        assert!(debug_str.contains("Test"));
+        assert!(debug_str.contains("needs_refuel"));
+    }
+}
+
+#[cfg(test)]
+#[allow(clippy::unwrap_used)]
+mod fuel_station_additional_tests {
+    use super::*;
+    use crate::Point3D;
+
+    fn make_terminal(
+        id: i64,
+        code: &str,
+        name: &str,
+        system: &str,
+        is_refuel: bool,
+    ) -> api_client::Terminal {
+        api_client::Terminal {
+            id,
+            code: Some(code.to_string()),
+            name: Some(name.to_string()),
+            nickname: None,
+            star_system_name: Some(system.to_string()),
+            planet_name: None,
+            moon_name: None,
+            space_station_name: None,
+            outpost_name: None,
+            city_name: None,
+            terminal_type: None,
+            has_freight_elevator: false,
+            has_loading_dock: false,
+            has_docking_port: true,
+            is_refuel,
+            is_refinery: false,
+        }
+    }
+
+    #[test]
+    fn test_fuel_station_uses_nickname_when_no_name() {
+        let terminal = api_client::Terminal {
+            id: 1,
+            code: Some("TEST".to_string()),
+            name: None,
+            nickname: Some("Test Nickname".to_string()),
+            star_system_name: Some("Stanton".to_string()),
+            planet_name: None,
+            moon_name: None,
+            space_station_name: None,
+            outpost_name: None,
+            city_name: None,
+            terminal_type: None,
+            has_freight_elevator: false,
+            has_loading_dock: false,
+            has_docking_port: true,
+            is_refuel: true,
+            is_refinery: false,
+        };
+
+        let index = FuelStationIndex::from_terminals(&[terminal]);
+        let station = &index.all_stations()[0];
+
+        assert_eq!(station.name, "Test Nickname");
+    }
+
+    #[test]
+    fn test_fuel_station_uses_id_fallback() {
+        let terminal = api_client::Terminal {
+            id: 42,
+            code: Some("TEST".to_string()),
+            name: None,
+            nickname: None,
+            star_system_name: Some("Stanton".to_string()),
+            planet_name: None,
+            moon_name: None,
+            space_station_name: None,
+            outpost_name: None,
+            city_name: None,
+            terminal_type: None,
+            has_freight_elevator: false,
+            has_loading_dock: false,
+            has_docking_port: true,
+            is_refuel: true,
+            is_refinery: false,
+        };
+
+        let index = FuelStationIndex::from_terminals(&[terminal]);
+        let station = &index.all_stations()[0];
+
+        assert_eq!(station.name, "Terminal 42");
+    }
+
+    #[test]
+    fn test_stations_in_system_case_insensitive() {
+        let terminals = vec![
+            make_terminal(1, "HUR-L1", "HUR-L1", "Stanton", true),
+            make_terminal(2, "PYRO-ST", "Pyro Station", "Pyro", true),
+        ];
+
+        let index = FuelStationIndex::from_terminals(&terminals);
+
+        // Test case-insensitive lookup
+        assert_eq!(index.stations_in_system("STANTON").len(), 1);
+        assert_eq!(index.stations_in_system("stanton").len(), 1);
+        assert_eq!(index.stations_in_system("StAnToN").len(), 1);
+        assert_eq!(index.stations_in_system("pyro").len(), 1);
+    }
+
+    #[test]
+    fn test_find_nearest_no_positions() {
+        // Create stations with codes that won't resolve to positions
+        let terminal = api_client::Terminal {
+            id: 1,
+            code: Some("UNKNOWN_LOCATION_XYZ".to_string()),
+            name: Some("Unknown Station".to_string()),
+            nickname: None,
+            star_system_name: Some("Unknown".to_string()),
+            planet_name: None,
+            moon_name: None,
+            space_station_name: None,
+            outpost_name: None,
+            city_name: None,
+            terminal_type: None,
+            has_freight_elevator: false,
+            has_loading_dock: false,
+            has_docking_port: true,
+            is_refuel: true,
+            is_refinery: false,
+        };
+
+        let index = FuelStationIndex::from_terminals(&[terminal]);
+        let test_pos = Point3D::new(0.0, 0.0, 0.0);
+
+        // Should return None since the station has no position
+        let result = index.find_nearest(&test_pos);
+        assert!(
+            result.is_none(),
+            "Should return None when stations have no positions"
+        );
+    }
+
+    #[test]
+    fn test_fuel_station_struct_debug() {
+        let station = FuelStation {
+            name: "Test Station".to_string(),
+            code: Some("TST".to_string()),
+            system: Some("Stanton".to_string()),
+            position: Some(Point3D::new(1.0, 2.0, 3.0)),
+        };
+
+        let debug_str = format!("{:?}", station);
+        assert!(debug_str.contains("Test Station"));
+        assert!(debug_str.contains("TST"));
+    }
+
+    #[test]
+    fn test_fuel_station_index_debug() {
+        let terminals = vec![make_terminal(1, "HUR-L1", "HUR-L1", "Stanton", true)];
+        let index = FuelStationIndex::from_terminals(&terminals);
+
+        let debug_str = format!("{:?}", index);
+        assert!(debug_str.contains("FuelStationIndex"));
+    }
+}
+
+#[cfg(test)]
+#[allow(clippy::unwrap_used)]
+mod find_route_with_refueling_tests {
+    use super::*;
+
+    fn make_terminal(
+        id: i64,
+        code: &str,
+        name: &str,
+        system: &str,
+        is_refuel: bool,
+    ) -> api_client::Terminal {
+        api_client::Terminal {
+            id,
+            code: Some(code.to_string()),
+            name: Some(name.to_string()),
+            nickname: None,
+            star_system_name: Some(system.to_string()),
+            planet_name: None,
+            moon_name: None,
+            space_station_name: None,
+            outpost_name: None,
+            city_name: None,
+            terminal_type: None,
+            has_freight_elevator: false,
+            has_loading_dock: false,
+            has_docking_port: true,
+            is_refuel,
+            is_refinery: false,
+        }
+    }
+
+    #[test]
+    fn test_direct_route_no_refuel_needed() {
+        // Route within fuel range should return just origin and destination
+        let terminals = vec![make_terminal(1, "HUR-L1", "HUR-L1", "Stanton", true)];
+        let index = FuelStationIndex::from_terminals(&terminals);
+        let efficiency = efficiency_for_size(2).unwrap();
+
+        // Large fuel capacity for direct route
+        let result = find_route_with_refueling(
+            "Hurston", "Crusader", 10000.0, // Large capacity
+            efficiency, &index,
+        );
+
+        match result {
+            Ok(waypoints) => {
+                assert_eq!(waypoints.len(), 2, "Direct route should have 2 waypoints");
+                assert_eq!(waypoints[0].location, "Hurston");
+                assert!(!waypoints[0].needs_refuel);
+                assert_eq!(waypoints[1].location, "Crusader");
+                assert!(!waypoints[1].needs_refuel);
+            }
+            Err(e) => panic!("Expected Ok, got Err: {}", e),
+        }
+    }
+
+    #[test]
+    fn test_unknown_origin_location() {
+        let terminals = vec![make_terminal(1, "HUR-L1", "HUR-L1", "Stanton", true)];
+        let index = FuelStationIndex::from_terminals(&terminals);
+        let efficiency = efficiency_for_size(2).unwrap();
+
+        let result =
+            find_route_with_refueling("UnknownLocation123", "Crusader", 1000.0, efficiency, &index);
+
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("Unknown origin location"));
+    }
+
+    #[test]
+    fn test_unknown_destination_location() {
+        let terminals = vec![make_terminal(1, "HUR-L1", "HUR-L1", "Stanton", true)];
+        let index = FuelStationIndex::from_terminals(&terminals);
+        let efficiency = efficiency_for_size(2).unwrap();
+
+        let result =
+            find_route_with_refueling("Hurston", "UnknownLocation456", 1000.0, efficiency, &index);
+
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("Unknown destination location"));
+    }
+
+    #[test]
+    fn test_qt_drive_efficiency_new() {
+        let eff = QtDriveEfficiency::new("Custom", 50.0);
+        assert_eq!(eff.name, "Custom");
+        assert!((eff.fuel_per_mkm - 50.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_qt_drive_efficiency_clone_and_copy() {
+        let eff = QtDriveEfficiency::new("Test Drive", 75.0);
+        let eff_clone = eff; // Copy
+
+        assert_eq!(eff.name, "Test Drive");
+        assert_eq!(eff_clone.name, "Test Drive");
+        assert!((eff.fuel_per_mkm - 75.0).abs() < 0.001);
+        assert!((eff_clone.fuel_per_mkm - 75.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_qt_drive_efficiency_debug() {
+        let eff = QtDriveEfficiency::new("Debug Test", 100.0);
+        let debug_str = format!("{:?}", eff);
+
+        assert!(debug_str.contains("Debug Test"));
+        assert!(debug_str.contains("100"));
+    }
+
+    #[test]
+    fn test_fuel_constants() {
+        // Verify fuel price constants are sensible
+        assert!(HYDROGEN_FUEL_PRICE_PER_UNIT > 0.0);
+        assert!(QUANTUM_FUEL_PRICE_PER_UNIT > 0.0);
+        assert!(QUANTUM_FUEL_PRICE_PER_UNIT >= HYDROGEN_FUEL_PRICE_PER_UNIT);
     }
 }

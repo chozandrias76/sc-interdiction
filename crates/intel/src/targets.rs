@@ -3,6 +3,7 @@
 use std::sync::Arc;
 
 use crate::ships::{CargoShip, ShipRegistry};
+use crate::wikelo::{SourceFlag, WikieloIntel};
 use api_client::{TradeRoute, UexClient};
 use ordered_float::OrderedFloat;
 use route_graph::{
@@ -16,13 +17,34 @@ use std::collections::HashMap;
 pub struct TargetAnalyzer {
     uex: UexClient,
     registry: Arc<ShipRegistry>,
+    wikelo: Option<Arc<WikieloIntel>>,
 }
 
 impl TargetAnalyzer {
     /// Create a new target analyzer with a ship registry.
     #[must_use]
     pub fn new(uex: UexClient, registry: Arc<ShipRegistry>) -> Self {
-        Self { uex, registry }
+        Self {
+            uex,
+            registry,
+            wikelo: None,
+        }
+    }
+
+    /// Add Wikelo intelligence for source flagging.
+    ///
+    /// When enabled, departing targets from Wikelo source locations
+    /// will have their `wikelo_flag` populated with item information.
+    #[must_use]
+    pub fn with_wikelo(mut self, wikelo: Arc<WikieloIntel>) -> Self {
+        self.wikelo = Some(wikelo);
+        self
+    }
+
+    /// Get access to the Wikelo intelligence (if configured).
+    #[must_use]
+    pub fn wikelo(&self) -> Option<&WikieloIntel> {
+        self.wikelo.as_deref()
     }
 
     /// Get hot trade routes sorted by profitability.
@@ -51,6 +73,10 @@ impl TargetAnalyzer {
                 let (fuel_sufficient, fuel_required, _) =
                     likely_ship.can_complete_route(distance_mkm);
 
+                // Calculate Wikelo score and items for origin
+                let (wikelo_score, wikelo_items) =
+                    calculate_wikelo_score(&self.wikelo, &r.terminal_origin_name);
+
                 HotRoute {
                     commodity: r.commodity_name.clone(),
                     commodity_code: r.commodity_code.clone(),
@@ -66,6 +92,8 @@ impl TargetAnalyzer {
                     distance_mkm,
                     fuel_sufficient,
                     fuel_required,
+                    wikelo_score,
+                    wikelo_items,
                 }
             })
             .collect();
@@ -108,6 +136,16 @@ impl TargetAnalyzer {
                 let estimated_cargo_value = r.profit_for_scu(likely_ship.cargo_scu as f64)
                     + (r.price_origin * likely_ship.cargo_scu as f64);
 
+                // Flag departing targets from Wikelo source locations
+                // Arriving targets already have their cargo, so source flagging isn't useful
+                let wikelo_flag = if is_departing {
+                    self.wikelo
+                        .as_ref()
+                        .and_then(|w| w.flag_location(&r.terminal_destination_name))
+                } else {
+                    None
+                };
+
                 TargetPrediction {
                     direction: if is_departing {
                         TrafficDirection::Departing
@@ -122,6 +160,7 @@ impl TargetAnalyzer {
                     } else {
                         r.terminal_origin_name
                     },
+                    wikelo_flag,
                 }
             })
             .collect();
@@ -328,6 +367,12 @@ pub struct HotRoute {
     pub fuel_sufficient: bool,
     /// Quantum fuel required for this route (units).
     pub fuel_required: f64,
+    /// Wikelo score 0-100 for origin location (None if no `WikieloIntel`).
+    ///
+    /// Indicates likelihood that cargo from this origin includes Wikelo items.
+    pub wikelo_score: Option<f64>,
+    /// Wikelo item names available at origin (empty if none or no `WikieloIntel`).
+    pub wikelo_items: Vec<String>,
 }
 
 /// A complete round-trip trade run (outbound + return with cargo).
@@ -369,6 +414,11 @@ pub struct TargetPrediction {
     pub likely_ship: CargoShip,
     pub estimated_cargo_value: f64,
     pub destination: String,
+    /// Wikelo source flag if departing from a Wikelo item source location.
+    ///
+    /// Only populated for departing targets when `WikieloIntel` is configured.
+    /// Indicates the target may be carrying Wikelo-related items.
+    pub wikelo_flag: Option<SourceFlag>,
 }
 
 /// Direction of traffic flow.
@@ -408,6 +458,12 @@ pub struct InterdictionHotspot {
     pub likely_ships: Vec<ShipFrequency>,
     /// Suggested interdiction approach.
     pub suggested_position: String,
+    /// Wikelo potential 0-100 for this location (None if no `WikieloIntel`).
+    ///
+    /// Higher scores indicate more Wikelo items available at this location.
+    pub wikelo_potential: Option<f64>,
+    /// Wikelo item names available at this location (empty if none or no `WikieloIntel`).
+    pub wikelo_items: Vec<String>,
 }
 
 /// Commodity with estimated value.
@@ -467,7 +523,12 @@ impl TargetAnalyzer {
         // Convert to hotspots and sort by value
         let mut hotspots: Vec<InterdictionHotspot> = location_data
             .into_values()
-            .map(|agg| agg.into_hotspot())
+            .map(|agg| {
+                // Calculate Wikelo potential for this location
+                let (wikelo_potential, wikelo_items) =
+                    calculate_wikelo_score(&self.wikelo, &agg.location);
+                agg.into_hotspot(wikelo_potential, wikelo_items)
+            })
             .collect();
 
         hotspots.sort_by(|a, b| {
@@ -576,7 +637,11 @@ impl LocationAggregator {
         entry.0 += 1;
     }
 
-    fn into_hotspot(self) -> InterdictionHotspot {
+    fn into_hotspot(
+        self,
+        wikelo_potential: Option<f64>,
+        wikelo_items: Vec<String>,
+    ) -> InterdictionHotspot {
         // Calculate average threat
         let avg_threat = if self.threat_levels.is_empty() {
             5.0
@@ -628,6 +693,8 @@ impl LocationAggregator {
             top_commodities,
             likely_ships,
             suggested_position,
+            wikelo_potential,
+            wikelo_items,
         }
     }
 }
@@ -669,6 +736,58 @@ fn calculate_risk_score(route: &TradeRoute) -> f64 {
 
     // Cap at 100
     score.min(100.0)
+}
+
+/// Calculate Wikelo score and item names for a location.
+///
+/// Returns `(Option<f64>, Vec<String>)` where:
+/// - score is None if no `WikieloIntel`, `Some(0-100)` otherwise
+/// - items is empty if no `WikieloIntel` or no items at location
+///
+/// Scoring formula:
+/// - Base: 20 points if `is_wikelo_source(location)`
+/// - +10 per high-value item (`estimated_value` > 10,000)
+/// - +5 per item up to 50 points
+/// - Cap at 100
+fn calculate_wikelo_score(
+    wikelo: &Option<Arc<WikieloIntel>>,
+    location: &str,
+) -> (Option<f64>, Vec<String>) {
+    let Some(wikelo) = wikelo.as_ref() else {
+        return (None, Vec::new());
+    };
+
+    let flag = wikelo.flag_location(location);
+    let Some(flag) = flag else {
+        return (Some(0.0), Vec::new());
+    };
+
+    // Calculate score
+    let mut score: f64 = 20.0; // Base for being a Wikelo source
+
+    // +10 per high-value item
+    let high_value_count = flag
+        .top_items
+        .iter()
+        .filter(|item| item.estimated_value.is_some_and(|v| v > 10_000))
+        .count();
+    score += (high_value_count as f64) * 10.0;
+
+    // +5 per item up to 50 points
+    let item_bonus = (flag.item_count as f64 * 5.0).min(50.0);
+    score += item_bonus;
+
+    // Cap at 100
+    score = score.min(100.0);
+
+    // Collect item names
+    let items: Vec<String> = flag
+        .top_items
+        .iter()
+        .map(|item| item.name.clone())
+        .collect();
+
+    (Some(score), items)
 }
 
 #[cfg(test)]

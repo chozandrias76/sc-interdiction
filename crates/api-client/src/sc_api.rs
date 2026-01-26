@@ -169,7 +169,7 @@ struct SearchResponse {
 }
 
 /// Extract stations from a system's celestial objects.
-fn extract_stations(system: &StarSystem) -> Vec<Station> {
+pub(crate) fn extract_stations(system: &StarSystem) -> Vec<Station> {
     let mut stations = Vec::new();
     extract_stations_recursive(&system.celestial_objects, &system.code, "", &mut stations);
     stations

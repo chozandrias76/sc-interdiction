@@ -2563,6 +2563,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "wikelo-data"
+version = "0.1.4"
+dependencies = [
+ "intel",
+ "serde",
+ "thiserror 1.0.69",
+ "tracing",
+]
+
+[[package]]
 name = "winapi"
 version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"

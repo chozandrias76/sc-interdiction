@@ -6,6 +6,7 @@
 //! 3. Falling back to static data if database is unavailable
 
 use super::super::types::{MapLocation, MapLocationType};
+use intel::WikieloIntel;
 use route_graph::{estimate_position, locations_in_system, LOCATION_POSITIONS};
 use sc_data_extractor::database::Database;
 
@@ -73,7 +74,8 @@ pub fn infer_system(location: &str) -> String {
 /// Build map locations from database, with coordinate lookup from route-graph.
 ///
 /// Falls back to static data if database is unavailable.
-pub fn build_map_locations(system: &str) -> Vec<MapLocation> {
+/// Populates Wikelo source flags for each location.
+pub fn build_map_locations(system: &str, wikelo_intel: &WikieloIntel) -> Vec<MapLocation> {
     // Try to load from database first
     if let Ok(db) = Database::from_env() {
         if let Ok(db_locations) = db.query_map_locations_for_system(system) {
@@ -91,12 +93,18 @@ pub fn build_map_locations(system: &str) -> Vec<MapLocation> {
                         _ => continue, // Skip unknown types
                     };
 
+                    // Flag Wikelo source
+                    let (wikelo_items, wikelo_high_value) =
+                        flag_wikelo_source(&db_loc.display_name, wikelo_intel);
+
                     locations.push(MapLocation {
                         name: db_loc.display_name,
                         x: pos.x,
                         y: pos.y,
                         loc_type,
                         parent: db_loc.parent_display_name,
+                        wikelo_items,
+                        wikelo_high_value,
                     });
                 }
             }
@@ -115,6 +123,8 @@ pub fn build_map_locations(system: &str) -> Vec<MapLocation> {
                             y: 0.0,
                             loc_type: MapLocationType::Star,
                             parent: None,
+                            wikelo_items: Vec::new(),
+                            wikelo_high_value: false,
                         },
                     );
                 }
@@ -124,11 +134,25 @@ pub fn build_map_locations(system: &str) -> Vec<MapLocation> {
     }
 
     // Fall back to static data
-    build_static_map_locations(system)
+    build_static_map_locations(system, wikelo_intel)
+}
+
+/// Flag a location with Wikelo source data.
+fn flag_wikelo_source(location: &str, wikelo_intel: &WikieloIntel) -> (Vec<String>, bool) {
+    if let Some(flag) = wikelo_intel.flag_location(location) {
+        let items = flag
+            .top_items
+            .iter()
+            .map(|item| item.name.clone())
+            .collect();
+        (items, flag.has_high_value)
+    } else {
+        (Vec::new(), false)
+    }
 }
 
 /// Build static map locations (fallback when database unavailable).
-fn build_static_map_locations(system: &str) -> Vec<MapLocation> {
+fn build_static_map_locations(system: &str, wikelo_intel: &WikieloIntel) -> Vec<MapLocation> {
     let mut locations = Vec::new();
 
     // Get all locations from route-graph for this system
@@ -137,12 +161,17 @@ fn build_static_map_locations(system: &str) -> Vec<MapLocation> {
     for pos in system_locations {
         let loc_type = infer_location_type(pos.name, pos.parent);
 
+        // Flag Wikelo source
+        let (wikelo_items, wikelo_high_value) = flag_wikelo_source(pos.name, wikelo_intel);
+
         locations.push(MapLocation {
             name: pos.name.to_string(),
             x: pos.position.x,
             y: pos.position.y,
             loc_type,
             parent: pos.parent.map(String::from),
+            wikelo_items,
+            wikelo_high_value,
         });
     }
 
@@ -159,6 +188,8 @@ fn build_static_map_locations(system: &str) -> Vec<MapLocation> {
                 y: 0.0,
                 loc_type: MapLocationType::Star,
                 parent: None,
+                wikelo_items: Vec::new(),
+                wikelo_high_value: false,
             },
         );
     }
@@ -245,7 +276,8 @@ mod tests {
 
     #[test]
     fn test_static_locations() {
-        let locations = build_static_map_locations("Stanton");
+        let wikelo_intel = WikieloIntel::from_static();
+        let locations = build_static_map_locations("Stanton", &wikelo_intel);
         assert!(!locations.is_empty());
 
         // Should have a star

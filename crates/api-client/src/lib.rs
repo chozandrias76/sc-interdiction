@@ -11,6 +11,8 @@ mod sc_api;
 mod uex;
 
 #[cfg(test)]
+mod sc_api_tests;
+#[cfg(test)]
 mod uex_tests;
 
 pub use error::{ApiError, Result};
