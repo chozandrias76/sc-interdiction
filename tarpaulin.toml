@@ -1,11 +1,19 @@
 [default]
-# Exclude the sc-data-extractor crate from coverage
-exclude = ["sc-data-extractor"]
+# Exclude crates from coverage that are CLI tools or have external dependencies
+exclude = [
+    "sc-data-extractor",
+    "dataforge-explorer",
+    "sc-logistics-importer",
+    "scunpacked-explorer",
+]
 
 # Exclude specific file patterns from coverage
 exclude-files = [
     "crates/sc-data-extractor/src/*",
     "crates/cli/src/main.rs",
+    "crates/dataforge-explorer/src/*",
+    "crates/sc-logistics-importer/src/*",
+    "crates/scunpacked-explorer/src/*",
 ]
 
 # Output format
