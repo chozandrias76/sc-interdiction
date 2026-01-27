@@ -147,10 +147,7 @@ async fn test_get_hotspots_respects_max_limit() {
     );
 }
 
-// These intersection tests are slow under coverage instrumentation due to
-// computationally expensive route analysis. Run with `cargo test` (not tarpaulin).
 #[tokio::test]
-#[ignore = "slow under coverage: route intersection computation is O(n²)"]
 async fn test_get_intersections_default() {
     let (status, _body) = get("/api/intel/intersections").await;
 
@@ -162,7 +159,6 @@ async fn test_get_intersections_default() {
 }
 
 #[tokio::test]
-#[ignore = "slow under coverage: route intersection computation is O(n²)"]
 async fn test_get_intersections_with_params() {
     let (status, _body) = get("/api/intel/intersections?limit=5&min_routes=3").await;
 
