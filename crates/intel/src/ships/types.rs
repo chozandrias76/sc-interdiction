@@ -21,19 +21,23 @@ pub enum ShipRole {
     Support,
 }
 
-/// A cargo ship with relevant stats.
+/// A cargo ship with relevant stats for interdiction analysis.
 #[derive(Debug, Clone, Serialize)]
 pub struct CargoShip {
+    /// Ship name (e.g., "Caterpillar").
     pub name: String,
+    /// Ship manufacturer (e.g., "Drake").
     pub manufacturer: String,
+    /// Cargo capacity in SCU.
     pub cargo_scu: u32,
+    /// Maximum crew size.
     pub crew_size: u8,
     /// Ship combat difficulty for interdictors (1-10).
     /// 1 = easy kill (no weapons, slow, fragile)
     /// 5 = moderate (some weapons, tanky, or fast)
     /// 10 = very difficult (heavy weapons, fighter escort, etc.)
     pub threat_level: u8,
-    /// Typical value of the ship itself (purchase price).
+    /// Typical value of the ship itself (purchase price in aUEC).
     pub ship_value_uec: u64,
     /// Whether this ship requires a station with external freight elevators (Hull series).
     pub requires_freight_elevator: bool,
@@ -228,13 +232,13 @@ pub(super) fn has_freight_elevator(terminal_name: &str) -> bool {
 /// Estimated loot from a successful interdiction.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LootEstimate {
-    /// Total value of cargo carried by target
+    /// Total value of cargo carried by target (aUEC).
     pub cargo_value: f64,
-    /// Estimated value of recoverable cargo after interdiction
+    /// Estimated value of recoverable cargo after interdiction (aUEC).
     pub recoverable_cargo: f64,
-    /// Estimated value of salvageable ship components
+    /// Estimated value of salvageable ship components (aUEC).
     pub salvage_value: f64,
-    /// Total estimated loot value
+    /// Total estimated loot value (cargo + salvage, in aUEC).
     pub total: f64,
 }
 
