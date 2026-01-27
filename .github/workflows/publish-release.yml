@@ -152,12 +152,40 @@ jobs:
             $PRERELEASE_FLAG \
             artifacts/*/* || true
 
-      - name: Merge back to develop
+      - name: Create back-merge PR to develop
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
         run: |
-          git fetch origin develop
-          git checkout develop
-          git merge --no-ff main -m "chore: merge release v${{ needs.prepare.outputs.version }} back to develop"
-          git push origin develop
+          # Create a back-merge branch from main
+          BRANCH_NAME="chore/back-merge-v${{ needs.prepare.outputs.version }}"
+          git checkout -b "$BRANCH_NAME"
+          git push origin "$BRANCH_NAME"
+
+          # Create PR to merge back to develop
+          gh pr create \
+            --base develop \
+            --head "$BRANCH_NAME" \
+            --title "chore(release): back-merge v${{ needs.prepare.outputs.version }} to develop" \
+            --body "$(cat <<EOF
+          ## Summary
+
+          Automated back-merge of release v${{ needs.prepare.outputs.version }} from main to develop.
+
+          ## Changes
+
+          - Version bump to ${{ needs.prepare.outputs.version }}
+          - All changes included in this release
+
+          ## Test Results
+
+          - ✅ Release published successfully
+          - ✅ This is an automated back-merge
+
+          🤖 Generated automatically by release workflow
+          EOF
+          )"
+
+          echo "Created back-merge PR for v${{ needs.prepare.outputs.version }}"
 
       - name: Delete release branch
         if: github.event_name == 'pull_request'
@@ -178,7 +206,7 @@ jobs:
           echo "✅ Version: \`v${{ steps.get_version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
           echo "✅ Git tag created and pushed" >> $GITHUB_STEP_SUMMARY
           echo "✅ GitHub release created" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Changes merged back to develop" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Back-merge PR created to develop" >> $GITHUB_STEP_SUMMARY
           echo "✅ Release branch deleted" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "🎉 Release v${{ steps.get_version.outputs.version }} is now live!" >> $GITHUB_STEP_SUMMARY
