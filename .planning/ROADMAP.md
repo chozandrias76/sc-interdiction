@@ -142,9 +142,10 @@ Plans:
 **Depends on**: Phase 5.2 (need coverage threshold met)
 **Research**: Unlikely (standard testing)
 **Plans**: 2 plans
+**Status**: In progress
 
 Plans:
-- [ ] 06-01: Unit tests for data module and intel integration
+- [x] 06-01: TargetAnalyzer integration tests with mock fixtures
 - [ ] 06-02: Integration tests, edge cases, inline documentation
 
 ## Progress
@@ -162,4 +163,4 @@ Phases execute in numeric order: 1 → 2 → 2.1 → 3 → 4 → 5 → 5.1 → 5
 | 5. TUI Wikelo Views | 3/3 | Complete | 2026-01-21 |
 | 5.1. TUI Snapshot Test Coverage | 4/4 | Complete | 2026-01-22 |
 | 5.2. Coverage to 80% | 8/8 | Complete | 2026-01-23 |
-| 6. Testing & Polish | 0/2 | Not started | - |
+| 6. Testing & Polish | 1/2 | In progress | - |

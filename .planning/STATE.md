@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-14)
 
 **Core value:** Identify where valuable targets are and what they're likely carrying
-**Current focus:** Phase 5.2 — Coverage to 80%
+**Current focus:** Phase 6 — Testing & Polish
 
 ## Current Position
 
-Phase: 5.2 of 7 (Coverage to 80%)
-Plan: 8 of 8 in current phase
-Status: Complete
-Last activity: 2026-01-23 — Completed 05.2-08-PLAN.md
+Phase: 6 of 7 (Testing & Polish)
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-01-27 — Completed 06-01-PLAN.md
 
-Progress: ████████████████░░░░ 79% (26 of 33 plans complete)
+Progress: █████████████████░░░ 82% (27 of 33 plans complete)
 
 ## Performance Metrics
 
@@ -35,9 +35,10 @@ Progress: ████████████████░░░░ 79% (26 o
 | 5. TUI Wikelo Views | 3 | 23 min | 8 min |
 | 5.1. TUI Snapshot Tests | 4 | 24 min | 6 min |
 | 5.2. Coverage to 80% | 8 | 47 min | 6 min |
+| 6. Testing & Polish | 1 | 6 min | 6 min |
 
 **Recent Trend:**
-- Last 5 plans: 8m, 7m, 8m, 5m, 5m
+- Last 5 plans: 7m, 8m, 5m, 5m, 6m
 - Trend: → (stable, fast)
 
 ## Accumulated Context
@@ -79,23 +80,21 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-01-23
-Stopped at: Completed Phase 5.2 (8/8 plans)
+Last session: 2026-01-27
+Stopped at: Completed 06-01-PLAN.md (1/2 plans in Phase 6)
 Resume file: None
 
 ### Critical Context for Next Session
 
-**Phase 5.2 COMPLETE.** Coverage at 66.12% (target was 80%, CI doesn't enforce).
+**Phase 6 IN PROGRESS.** Testing & Polish phase.
 
-1. **05.2-01:** ✓ route-graph spatial.rs + fuel.rs unit tests (24 tests)
-2. **05.2-02:** ✓ intel ships/registry.rs + wikelo/contracts.rs tests (19 tests)
-3. **05.2-03:** ✓ route-graph spatial helper + intersection tests (30 tests)
-4. **05.2-04:** ✓ intel ships/types.rs + wikelo/types.rs unit tests (34 tests)
-5. **05.2-05:** ✓ route-graph graph.rs + refinery.rs unit tests (15+ tests)
-6. **05.2-06:** ✓ api-client get_trade_routes mock tests (11 tests)
-7. **05.2-07:** ✓ intel targets.rs LocationAggregator + helper tests (17 tests)
-8. **05.2-08:** ✓ api-client sc_api.rs mock tests (12 tests)
+1. **06-01:** ✓ TargetAnalyzer integration tests with mock fixtures (4 tests)
+   - Created fixtures.rs with mock UEX API responses
+   - Implemented test_get_hot_routes_integration
+   - Implemented test_predict_targets_at_integration
+   - Implemented test_get_trade_runs_integration
+   - Implemented test_get_interdiction_hotspots_integration
 
-**Phase 5.2 progress:** 8/8 plans complete
+**Phase 6 progress:** 1/2 plans complete
 
-**Next:** Transition to Phase 6 (Testing & Polish)
+**Next:** Execute 06-02-PLAN.md (edge cases, inline documentation)
