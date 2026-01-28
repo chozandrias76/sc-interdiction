@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-14)
 
 **Core value:** Identify where valuable targets are and what they're likely carrying
-**Current focus:** Phase 6 — Testing & Polish (COMPLETE)
+**Current focus:** v1.1 Demand Modeling — Phase 7 (Demand Research)
 
 ## Current Position
 
-Phase: 6 of 7 (Testing & Polish)
-Plan: 2 of 2 in current phase
-Status: Phase complete
-Last activity: 2026-01-27 — Completed 06-02-PLAN.md
+Phase: 7 of 12 (Demand Research)
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-01-27 — Milestone v1.1 created
 
-Progress: ████████████████████ 100% (28 of 28 plans complete)
+Progress: ░░░░░░░░░░ 0% (0 of ? plans in v1.1)
 
 ## Performance Metrics
 
@@ -69,6 +69,7 @@ Recent decisions affecting current work:
 
 - Phase 5.1 inserted after Phase 5: TUI Snapshot Test Coverage (URGENT) - discovered test gaps during 05-01 execution
 - Phase 5.2 inserted after Phase 5.1: Coverage to 80% - CI coverage threshold blocking pushes (61.74% < 80%)
+- Milestone v1.1 created: Demand Modeling, 6 phases (Phase 7-12)
 
 ### Deferred Issues
 
@@ -81,14 +82,19 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-27
-Stopped at: Completed 06-02-PLAN.md (Phase 6 COMPLETE)
+Stopped at: Milestone v1.1 Demand Modeling created
 Resume file: None
 
 ### Critical Context for Next Session
 
-**MILESTONE COMPLETE.** All phases finished.
+**v1.1 Demand Modeling milestone created.** 6 phases (7-12).
 
-1. **06-01:** ✓ TargetAnalyzer integration tests with mock fixtures (4 tests)
-2. **06-02:** ✓ Inline documentation + edge case tests (5 tests)
+Research plan: `.planning/research/demand-modeling-research.md`
 
-**Next:** Run `/gsd:complete-milestone` to archive and prepare for next version.
+**Phase 7 (Demand Research)** needs `/gsd:research-phase 7` first to gather:
+- Wikelo contracts from wikelotrades.com
+- MG/Council faction systems
+- Exchange rates (50 MG Scrip → 1 Favor)
+- Other demand sources
+
+**Next:** Run `/gsd:research-phase 7` to begin demand research.

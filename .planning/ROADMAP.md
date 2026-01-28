@@ -8,23 +8,29 @@ Add Wikelo item source intelligence to the interdiction planning tool. Players c
 
 None
 
+## Milestones
+
+- ✅ **v1.0 Wikelo Intel** - Phases 1-6 (shipped 2026-01-27)
+- 🚧 **v1.1 Demand Modeling** - Phases 7-12 (in progress)
+
 ## Phases
 
 **Phase Numbering:**
 - Integer phases (1, 2, 3): Planned milestone work
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
+<details>
+<summary>✅ v1.0 Wikelo Intel (Phases 1-6) - SHIPPED 2026-01-27</summary>
+
 - [x] **Phase 1: Wikelo Data Model** - Define data structures for items, sources, contracts
 - [x] **Phase 2: Item Source Research** - Research and compile item→source mappings from wiki
-- [ ] **Phase 2.1: Game Data Extraction** - INSERTED: Extract authoritative data from Data.p4k
+- [x] **Phase 2.1: Game Data Extraction** - INSERTED: Extract authoritative data from Data.p4k
 - [x] **Phase 3: Wikelo Data Module** - Create crate with static Wikelo item/source data
 - [x] **Phase 4: Source Intel Integration** - Integrate source flagging into intel crate
 - [x] **Phase 5: TUI Wikelo Views** - Add Wikelo intel display to dashboard
-- [x] **Phase 5.1: TUI Snapshot Test Coverage** - INSERTED: Comprehensive visual regression tests for Wikelo features
-- [ ] **Phase 5.2: Coverage to 80%** - INSERTED: Reach CI coverage threshold
+- [x] **Phase 5.1: TUI Snapshot Test Coverage** - INSERTED: Comprehensive visual regression tests
+- [x] **Phase 5.2: Coverage to 80%** - INSERTED: Reach CI coverage threshold
 - [x] **Phase 6: Testing & Polish** - Tests, edge cases, documentation
-
-## Phase Details
 
 ### Phase 1: Wikelo Data Model
 **Goal**: Define Rust types for Wikelo items, source locations, and contracts
@@ -63,7 +69,6 @@ Plans:
 **Depends on**: Phase 2.1 (need authoritative data from game files)
 **Research**: Unlikely (standard crate creation)
 **Plans**: 2 plans
-**Status**: Complete
 
 Plans:
 - [x] 03-01: Create crate structure with item registry
@@ -109,24 +114,6 @@ Plans:
 **Research**: Unlikely (standard testing)
 **Plans**: 8 plans
 
-Starting coverage: 54.30%
-Final coverage: 66.12%
-Target: 80%
-
-**Note**: Phase 5.2 plans increased coverage by ~12 points. Remaining gaps are primarily
-in `server/` (0%) and `sc-data-extractor/` (0%) which require integration tests.
-CI doesn't enforce threshold - coverage upload is informational only.
-
-Key gaps addressed:
-- `spatial.rs`: 27/210 → comprehensive unit tests (Plans 01, 03)
-- `fuel.rs`: 23/98 → calculation tests (Plan 01)
-- `ships/registry.rs`: 14/62 → lookup tests (Plan 02)
-- `wikelo/contracts.rs`: 0/16 → helper tests (Plan 02)
-- `ships/types.rs`: 27/47 → method tests (Plan 04)
-- `graph.rs`: 56/77 → graph operation tests (Plan 05)
-- `refinery.rs`: 25/41 → index tests (Plan 05)
-- `uex.rs`: 48/108 → mock API tests (Plan 06)
-
 Plans:
 - [x] 05.2-01: route-graph spatial.rs + fuel.rs unit tests
 - [x] 05.2-02: intel ships/registry.rs + wikelo/contracts.rs unit tests
@@ -142,25 +129,98 @@ Plans:
 **Depends on**: Phase 5.2 (need coverage threshold met)
 **Research**: Unlikely (standard testing)
 **Plans**: 2 plans
-**Status**: Complete
 
 Plans:
 - [x] 06-01: TargetAnalyzer integration tests with mock fixtures
 - [x] 06-02: Integration tests, edge cases, inline documentation
 
+</details>
+
+### 🚧 v1.1 Demand Modeling (In Progress)
+
+**Milestone Goal:** Add contract/demand tracking to complement existing item sources. Model the full item economy: where items come from (supply, already done) AND who wants them (demand, new).
+
+- [ ] **Phase 7: Demand Research** - Research Wikelo contracts and other demand sources
+- [ ] **Phase 8: Demand Data Model** - Extend types for demand/contracts
+- [ ] **Phase 9: Contract Data Population** - Populate Wikelo contract instances
+- [ ] **Phase 10: Demand Registry** - Create contract registry with indexing
+- [ ] **Phase 11: Demand Intel Integration** - Add demand scoring to TargetAnalyzer
+- [ ] **Phase 12: CLI/TUI Demand Views** - Add item lookup and demand display
+
+#### Phase 7: Demand Research
+**Goal**: Research Wikelo contracts, MG/Council systems, and other demand sources
+**Depends on**: v1.0 complete (builds on existing item data)
+**Research**: Likely (external data gathering)
+**Research topics**: wikelotrades.com contracts, mission giver requirements, faction reward systems, exchange rates (50 MG Scrip → 1 Favor)
+**Plans**: TBD
+
+Plans:
+- [ ] 07-01: TBD (run /gsd:plan-phase 7 to break down)
+
+#### Phase 8: Demand Data Model
+**Goal**: Extend type system for demand sources and contracts
+**Depends on**: Phase 7 (need research results)
+**Research**: Unlikely (internal modeling)
+**Plans**: TBD
+
+Plans:
+- [ ] 08-01: TBD
+
+#### Phase 9: Contract Data Population
+**Goal**: Populate WikieloContract instances with researched data
+**Depends on**: Phase 8 (need types defined)
+**Research**: Unlikely (data entry from research)
+**Plans**: TBD
+
+Plans:
+- [ ] 09-01: TBD
+
+#### Phase 10: Demand Registry
+**Goal**: Create ContractRegistry with bidirectional indexing (item→contracts, contract→items)
+**Depends on**: Phase 9 (need contract data)
+**Research**: Unlikely (follows WikieloRegistry pattern)
+**Plans**: TBD
+
+Plans:
+- [ ] 10-01: TBD
+
+#### Phase 11: Demand Intel Integration
+**Goal**: Add demand scoring to TargetAnalyzer - flag ships heading TO demand locations
+**Depends on**: Phase 10 (need registry)
+**Research**: Unlikely (extends existing patterns)
+**Plans**: TBD
+
+Plans:
+- [ ] 11-01: TBD
+
+#### Phase 12: CLI/TUI Demand Views
+**Goal**: Add item reverse lookup CLI and demand display in TUI
+**Depends on**: Phase 11 (need intel integration)
+**Research**: Unlikely (follows existing patterns)
+**Plans**: TBD
+
+Plans:
+- [ ] 12-01: TBD
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 2.1 → 3 → 4 → 5 → 5.1 → 5.2 → 6
+Phases execute in numeric order: 1 → 2 → 2.1 → 3 → 4 → 5 → 5.1 → 5.2 → 6 → 7 → ...
 
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 1. Wikelo Data Model | 2/2 | Complete | 2026-01-15 |
-| 2. Item Source Research | 1/1 | Complete | 2026-01-15 |
-| 2.1. Game Data Extraction | 3/3 | Complete | 2026-01-17 |
-| 3. Wikelo Data Module | 2/2 | Complete | 2026-01-18 |
-| 4. Source Intel Integration | 3/3 | Complete | 2026-01-20 |
-| 5. TUI Wikelo Views | 3/3 | Complete | 2026-01-21 |
-| 5.1. TUI Snapshot Test Coverage | 4/4 | Complete | 2026-01-22 |
-| 5.2. Coverage to 80% | 8/8 | Complete | 2026-01-23 |
-| 6. Testing & Polish | 2/2 | Complete | 2026-01-27 |
+| Phase | Milestone | Plans Complete | Status | Completed |
+|-------|-----------|----------------|--------|-----------|
+| 1. Wikelo Data Model | v1.0 | 2/2 | Complete | 2026-01-15 |
+| 2. Item Source Research | v1.0 | 1/1 | Complete | 2026-01-15 |
+| 2.1. Game Data Extraction | v1.0 | 3/3 | Complete | 2026-01-17 |
+| 3. Wikelo Data Module | v1.0 | 2/2 | Complete | 2026-01-18 |
+| 4. Source Intel Integration | v1.0 | 3/3 | Complete | 2026-01-20 |
+| 5. TUI Wikelo Views | v1.0 | 3/3 | Complete | 2026-01-21 |
+| 5.1. TUI Snapshot Test Coverage | v1.0 | 4/4 | Complete | 2026-01-22 |
+| 5.2. Coverage to 80% | v1.0 | 8/8 | Complete | 2026-01-23 |
+| 6. Testing & Polish | v1.0 | 2/2 | Complete | 2026-01-27 |
+| 7. Demand Research | v1.1 | 0/? | Not started | - |
+| 8. Demand Data Model | v1.1 | 0/? | Not started | - |
+| 9. Contract Data Population | v1.1 | 0/? | Not started | - |
+| 10. Demand Registry | v1.1 | 0/? | Not started | - |
+| 11. Demand Intel Integration | v1.1 | 0/? | Not started | - |
+| 12. CLI/TUI Demand Views | v1.1 | 0/? | Not started | - |
