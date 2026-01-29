@@ -140,7 +140,7 @@ Plans:
 
 **Milestone Goal:** Add contract/demand tracking to complement existing item sources. Model the full item economy: where items come from (supply, already done) AND who wants them (demand, new).
 
-- [ ] **Phase 7: Demand Research** - Research Wikelo contracts and other demand sources
+- [x] **Phase 7: Demand Research** - Research Wikelo contracts and other demand sources
 - [ ] **Phase 8: Demand Data Model** - Extend types for demand/contracts
 - [ ] **Phase 9: Contract Data Population** - Populate Wikelo contract instances
 - [ ] **Phase 10: Demand Registry** - Create contract registry with indexing
@@ -155,7 +155,7 @@ Plans:
 **Plans**: TBD
 
 Plans:
-- [ ] 07-01: TBD (run /gsd:plan-phase 7 to break down)
+- [x] 07-01: Research and document all 43 Wikelo contracts and demand ecosystem
 
 #### Phase 8: Demand Data Model
 **Goal**: Extend type system for demand sources and contracts
@@ -218,7 +218,7 @@ Phases execute in numeric order: 1 → 2 → 2.1 → 3 → 4 → 5 → 5.1 → 5
 | 5.1. TUI Snapshot Test Coverage | v1.0 | 4/4 | Complete | 2026-01-22 |
 | 5.2. Coverage to 80% | v1.0 | 8/8 | Complete | 2026-01-23 |
 | 6. Testing & Polish | v1.0 | 2/2 | Complete | 2026-01-27 |
-| 7. Demand Research | v1.1 | 0/? | Not started | - |
+| 7. Demand Research | v1.1 | 1/1 | Complete | 2026-01-29 |
 | 8. Demand Data Model | v1.1 | 0/? | Not started | - |
 | 9. Contract Data Population | v1.1 | 0/? | Not started | - |
 | 10. Demand Registry | v1.1 | 0/? | Not started | - |
