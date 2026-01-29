@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-14)
 
 **Core value:** Identify where valuable targets are and what they're likely carrying
-**Current focus:** Phase 5.2 — Coverage to 80%
+**Current focus:** v1.1 Demand Modeling — Phase 7 (Demand Research)
 
 ## Current Position
 
-Phase: 5.2 of 7 (Coverage to 80%)
-Plan: 8 of 8 in current phase
-Status: Complete
-Last activity: 2026-01-23 — Completed 05.2-08-PLAN.md
+Phase: 7 of 12 (Demand Research)
+Plan: 07-01 complete
+Status: Phase 7 in progress (plan 01 done, research complete)
+Last activity: 2026-01-29 — Demand research plan 07-01 executed
 
-Progress: ████████████████░░░░ 79% (26 of 33 plans complete)
+Progress: █░░░░░░░░░ ~10% (1 of ~? plans in v1.1)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 23
-- Average duration: 11 min
-- Total execution time: 4.0 hours
+- Total plans completed: 28
+- Average duration: 10 min
+- Total execution time: 4.1 hours
 
 **By Phase:**
 
@@ -35,9 +35,10 @@ Progress: ████████████████░░░░ 79% (26 o
 | 5. TUI Wikelo Views | 3 | 23 min | 8 min |
 | 5.1. TUI Snapshot Tests | 4 | 24 min | 6 min |
 | 5.2. Coverage to 80% | 8 | 47 min | 6 min |
+| 6. Testing & Polish | 2 | 10 min | 5 min |
 
 **Recent Trend:**
-- Last 5 plans: 8m, 7m, 8m, 5m, 5m
+- Last 5 plans: 8m, 5m, 5m, 6m, 4m
 - Trend: → (stable, fast)
 
 ## Accumulated Context
@@ -68,6 +69,7 @@ Recent decisions affecting current work:
 
 - Phase 5.1 inserted after Phase 5: TUI Snapshot Test Coverage (URGENT) - discovered test gaps during 05-01 execution
 - Phase 5.2 inserted after Phase 5.1: Coverage to 80% - CI coverage threshold blocking pushes (61.74% < 80%)
+- Milestone v1.1 created: Demand Modeling, 6 phases (Phase 7-12)
 
 ### Deferred Issues
 
@@ -79,23 +81,16 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-01-23
-Stopped at: Completed Phase 5.2 (8/8 plans)
-Resume file: None
+Last session: 2026-01-29
+Stopped at: Plan 07-01 complete (demand research compiled)
+Resume file: `.planning/phases/07-demand-research/07-01-SUMMARY.md`
 
 ### Critical Context for Next Session
 
-**Phase 5.2 COMPLETE.** Coverage at 66.12% (target was 80%, CI doesn't enforce).
+**Plan 07-01 (Demand Research) complete.** 07-RESEARCH.md created with all 43 contracts documented.
 
-1. **05.2-01:** ✓ route-graph spatial.rs + fuel.rs unit tests (24 tests)
-2. **05.2-02:** ✓ intel ships/registry.rs + wikelo/contracts.rs tests (19 tests)
-3. **05.2-03:** ✓ route-graph spatial helper + intersection tests (30 tests)
-4. **05.2-04:** ✓ intel ships/types.rs + wikelo/types.rs unit tests (34 tests)
-5. **05.2-05:** ✓ route-graph graph.rs + refinery.rs unit tests (15+ tests)
-6. **05.2-06:** ✓ api-client get_trade_routes mock tests (11 tests)
-7. **05.2-07:** ✓ intel targets.rs LocationAggregator + helper tests (17 tests)
-8. **05.2-08:** ✓ api-client sc_api.rs mock tests (12 tests)
+Key output: `.planning/phases/07-demand-research/07-RESEARCH.md`
 
-**Phase 5.2 progress:** 8/8 plans complete
+**Limitation:** WebFetch was unavailable — 29/43 contracts have incomplete requirement data (names and categories known, exact item quantities TBD). 14 contracts have sufficient data.
 
-**Next:** Transition to Phase 6 (Testing & Polish)
+**Next:** Phase 8 (Demand Data Model) can proceed using the data model recommendations in 07-RESEARCH.md Section 7. Phase 9 will need a wiki scraping session to fill the 29 incomplete contracts.

@@ -860,3 +860,98 @@ fn test_ship_frequency_struct() {
     assert!(json.contains("Caterpillar"));
     assert!(json.contains("15"));
 }
+
+// ===== Edge Case Tests (Phase 6 Plan 2) =====
+
+#[test]
+fn test_calculate_wikelo_score_no_items() {
+    // Test that a location with WikieloIntel but no items returns score 0.0
+    use std::sync::Arc;
+
+    let wikelo = Arc::new(WikieloIntel::from_static());
+
+    // A location that exists but has no Wikelo items
+    let (score, items) = calculate_wikelo_score(&Some(wikelo), "Area 18");
+
+    assert!(
+        score.is_some(),
+        "Should return Some score even for location with no items"
+    );
+    assert_eq!(
+        score.unwrap(),
+        0.0,
+        "Location with no Wikelo items should have score 0.0"
+    );
+    assert!(
+        items.is_empty(),
+        "Location with no Wikelo items should have empty vec"
+    );
+}
+
+#[test]
+fn test_extract_system_with_missing_system() {
+    // Test terminal string without proper system suffix
+    assert_eq!(
+        extract_system("Some Terminal"),
+        "Unknown",
+        "Terminal without parens should return Unknown"
+    );
+
+    assert_eq!(
+        extract_system("Terminal ()"),
+        "",
+        "Terminal with empty parens should return empty string"
+    );
+
+    assert_eq!(
+        extract_system("Terminal (OnlySystem)"),
+        "OnlySystem",
+        "Terminal with parens but no arrow should extract content"
+    );
+}
+
+#[test]
+fn test_location_aggregator_into_hotspot_with_no_routes() {
+    // Test that an empty LocationAggregator produces valid hotspot
+    let agg = LocationAggregator::new("Empty".to_string(), "Stanton".to_string());
+    let hotspot = agg.into_hotspot(None, vec![]);
+
+    assert_eq!(hotspot.location, "Empty");
+    assert_eq!(hotspot.route_count, 0);
+    assert_eq!(hotspot.total_cargo_value, 0.0);
+    // avg_threat should default to 5.0 when no routes
+    assert_eq!(hotspot.avg_threat_level, 5.0);
+    assert!(hotspot.top_commodities.is_empty());
+    assert!(hotspot.likely_ships.is_empty());
+}
+
+#[test]
+fn test_zero_profit_route_risk_score() {
+    // Test risk score calculation with zero profit route
+    let route = mock_trade_route(
+        "Test", "TEST", "Origin", "Dest", "Stanton", "Stanton", 0.0, 100.0, 10.0,
+    );
+    let score = calculate_risk_score(&route);
+
+    // Zero profit should result in low score
+    // Profit: 0/10 = 0, SCU: 100/100 = 1.0, no large cargo bonus
+    assert_eq!(score, 1.0);
+}
+
+#[test]
+fn test_negative_profit_route_risk_score() {
+    // Test risk score calculation with negative profit route
+    let route = mock_trade_route(
+        "Test", "TEST", "Origin", "Dest", "Stanton", "Stanton", -5.0, 100.0, 10.0,
+    );
+    let score = calculate_risk_score(&route);
+
+    // Negative profit should still calculate (though such routes would be filtered upstream)
+    // Profit: -5/10 = -0.5, but .min(30) caps positive only
+    // SCU: 100/100 = 1.0
+    // Score: -0.5 + 1.0 = 0.5
+    assert!(
+        score < 2.0,
+        "Negative profit routes should have very low risk scores"
+    );
+}

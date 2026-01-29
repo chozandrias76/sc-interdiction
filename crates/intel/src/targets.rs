@@ -349,15 +349,25 @@ impl TargetAnalyzer {
 /// A hot trade route (single commodity, origin -> destination).
 #[derive(Debug, Clone, Serialize)]
 pub struct HotRoute {
+    /// Commodity being traded (e.g., "Laranite").
     pub commodity: String,
+    /// Commodity code for API lookups (e.g., "LARA").
     pub commodity_code: String,
+    /// Origin terminal name.
     pub origin: String,
+    /// Destination terminal name.
     pub destination: String,
+    /// Star system containing the origin terminal.
     pub origin_system: Option<String>,
+    /// Star system containing the destination terminal.
     pub destination_system: Option<String>,
+    /// Profit per SCU of cargo (aUEC).
     pub profit_per_scu: f64,
+    /// Maximum SCU available for profitable trading.
     pub available_scu: f64,
+    /// Ship most likely to service this route based on cargo requirements.
     pub likely_ship: CargoShip,
+    /// Total estimated profit for a full haul (aUEC).
     pub estimated_haul_value: f64,
     /// Risk score 0-100 (higher = more likely to be used).
     pub risk_score: f64,
@@ -397,10 +407,15 @@ pub struct TradeRun {
 /// A single leg of a trade route.
 #[derive(Debug, Clone, Serialize)]
 pub struct RouteLeg {
+    /// Commodity being hauled on this leg.
     pub commodity: String,
+    /// Starting terminal for this leg.
     pub origin: String,
+    /// Ending terminal for this leg.
     pub destination: String,
+    /// Profit per SCU of cargo (aUEC).
     pub profit_per_scu: f64,
+    /// Total cargo value at origin prices (aUEC).
     pub cargo_value: f64,
     /// Route distance in millions of km (Mkm).
     pub distance_mkm: f64,
@@ -409,10 +424,15 @@ pub struct RouteLeg {
 /// Prediction of a target at a location.
 #[derive(Debug, Clone, Serialize)]
 pub struct TargetPrediction {
+    /// Whether the target is arriving or departing.
     pub direction: TrafficDirection,
+    /// Primary commodity the target is hauling.
     pub commodity: String,
+    /// Ship most likely carrying this cargo.
     pub likely_ship: CargoShip,
+    /// Total estimated value of cargo on board (aUEC).
     pub estimated_cargo_value: f64,
+    /// Where the target is headed (if departing) or coming from (if arriving).
     pub destination: String,
     /// Wikelo source flag if departing from a Wikelo item source location.
     ///
@@ -431,11 +451,17 @@ pub enum TrafficDirection {
 /// Trade activity summary for a location.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TradeActivity {
+    /// Location name (terminal or station).
     pub location: String,
+    /// Number of routes delivering cargo to this location.
     pub inbound_routes: usize,
+    /// Number of routes originating from this location.
     pub outbound_routes: usize,
+    /// Top commodities being imported to this location.
     pub top_imports: Vec<String>,
+    /// Top commodities being exported from this location.
     pub top_exports: Vec<String>,
+    /// Estimated daily ship traffic through this location.
     pub estimated_daily_traffic: f64,
 }
 
@@ -466,18 +492,23 @@ pub struct InterdictionHotspot {
     pub wikelo_items: Vec<String>,
 }
 
-/// Commodity with estimated value.
+/// Commodity with estimated value passing through a location.
 #[derive(Debug, Clone, Serialize)]
 pub struct CommodityValue {
+    /// Commodity name (e.g., "Laranite").
     pub name: String,
+    /// Total estimated value of this commodity at the location (aUEC).
     pub estimated_value: f64,
 }
 
-/// Ship type with frequency.
+/// Ship type with frequency at a location.
 #[derive(Debug, Clone, Serialize)]
 pub struct ShipFrequency {
+    /// Ship name (e.g., "Caterpillar").
     pub ship_name: String,
+    /// Number of routes serviced by this ship type.
     pub count: usize,
+    /// Threat level for interdiction (1-10 scale).
     pub threat_level: u8,
 }
 
