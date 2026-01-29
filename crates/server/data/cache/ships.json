@@ -1,6 +1,6 @@
 {
   "version": "0.1.4",
-  "fetched_at": 1769481305,
+  "fetched_at": 1769720294,
   "ships": [
     {
       "id": "719f60e4-ae48-4941-80f1-17528fd7dd06",
@@ -4410,6 +4410,45 @@
       "rsiId": 61.0
     },
     {
+      "id": "f7ac61be-43e7-4bea-bcd2-15d6fc5048cb",
+      "name": "Hermes",
+      "slug": "hermes",
+      "description": "A freighter designed for maximum payloads and minimal crew. With generous internal storage, solo flyability, and solid defensive measures, RSI delivers opportunity, possibility, and assurance.",
+      "manufacturer": {
+        "name": "Roberts Space Industries",
+        "slug": "roberts-space-industries",
+        "code": "RSI"
+      },
+      "metrics": {
+        "beam": 58.0,
+        "cargo": 288.0,
+        "height": 14.0,
+        "length": 65.0,
+        "mass": 663086.0,
+        "size": "medium",
+        "hydrogenFuelTankSize": null,
+        "quantumFuelTankSize": null
+      },
+      "crew": {
+        "min": 1,
+        "max": 2
+      },
+      "speeds": {
+        "scmSpeed": 180.0,
+        "maxSpeedAcceleration": null,
+        "maxSpeedDecceleration": null,
+        "scmSpeedAcceleration": null,
+        "scmSpeedDecceleration": null
+      },
+      "focus": "Medium Freighter",
+      "productionStatus": "flight-ready",
+      "classification": "transport",
+      "size": "medium",
+      "price": null,
+      "pledgePrice": 220.0,
+      "rsiId": 310.0
+    },
+    {
       "id": "a39921fa-b8ba-499f-bc53-6b68a0df6057",
       "name": "HoverQuad",
       "slug": "hoverquad",
@@ -6707,7 +6746,7 @@
       "classification": "transport",
       "size": "medium",
       "price": 1853000.0,
-      "pledgePrice": 125.0,
+      "pledgePrice": 190.0,
       "rsiId": 226.0
     },
     {
