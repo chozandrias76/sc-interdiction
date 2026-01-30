@@ -44,3 +44,7 @@ __pycache__/
 
 # Extraction tools
 /tools/
+# AI Tools
+.opencode
+.aider*
+opencode.json

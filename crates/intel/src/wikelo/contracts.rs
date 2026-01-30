@@ -19,6 +19,12 @@ pub enum ContractCategory {
     Equipment,
 }
 
+impl Default for ContractCategory {
+    fn default() -> Self {
+        Self::Equipment
+    }
+}
+
 /// Tracks how reliable contract data is.
 ///
 /// Higher values indicate greater confidence. Uses `repr(u8)` so variants
@@ -36,6 +42,12 @@ pub enum DataConfidence {
     Verified = 4,
     /// Sourced from official game data or API.
     Authoritative = 5,
+}
+
+impl Default for DataConfidence {
+    fn default() -> Self {
+        Self::Inferred
+    }
 }
 
 /// Models the different currencies in the Star Citizen economy.
