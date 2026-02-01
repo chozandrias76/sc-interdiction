@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-14)
 
 **Core value:** Identify where valuable targets are and what they're likely carrying
-**Current focus:** v1.1 Demand Modeling — Phase 7 (Demand Research)
+**Current focus:** v1.1 Demand Modeling — Phase 8 (Demand Data Model)
 
 ## Current Position
 
-Phase: 7 of 12 (Demand Research)
-Plan: 07-01 complete
-Status: Phase 7 in progress (plan 01 done, research complete)
-Last activity: 2026-01-29 — Demand research plan 07-01 executed
+Phase: 8 of 12 (Demand Data Model)
+Plan: 1 of 1 in current phase
+Status: Phase 8 complete
+Last activity: 2026-02-01 — Completed 08-01-PLAN.md
 
-Progress: █░░░░░░░░░ ~10% (1 of ~? plans in v1.1)
+Progress: ██░░░░░░░░ ~20% (2 of ~6+ plans in v1.1)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 28
+- Total plans completed: 29
 - Average duration: 10 min
-- Total execution time: 4.1 hours
+- Total execution time: 4.2 hours
 
 **By Phase:**
 
@@ -36,9 +36,11 @@ Progress: █░░░░░░░░░ ~10% (1 of ~? plans in v1.1)
 | 5.1. TUI Snapshot Tests | 4 | 24 min | 6 min |
 | 5.2. Coverage to 80% | 8 | 47 min | 6 min |
 | 6. Testing & Polish | 2 | 10 min | 5 min |
+| 7. Demand Research | 1 | — | — |
+| 8. Demand Data Model | 1 | 5 min | 5 min |
 
 **Recent Trend:**
-- Last 5 plans: 8m, 5m, 5m, 6m, 4m
+- Last 5 plans: 5m, 5m, 6m, 4m, 5m
 - Trend: → (stable, fast)
 
 ## Accumulated Context
@@ -64,6 +66,8 @@ Recent decisions affecting current work:
 - Normalized key matching (lowercase, collapsed whitespace) for flexible lookups
 - **NEW:** Moved registry/items from wikelo-data to intel to resolve cyclic dependency
 - Only flag departing targets (arriving have cargo already on ship, source flagging not useful)
+- ContractCategory defaults to Equipment; DataConfidence uses repr(u8) for ordering
+- CurrencyType::Other(String) for extensibility; all new WikieloContract fields use serde(default)
 
 ### Roadmap Evolution
 
@@ -81,16 +85,14 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-01-29
-Stopped at: Plan 07-01 complete (demand research compiled)
-Resume file: `.planning/phases/07-demand-research/07-01-SUMMARY.md`
+Last session: 2026-02-01
+Stopped at: Completed 08-01-PLAN.md (Phase 8 complete)
+Resume file: `.planning/phases/08-demand-data-model/08-01-SUMMARY.md`
 
 ### Critical Context for Next Session
 
-**Plan 07-01 (Demand Research) complete.** 07-RESEARCH.md created with all 43 contracts documented.
+**Phase 8 (Demand Data Model) complete.** All demand-side types defined in intel crate.
 
-Key output: `.planning/phases/07-demand-research/07-RESEARCH.md`
+Key types added: ContractCategory, DataConfidence, CurrencyType, ExchangeRate. WikieloContract extended with 7 fields. RewardType extended with 5 variants. 171 tests passing.
 
-**Limitation:** WebFetch was unavailable — 29/43 contracts have incomplete requirement data (names and categories known, exact item quantities TBD). 14 contracts have sufficient data.
-
-**Next:** Phase 8 (Demand Data Model) can proceed using the data model recommendations in 07-RESEARCH.md Section 7. Phase 9 will need a wiki scraping session to fill the 29 incomplete contracts.
+**Next:** Phase 9 (Contract Data Population) — populate WikieloContract instances with data from 07-RESEARCH.md. Note: 29/43 contracts have incomplete requirement data; Phase 9 may need wiki scraping to fill gaps.

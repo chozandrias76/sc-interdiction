@@ -49,3 +49,4 @@ __pycache__/
 .opencode
 .aider*
 opencode.json
+.claude/settings.local.json

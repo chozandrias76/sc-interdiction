@@ -3,7 +3,7 @@
 use serde::{Deserialize, Serialize};
 
 /// Categorizes contracts for filtering and grouping.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 pub enum ContractCategory {
     /// Must be completed before accessing other contracts.
     Prerequisite,
@@ -16,23 +16,21 @@ pub enum ContractCategory {
     /// Rewards a ship or vehicle upon completion.
     Ship,
     /// Rewards equipment, consumables, or other items.
+    #[default]
     Equipment,
-}
-
-impl Default for ContractCategory {
-    fn default() -> Self {
-        Self::Equipment
-    }
 }
 
 /// Tracks how reliable contract data is.
 ///
 /// Higher values indicate greater confidence. Uses `repr(u8)` so variants
 /// can be compared with `<` / `>` operators via the derived `Ord` impl.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, Default,
+)]
 #[repr(u8)]
 pub enum DataConfidence {
     /// Data inferred from the contract name only.
+    #[default]
     Inferred = 1,
     /// Some fields confirmed but gaps remain.
     Partial = 2,
@@ -44,18 +42,12 @@ pub enum DataConfidence {
     Authoritative = 5,
 }
 
-impl Default for DataConfidence {
-    fn default() -> Self {
-        Self::Inferred
-    }
-}
-
 /// Models the different currencies in the Star Citizen economy.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum CurrencyType {
     /// Alpha United Earth Credits — the primary in-game currency.
     Auec,
-    /// MG Scrip — earned from MicroTech Guardian missions.
+    /// MG Scrip — earned from `MicroTech` Guardian missions.
     MgScrip,
     /// Council Scrip — earned from CDF missions.
     CouncilScrip,
@@ -125,6 +117,16 @@ pub enum RewardType {
     Consumable,
     /// Other/miscellaneous
     Other,
+    /// Vehicle reward (ATLS variants, ground vehicles)
+    Vehicle,
+    /// Ship component (Grade A/B ship parts)
+    ShipComponent,
+    /// Access reward (unlocks other contracts or areas)
+    Access,
+    /// Wikelo Favor currency
+    Favor,
+    /// Polaris Bit currency
+    PolarisBit,
 }
 
 /// A reward from completing a Wikelo contract.
@@ -175,6 +177,52 @@ pub struct WikieloContract {
     pub repeatable: bool,
     /// Optional description/flavor text
     pub description: Option<String>,
+    /// Category for filtering and grouping.
+    #[serde(default)]
+    pub category: ContractCategory,
+    /// Contract IDs that must be completed before this one is available.
+    #[serde(default)]
+    pub prerequisites: Vec<String>,
+    /// Station names where this contract can be turned in.
+    #[serde(default)]
+    pub turn_in_locations: Vec<String>,
+    /// How reliable the data for this contract is.
+    #[serde(default)]
+    pub confidence: DataConfidence,
+    /// Whether this contract is currently available in-game.
+    #[serde(default = "default_true")]
+    pub available: bool,
+    /// Whether this is a limited-time offer.
+    #[serde(default)]
+    pub limited_time: bool,
+    /// For favor exchange contracts that convert currencies.
+    #[serde(default)]
+    pub exchange_rate: Option<ExchangeRate>,
+}
+
+/// Helper for serde default of `true`.
+fn default_true() -> bool {
+    true
+}
+
+impl Default for WikieloContract {
+    fn default() -> Self {
+        Self {
+            id: String::new(),
+            name: String::new(),
+            requirements: Vec::new(),
+            rewards: Vec::new(),
+            repeatable: false,
+            description: None,
+            category: ContractCategory::default(),
+            prerequisites: Vec::new(),
+            turn_in_locations: Vec::new(),
+            confidence: DataConfidence::default(),
+            available: true,
+            limited_time: false,
+            exchange_rate: None,
+        }
+    }
 }
 
 impl WikieloContract {
@@ -241,6 +289,7 @@ mod tests {
             rewards,
             repeatable: false,
             description: None,
+            ..Default::default()
         }
     }
 
@@ -363,5 +412,145 @@ mod tests {
         let contract = mock_contract(requirements, vec![]);
 
         assert_eq!(contract.quantity_required("unknown-item"), 0);
+    }
+
+    // ContractCategory tests
+
+    #[test]
+    fn test_contract_category_equality() {
+        assert_eq!(ContractCategory::Weapon, ContractCategory::Weapon);
+        assert_ne!(ContractCategory::Weapon, ContractCategory::Armor);
+        assert_ne!(
+            ContractCategory::Prerequisite,
+            ContractCategory::FavorExchange
+        );
+    }
+
+    #[test]
+    fn test_contract_category_hash() {
+        use std::collections::HashMap;
+        let mut map = HashMap::new();
+        map.insert(ContractCategory::Ship, "ships");
+        map.insert(ContractCategory::Equipment, "equipment");
+        assert_eq!(map.get(&ContractCategory::Ship), Some(&"ships"));
+        assert_eq!(map.get(&ContractCategory::Equipment), Some(&"equipment"));
+        assert_eq!(map.get(&ContractCategory::Armor), None);
+    }
+
+    // DataConfidence tests
+
+    #[test]
+    fn test_data_confidence_ordering() {
+        assert!(DataConfidence::Inferred < DataConfidence::Partial);
+        assert!(DataConfidence::Partial < DataConfidence::Confirmed);
+        assert!(DataConfidence::Confirmed < DataConfidence::Verified);
+        assert!(DataConfidence::Verified < DataConfidence::Authoritative);
+    }
+
+    #[test]
+    fn test_data_confidence_default() {
+        assert_eq!(DataConfidence::default(), DataConfidence::Inferred);
+    }
+
+    // CurrencyType tests
+
+    #[test]
+    fn test_currency_type_equality() {
+        assert_eq!(CurrencyType::MgScrip, CurrencyType::MgScrip);
+        assert_ne!(CurrencyType::MgScrip, CurrencyType::Auec);
+    }
+
+    #[test]
+    fn test_currency_type_other() {
+        let custom = CurrencyType::Other("Custom".into());
+        let custom2 = CurrencyType::Other("Custom".into());
+        let different = CurrencyType::Other("Different".into());
+        assert_eq!(custom, custom2);
+        assert_ne!(custom, different);
+    }
+
+    // ExchangeRate tests
+
+    #[test]
+    fn test_exchange_rate_mg_scrip_to_favor() {
+        let rate = ExchangeRate {
+            input_currency: CurrencyType::MgScrip,
+            input_quantity: 50,
+            output_currency: CurrencyType::WikieloFavor,
+            output_quantity: 1,
+        };
+        let r = rate.rate();
+        assert!((r - 0.02).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_exchange_rate_valakkar_pearl_to_favor() {
+        let rate = ExchangeRate {
+            input_currency: CurrencyType::Other("Valakkar Pearl".into()),
+            input_quantity: 15,
+            output_currency: CurrencyType::WikieloFavor,
+            output_quantity: 1,
+        };
+        let r = rate.rate();
+        let expected = 1.0 / 15.0;
+        assert!((r - expected).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_exchange_rate_quantanium_to_polaris_bit() {
+        let rate = ExchangeRate {
+            input_currency: CurrencyType::Other("Quantanium".into()),
+            input_quantity: 24,
+            output_currency: CurrencyType::PolarisBit,
+            output_quantity: 1,
+        };
+        let r = rate.rate();
+        let expected = 1.0 / 24.0;
+        assert!((r - expected).abs() < 1e-10);
+    }
+
+    // Extended WikieloContract tests
+
+    #[test]
+    fn test_contract_with_category() {
+        let contract = WikieloContract {
+            id: "weapon-contract".to_string(),
+            name: "Blade of the Vanguard".to_string(),
+            category: ContractCategory::Weapon,
+            requirements: vec![mock_requirement("valakkar-fang", 3)],
+            rewards: vec![mock_reward("Energy Blade", Some(25_000))],
+            ..Default::default()
+        };
+        assert_eq!(contract.category, ContractCategory::Weapon);
+    }
+
+    #[test]
+    fn test_contract_with_exchange_rate() {
+        let contract = WikieloContract {
+            id: "favor-exchange".to_string(),
+            name: "MG Scrip Exchange".to_string(),
+            category: ContractCategory::FavorExchange,
+            exchange_rate: Some(ExchangeRate {
+                input_currency: CurrencyType::MgScrip,
+                input_quantity: 50,
+                output_currency: CurrencyType::WikieloFavor,
+                output_quantity: 1,
+            }),
+            ..Default::default()
+        };
+        let rate = contract.exchange_rate.unwrap();
+        assert!((rate.rate() - 0.02).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_contract_default_fields() {
+        let contract = WikieloContract::default();
+        assert_eq!(contract.confidence, DataConfidence::Inferred);
+        assert!(contract.available);
+        assert!(!contract.limited_time);
+        assert!(contract.prerequisites.is_empty());
+        assert!(contract.turn_in_locations.is_empty());
+        assert!(contract.exchange_rate.is_none());
+        assert_eq!(contract.category, ContractCategory::Equipment);
     }
 }
