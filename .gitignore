@@ -18,6 +18,7 @@ Thumbs.db
 # Project
 /data/cache/*
 !data/cache/.gitkeep
+crates/server/data/cache/
 /data/*.db
 /data/*.db-*
 
