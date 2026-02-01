@@ -6,6 +6,10 @@ on:
       - main
       - develop
 
+concurrency:
+  group: branch-protection-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
   validate-source-branch:
     name: Validate PR Source Branch
