@@ -3,7 +3,7 @@
 use serde::{Deserialize, Serialize};
 
 /// Categorizes contracts for filtering and grouping.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 pub enum ContractCategory {
     /// Must be completed before accessing other contracts.
     Prerequisite,
@@ -16,23 +16,21 @@ pub enum ContractCategory {
     /// Rewards a ship or vehicle upon completion.
     Ship,
     /// Rewards equipment, consumables, or other items.
+    #[default]
     Equipment,
-}
-
-impl Default for ContractCategory {
-    fn default() -> Self {
-        Self::Equipment
-    }
 }
 
 /// Tracks how reliable contract data is.
 ///
 /// Higher values indicate greater confidence. Uses `repr(u8)` so variants
 /// can be compared with `<` / `>` operators via the derived `Ord` impl.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, Default,
+)]
 #[repr(u8)]
 pub enum DataConfidence {
     /// Data inferred from the contract name only.
+    #[default]
     Inferred = 1,
     /// Some fields confirmed but gaps remain.
     Partial = 2,
@@ -44,18 +42,12 @@ pub enum DataConfidence {
     Authoritative = 5,
 }
 
-impl Default for DataConfidence {
-    fn default() -> Self {
-        Self::Inferred
-    }
-}
-
 /// Models the different currencies in the Star Citizen economy.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum CurrencyType {
     /// Alpha United Earth Credits — the primary in-game currency.
     Auec,
-    /// MG Scrip — earned from MicroTech Guardian missions.
+    /// MG Scrip — earned from `MicroTech` Guardian missions.
     MgScrip,
     /// Council Scrip — earned from CDF missions.
     CouncilScrip,
