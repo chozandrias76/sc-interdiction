@@ -5,13 +5,12 @@
 // Allow long functions for static data definitions - these are data, not logic
 #![allow(clippy::too_many_lines)]
 
-#[allow(unused_imports)]
 use super::contracts::{
     ContractCategory, ContractRequirement, ContractReward, CurrencyType, DataConfidence,
     ExchangeRate, RewardType, WikieloContract,
 };
 
-/// Returns all Wikelo contracts from research data.
+/// Returns all 14 high-confidence Wikelo contracts from research data.
 #[must_use]
 pub fn all_contracts() -> Vec<WikieloContract> {
     let mut contracts = Vec::with_capacity(14);
@@ -22,7 +21,6 @@ pub fn all_contracts() -> Vec<WikieloContract> {
 }
 
 /// Returns the 3 Wikelo Emporium station names used as turn-in locations.
-#[allow(dead_code)]
 fn wikelo_locations() -> Vec<String> {
     vec![
         "Wikelo Emporium Dasi".to_string(),
@@ -31,17 +29,313 @@ fn wikelo_locations() -> Vec<String> {
     ]
 }
 
-/// Returns prerequisite contracts.
+/// Returns the 1 prerequisite contract.
 fn prerequisite_contracts() -> Vec<WikieloContract> {
-    vec![]
+    vec![WikieloContract {
+        id: "new_to_system".to_string(),
+        name: "New to System".to_string(),
+        category: ContractCategory::Prerequisite,
+        requirements: vec![
+            ContractRequirement::new("vestal_water", 1),
+            ContractRequirement::new("tundra_kopion_horn", 3),
+        ],
+        rewards: vec![ContractReward::new(
+            "Access to all Wikelo contracts",
+            RewardType::Access,
+        )],
+        repeatable: false,
+        description: Some(
+            "Gateway contract. Must be completed before accessing other Wikelo contracts."
+                .to_string(),
+        ),
+        prerequisites: vec![],
+        turn_in_locations: wikelo_locations(),
+        confidence: DataConfidence::Confirmed,
+        available: true,
+        limited_time: false,
+        exchange_rate: None,
+    }]
 }
 
-/// Returns favor exchange contracts.
+/// Returns the 5 favor exchange contracts.
 fn favor_exchange_contracts() -> Vec<WikieloContract> {
-    vec![]
+    vec![
+        WikieloContract {
+            id: "turn_things_to_favor".to_string(),
+            name: "Turn Things to Favor".to_string(),
+            category: ContractCategory::FavorExchange,
+            requirements: vec![ContractRequirement::new("mg_scrip", 50)],
+            rewards: vec![ContractReward::new("Wikelo Favor", RewardType::Favor)],
+            repeatable: true,
+            description: Some("Exchange MG Scrip for Wikelo Favors.".to_string()),
+            prerequisites: vec!["new_to_system".to_string()],
+            turn_in_locations: wikelo_locations(),
+            confidence: DataConfidence::Confirmed,
+            available: true,
+            limited_time: false,
+            exchange_rate: Some(ExchangeRate {
+                input_currency: CurrencyType::MgScrip,
+                input_quantity: 50,
+                output_currency: CurrencyType::WikieloFavor,
+                output_quantity: 1,
+            }),
+        },
+        WikieloContract {
+            id: "trade_council_scrip_for_favors".to_string(),
+            name: "Trade Council Scrip for Favors?".to_string(),
+            category: ContractCategory::FavorExchange,
+            requirements: vec![ContractRequirement::new("council_scrip", 50)],
+            rewards: vec![ContractReward::new("Wikelo Favor", RewardType::Favor)],
+            repeatable: true,
+            description: Some("Exchange Council Scrip for Wikelo Favors.".to_string()),
+            prerequisites: vec!["new_to_system".to_string()],
+            turn_in_locations: wikelo_locations(),
+            confidence: DataConfidence::Partial,
+            available: true,
+            limited_time: false,
+            exchange_rate: Some(ExchangeRate {
+                input_currency: CurrencyType::CouncilScrip,
+                input_quantity: 50,
+                output_currency: CurrencyType::WikieloFavor,
+                output_quantity: 1,
+            }),
+        },
+        WikieloContract {
+            id: "need_mining_things".to_string(),
+            name: "Need mining things. Clever things to trade.".to_string(),
+            category: ContractCategory::FavorExchange,
+            requirements: vec![ContractRequirement::new("carinite", 50)],
+            rewards: vec![ContractReward::new("Wikelo Favor", RewardType::Favor)],
+            repeatable: true,
+            description: Some("Exchange Carinite for Wikelo Favors.".to_string()),
+            prerequisites: vec!["new_to_system".to_string()],
+            turn_in_locations: wikelo_locations(),
+            confidence: DataConfidence::Partial,
+            available: true,
+            limited_time: false,
+            exchange_rate: Some(ExchangeRate {
+                input_currency: CurrencyType::Carinite,
+                input_quantity: 50,
+                output_currency: CurrencyType::WikieloFavor,
+                output_quantity: 1,
+            }),
+        },
+        WikieloContract {
+            id: "trade_worm_parts_for_favors".to_string(),
+            name: "Trade Worm Parts for Favors?".to_string(),
+            category: ContractCategory::FavorExchange,
+            requirements: vec![ContractRequirement::new("irradiated_valakkar_pearl", 15)],
+            rewards: vec![ContractReward::new("Wikelo Favor", RewardType::Favor)],
+            repeatable: true,
+            description: Some("Exchange Irradiated Valakkar Pearls for Wikelo Favors.".to_string()),
+            prerequisites: vec!["new_to_system".to_string()],
+            turn_in_locations: wikelo_locations(),
+            confidence: DataConfidence::Partial,
+            available: true,
+            limited_time: false,
+            exchange_rate: Some(ExchangeRate {
+                input_currency: CurrencyType::Other("Irradiated Valakkar Pearl".to_string()),
+                input_quantity: 15,
+                output_currency: CurrencyType::WikieloFavor,
+                output_quantity: 1,
+            }),
+        },
+        WikieloContract {
+            id: "very_hungry".to_string(),
+            name: "Very Hungry".to_string(),
+            category: ContractCategory::FavorExchange,
+            requirements: vec![],
+            rewards: vec![ContractReward::new("Wikelo Favor", RewardType::Favor)],
+            repeatable: true,
+            description: Some(
+                "Exchange food/consumable items for Wikelo Favors. Exact requirements TBD."
+                    .to_string(),
+            ),
+            prerequisites: vec!["new_to_system".to_string()],
+            turn_in_locations: wikelo_locations(),
+            confidence: DataConfidence::Inferred,
+            available: true,
+            limited_time: false,
+            exchange_rate: None,
+        },
+    ]
 }
 
-/// Returns contracts with partial data (weapons, armor, ships, equipment).
+/// Returns the 8 contracts with partial data (weapons, armor, ships, equipment).
 fn partial_data_contracts() -> Vec<WikieloContract> {
-    vec![]
+    vec![
+        // Weapon contracts
+        WikieloContract {
+            id: "yormandi_gun".to_string(),
+            name: "Yormandi Gun".to_string(),
+            category: ContractCategory::Weapon,
+            requirements: vec![
+                ContractRequirement::new("yormandi_eye", 1),
+                ContractRequirement::new("yormandi_tongue", 1),
+                ContractRequirement::new("wikelo_favor", 1),
+            ],
+            rewards: vec![ContractReward::new(
+                "Yormandi-themed weapon",
+                RewardType::Weapon,
+            )],
+            repeatable: false,
+            description: Some(
+                "Trade Yormandi parts and Favors for a Yormandi-themed weapon.".to_string(),
+            ),
+            prerequisites: vec!["new_to_system".to_string()],
+            turn_in_locations: wikelo_locations(),
+            confidence: DataConfidence::Partial,
+            available: true,
+            limited_time: false,
+            exchange_rate: None,
+        },
+        WikieloContract {
+            id: "need_ore_will_give_guns".to_string(),
+            name: "Need Ore. Will give Guns.".to_string(),
+            category: ContractCategory::Weapon,
+            requirements: vec![
+                ContractRequirement::new("copper", 1),
+                ContractRequirement::new("tungsten", 1),
+                ContractRequirement::new("wikelo_favor", 1),
+            ],
+            rewards: vec![ContractReward::new("Weapon", RewardType::Weapon)],
+            repeatable: false,
+            description: Some("Trade mined ores and Favors for a weapon.".to_string()),
+            prerequisites: vec!["new_to_system".to_string()],
+            turn_in_locations: wikelo_locations(),
+            confidence: DataConfidence::Partial,
+            available: true,
+            limited_time: false,
+            exchange_rate: None,
+        },
+        // Armor contract
+        WikieloContract {
+            id: "walk_in_danger_look_good".to_string(),
+            name: "Walk in danger. Look good".to_string(),
+            category: ContractCategory::Armor,
+            requirements: vec![
+                ContractRequirement::new("irradiated_valakkar_fang_juvenile", 1),
+                ContractRequirement::new("irradiated_valakkar_fang_adult", 1),
+                ContractRequirement::new("wikelo_favor", 1),
+            ],
+            rewards: vec![ContractReward::new(
+                "Danger-themed armor",
+                RewardType::Armor,
+            )],
+            repeatable: false,
+            description: Some(
+                "Trade Irradiated Valakkar parts and Favors for themed armor.".to_string(),
+            ),
+            prerequisites: vec!["new_to_system".to_string()],
+            turn_in_locations: wikelo_locations(),
+            confidence: DataConfidence::Partial,
+            available: true,
+            limited_time: false,
+            exchange_rate: None,
+        },
+        // Ship contracts
+        WikieloContract {
+            id: "now_make_polaris_limited".to_string(),
+            name: "Now make Polaris. Short Time Deal.".to_string(),
+            category: ContractCategory::Ship,
+            requirements: vec![
+                ContractRequirement::new("polaris_bit", 1),
+                ContractRequirement::new("carinite", 1),
+                ContractRequirement::new("dchs_05_comp_board", 1),
+                ContractRequirement::new("wikelo_favor", 1),
+            ],
+            rewards: vec![ContractReward::new("RSI Polaris", RewardType::Ship)],
+            repeatable: false,
+            description: Some(
+                "Limited-time Polaris ship contract. Requires Polaris Bits, Carinite, and DCHS-05 boards."
+                    .to_string(),
+            ),
+            prerequisites: vec!["new_to_system".to_string()],
+            turn_in_locations: wikelo_locations(),
+            confidence: DataConfidence::Partial,
+            available: true,
+            limited_time: true,
+            exchange_rate: None,
+        },
+        WikieloContract {
+            id: "want_polaris_need_special".to_string(),
+            name: "Want Polaris? Need something special.".to_string(),
+            category: ContractCategory::Ship,
+            requirements: vec![
+                ContractRequirement::new("polaris_bit", 1),
+                ContractRequirement::new("wikelo_favor", 1),
+            ],
+            rewards: vec![ContractReward::new("RSI Polaris", RewardType::Ship)],
+            repeatable: false,
+            description: Some(
+                "Standard Polaris contract. Requires Polaris Bits and rare materials.".to_string(),
+            ),
+            prerequisites: vec!["new_to_system".to_string()],
+            turn_in_locations: wikelo_locations(),
+            confidence: DataConfidence::Partial,
+            available: true,
+            limited_time: false,
+            exchange_rate: None,
+        },
+        // Vehicle contracts
+        WikieloContract {
+            id: "make_atls_shoot".to_string(),
+            name: "Make ATLS shoot".to_string(),
+            category: ContractCategory::Equipment,
+            requirements: vec![ContractRequirement::new("wikelo_favor", 1)],
+            rewards: vec![ContractReward::new("Armed ATLS variant", RewardType::Vehicle)],
+            repeatable: false,
+            description: Some(
+                "Trade Favors and ATLS components for an armed ATLS variant.".to_string(),
+            ),
+            prerequisites: vec!["new_to_system".to_string()],
+            turn_in_locations: wikelo_locations(),
+            confidence: DataConfidence::Partial,
+            available: true,
+            limited_time: false,
+            exchange_rate: None,
+        },
+        WikieloContract {
+            id: "make_jumpy_atls_shoot".to_string(),
+            name: "Make jumpy ATLS shoot".to_string(),
+            category: ContractCategory::Equipment,
+            requirements: vec![ContractRequirement::new("wikelo_favor", 1)],
+            rewards: vec![ContractReward::new(
+                "Armed jumping ATLS variant",
+                RewardType::Vehicle,
+            )],
+            repeatable: false,
+            description: Some(
+                "Trade Favors and ATLS components for an armed jumping ATLS variant.".to_string(),
+            ),
+            prerequisites: vec!["new_to_system".to_string()],
+            turn_in_locations: wikelo_locations(),
+            confidence: DataConfidence::Partial,
+            available: true,
+            limited_time: false,
+            exchange_rate: None,
+        },
+        // Equipment contract
+        WikieloContract {
+            id: "want_better_eyes".to_string(),
+            name: "Want Better Eyes".to_string(),
+            category: ContractCategory::Equipment,
+            requirements: vec![
+                ContractRequirement::new("yormandi_eye", 1),
+                ContractRequirement::new("wikelo_favor", 1),
+            ],
+            rewards: vec![ContractReward::new(
+                "Enhanced optics/visor",
+                RewardType::Other,
+            )],
+            repeatable: false,
+            description: Some("Trade Yormandi Eyes and Favors for enhanced optics.".to_string()),
+            prerequisites: vec!["new_to_system".to_string()],
+            turn_in_locations: wikelo_locations(),
+            confidence: DataConfidence::Partial,
+            available: true,
+            limited_time: false,
+            exchange_rate: None,
+        },
+    ]
 }
