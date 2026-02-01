@@ -125,6 +125,16 @@ pub enum RewardType {
     Consumable,
     /// Other/miscellaneous
     Other,
+    /// Vehicle reward (ATLS variants, ground vehicles)
+    Vehicle,
+    /// Ship component (Grade A/B ship parts)
+    ShipComponent,
+    /// Access reward (unlocks other contracts or areas)
+    Access,
+    /// Wikelo Favor currency
+    Favor,
+    /// Polaris Bit currency
+    PolarisBit,
 }
 
 /// A reward from completing a Wikelo contract.
@@ -175,6 +185,52 @@ pub struct WikieloContract {
     pub repeatable: bool,
     /// Optional description/flavor text
     pub description: Option<String>,
+    /// Category for filtering and grouping.
+    #[serde(default)]
+    pub category: ContractCategory,
+    /// Contract IDs that must be completed before this one is available.
+    #[serde(default)]
+    pub prerequisites: Vec<String>,
+    /// Station names where this contract can be turned in.
+    #[serde(default)]
+    pub turn_in_locations: Vec<String>,
+    /// How reliable the data for this contract is.
+    #[serde(default)]
+    pub confidence: DataConfidence,
+    /// Whether this contract is currently available in-game.
+    #[serde(default = "default_true")]
+    pub available: bool,
+    /// Whether this is a limited-time offer.
+    #[serde(default)]
+    pub limited_time: bool,
+    /// For favor exchange contracts that convert currencies.
+    #[serde(default)]
+    pub exchange_rate: Option<ExchangeRate>,
+}
+
+/// Helper for serde default of `true`.
+fn default_true() -> bool {
+    true
+}
+
+impl Default for WikieloContract {
+    fn default() -> Self {
+        Self {
+            id: String::new(),
+            name: String::new(),
+            requirements: Vec::new(),
+            rewards: Vec::new(),
+            repeatable: false,
+            description: None,
+            category: ContractCategory::default(),
+            prerequisites: Vec::new(),
+            turn_in_locations: Vec::new(),
+            confidence: DataConfidence::default(),
+            available: true,
+            limited_time: false,
+            exchange_rate: None,
+        }
+    }
 }
 
 impl WikieloContract {
@@ -241,6 +297,7 @@ mod tests {
             rewards,
             repeatable: false,
             description: None,
+            ..Default::default()
         }
     }
 
