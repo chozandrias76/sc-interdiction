@@ -339,3 +339,208 @@ fn partial_data_contracts() -> Vec<WikieloContract> {
         },
     ]
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_all_contracts_returns_14() {
+        let contracts = all_contracts();
+        assert_eq!(
+            contracts.len(),
+            14,
+            "Expected 14 contracts, got {}",
+            contracts.len()
+        );
+    }
+
+    #[test]
+    fn test_all_contracts_have_unique_ids() {
+        let contracts = all_contracts();
+        let mut ids: Vec<&str> = contracts.iter().map(|c| c.id.as_str()).collect();
+        ids.sort();
+        let original_len = ids.len();
+        ids.dedup();
+        assert_eq!(ids.len(), original_len, "Found duplicate contract IDs");
+    }
+
+    #[test]
+    fn test_prerequisite_count() {
+        let contracts = all_contracts();
+        let prereqs: Vec<_> = contracts
+            .iter()
+            .filter(|c| c.category == ContractCategory::Prerequisite)
+            .collect();
+        assert_eq!(prereqs.len(), 1, "Expected 1 prerequisite contract");
+    }
+
+    #[test]
+    fn test_favor_exchange_count() {
+        let contracts = all_contracts();
+        let exchanges: Vec<_> = contracts
+            .iter()
+            .filter(|c| c.category == ContractCategory::FavorExchange)
+            .collect();
+        assert_eq!(exchanges.len(), 5, "Expected 5 favor exchange contracts");
+    }
+
+    #[test]
+    fn test_new_to_system_has_no_prerequisites() {
+        let contracts = all_contracts();
+        let nts = contracts
+            .iter()
+            .find(|c| c.id == "new_to_system")
+            .expect("new_to_system not found");
+        assert!(
+            nts.prerequisites.is_empty(),
+            "New to System should have no prerequisites"
+        );
+    }
+
+    #[test]
+    fn test_non_prerequisite_contracts_require_new_to_system() {
+        let contracts = all_contracts();
+        for contract in &contracts {
+            if contract.category != ContractCategory::Prerequisite {
+                assert!(
+                    contract
+                        .prerequisites
+                        .contains(&"new_to_system".to_string()),
+                    "Contract '{}' should require new_to_system",
+                    contract.id
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn test_all_contracts_have_turn_in_locations() {
+        let contracts = all_contracts();
+        for contract in &contracts {
+            assert_eq!(
+                contract.turn_in_locations.len(),
+                3,
+                "Contract '{}' should have 3 turn-in locations",
+                contract.id
+            );
+            assert!(contract
+                .turn_in_locations
+                .iter()
+                .any(|l| l.contains("Dasi")));
+            assert!(contract
+                .turn_in_locations
+                .iter()
+                .any(|l| l.contains("Kinga")));
+            assert!(contract
+                .turn_in_locations
+                .iter()
+                .any(|l| l.contains("Selo")));
+        }
+    }
+
+    #[test]
+    fn test_favor_exchange_rates() {
+        let contracts = all_contracts();
+        let exchanges: Vec<_> = contracts
+            .iter()
+            .filter(|c| c.category == ContractCategory::FavorExchange && c.exchange_rate.is_some())
+            .collect();
+        assert!(
+            exchanges.len() >= 4,
+            "Expected at least 4 contracts with exchange rates"
+        );
+
+        // Verify MG Scrip rate: 50 -> 1
+        let mg_scrip = contracts
+            .iter()
+            .find(|c| c.id == "turn_things_to_favor")
+            .expect("turn_things_to_favor not found");
+        let rate = mg_scrip
+            .exchange_rate
+            .as_ref()
+            .expect("should have exchange rate");
+        assert_eq!(rate.input_quantity, 50);
+        assert_eq!(rate.output_quantity, 1);
+    }
+
+    #[test]
+    fn test_polaris_limited_time_flag() {
+        let contracts = all_contracts();
+        let polaris_limited = contracts
+            .iter()
+            .find(|c| c.id == "now_make_polaris_limited")
+            .expect("now_make_polaris_limited not found");
+        assert!(
+            polaris_limited.limited_time,
+            "Polaris limited deal should be limited_time"
+        );
+
+        let polaris_standard = contracts
+            .iter()
+            .find(|c| c.id == "want_polaris_need_special")
+            .expect("want_polaris_need_special not found");
+        assert!(
+            !polaris_standard.limited_time,
+            "Standard Polaris should not be limited_time"
+        );
+    }
+
+    #[test]
+    fn test_all_contracts_available() {
+        let contracts = all_contracts();
+        for contract in &contracts {
+            assert!(
+                contract.available,
+                "Contract '{}' should be available",
+                contract.id
+            );
+        }
+    }
+
+    #[test]
+    fn test_new_to_system_requirements() {
+        let contracts = all_contracts();
+        let nts = contracts
+            .iter()
+            .find(|c| c.id == "new_to_system")
+            .expect("new_to_system not found");
+        assert!(nts.requires_item("vestal_water"));
+        assert!(nts.requires_item("tundra_kopion_horn"));
+        assert_eq!(nts.quantity_required("tundra_kopion_horn"), 3);
+    }
+
+    #[test]
+    fn test_wikelo_locations_helper() {
+        let locations = wikelo_locations();
+        assert_eq!(locations.len(), 3);
+        assert!(locations.contains(&"Wikelo Emporium Dasi".to_string()));
+        assert!(locations.contains(&"Wikelo Emporium Kinga".to_string()));
+        assert!(locations.contains(&"Wikelo Emporium Selo".to_string()));
+    }
+
+    #[test]
+    fn test_confidence_levels() {
+        let contracts = all_contracts();
+        // New to System and Turn Things to Favor should be Confirmed
+        let nts = contracts
+            .iter()
+            .find(|c| c.id == "new_to_system")
+            .expect("new_to_system");
+        assert_eq!(nts.confidence, DataConfidence::Confirmed);
+
+        // Very Hungry should be Inferred (lowest confidence)
+        let hungry = contracts
+            .iter()
+            .find(|c| c.id == "very_hungry")
+            .expect("very_hungry");
+        assert_eq!(hungry.confidence, DataConfidence::Inferred);
+
+        // Partial data contracts should be Partial
+        let yormandi = contracts
+            .iter()
+            .find(|c| c.id == "yormandi_gun")
+            .expect("yormandi_gun");
+        assert_eq!(yormandi.confidence, DataConfidence::Partial);
+    }
+}
