@@ -239,6 +239,7 @@ fn test_target_prediction_without_wikelo() {
         estimated_cargo_value: 100_000.0,
         destination: "Pyro I".to_string(),
         wikelo_flag: None,
+        demand_flag: None,
     };
 
     assert!(
@@ -270,6 +271,7 @@ fn test_target_prediction_departing_to_wikelo_source() {
         estimated_cargo_value: 50_000.0,
         destination: "Pyro I".to_string(),
         wikelo_flag: Some(flag),
+        demand_flag: None,
     };
 
     assert!(
@@ -292,6 +294,7 @@ fn test_target_prediction_arriving_no_wikelo_flag() {
         estimated_cargo_value: 100_000.0,
         destination: "Pyro I".to_string(),
         wikelo_flag: None, // Arriving targets don't get flagged
+        demand_flag: None,
     };
 
     assert!(
@@ -317,6 +320,7 @@ fn test_target_prediction_departing_to_non_wikelo_location() {
         estimated_cargo_value: 100_000.0,
         destination: "Random Station".to_string(),
         wikelo_flag: None,
+        demand_flag: None,
     };
 
     assert!(
@@ -539,7 +543,7 @@ fn test_location_aggregator_multiple_routes() {
 #[test]
 fn test_location_aggregator_into_hotspot_empty() {
     let agg = LocationAggregator::new("Empty Station".to_string(), "Pyro".to_string());
-    let hotspot = agg.into_hotspot(None, vec![]);
+    let hotspot = agg.into_hotspot(None, vec![], None, vec![]);
 
     assert_eq!(hotspot.location, "Empty Station");
     assert_eq!(hotspot.system, "Pyro");
@@ -561,7 +565,7 @@ fn test_location_aggregator_into_hotspot_with_data() {
     agg.add_route("Titanium", 50_000.0, &ship);
 
     let wikelo_items = vec!["Valakkar Fang".to_string()];
-    let hotspot = agg.into_hotspot(Some(75.0), wikelo_items.clone());
+    let hotspot = agg.into_hotspot(Some(75.0), wikelo_items.clone(), None, vec![]);
 
     assert_eq!(hotspot.location, "Area 18");
     assert_eq!(hotspot.system, "Stanton");
@@ -596,7 +600,7 @@ fn test_location_aggregator_avg_threat_calculation() {
     agg.add_route("B", 1.0, &high_threat);
     agg.add_route("C", 1.0, &low_threat);
 
-    let hotspot = agg.into_hotspot(None, vec![]);
+    let hotspot = agg.into_hotspot(None, vec![], None, vec![]);
 
     // Average of [2, 8, 2] = 4.0
     assert!((hotspot.avg_threat_level - 4.0).abs() < 0.01);
@@ -615,7 +619,7 @@ fn test_location_aggregator_top_commodities_sorted() {
     agg.add_route("Diamond", 500.0, &ship);
     agg.add_route("Unobtanium", 1000.0, &ship);
 
-    let hotspot = agg.into_hotspot(None, vec![]);
+    let hotspot = agg.into_hotspot(None, vec![], None, vec![]);
 
     // Should only have top 5, sorted by value descending
     assert_eq!(hotspot.top_commodities.len(), 5);
@@ -656,7 +660,7 @@ fn test_location_aggregator_likely_ships_sorted() {
     agg.add_route("E", 1.0, &caterpillar); // 2 times
     agg.add_route("F", 1.0, &hull_c); // 1 time
 
-    let hotspot = agg.into_hotspot(None, vec![]);
+    let hotspot = agg.into_hotspot(None, vec![], None, vec![]);
 
     // Should be sorted by count descending
     assert_eq!(hotspot.likely_ships.len(), 3);
@@ -681,7 +685,7 @@ fn test_suggested_position_low_risk() {
     agg.add_route("A", 1.0, &ship);
     agg.add_route("B", 1.0, &ship);
 
-    let hotspot = agg.into_hotspot(None, vec![]);
+    let hotspot = agg.into_hotspot(None, vec![], None, vec![]);
     // Average threat 1.0 < 3.0
     assert_eq!(
         hotspot.suggested_position,
@@ -699,7 +703,7 @@ fn test_suggested_position_medium_risk() {
 
     agg.add_route("A", 1.0, &ship);
 
-    let hotspot = agg.into_hotspot(None, vec![]);
+    let hotspot = agg.into_hotspot(None, vec![], None, vec![]);
     // Average threat 4.0 >= 3.0 and < 6.0
     assert_eq!(hotspot.suggested_position, "Medium risk - wing recommended");
 }
@@ -714,7 +718,7 @@ fn test_suggested_position_high_risk() {
 
     agg.add_route("A", 1.0, &ship);
 
-    let hotspot = agg.into_hotspot(None, vec![]);
+    let hotspot = agg.into_hotspot(None, vec![], None, vec![]);
     // Average threat 8.0 >= 6.0
     assert_eq!(
         hotspot.suggested_position,
@@ -743,6 +747,8 @@ fn test_hot_route_serialization() {
         fuel_required: 250.0,
         wikelo_score: Some(30.0),
         wikelo_items: vec!["Valakkar Fang".to_string()],
+        demand_score: None,
+        demand_contracts: vec![],
     };
 
     let json = serde_json::to_string(&hot_route).unwrap();
@@ -821,6 +827,8 @@ fn test_interdiction_hotspot_serialization() {
         suggested_position: "Medium risk - wing recommended".to_string(),
         wikelo_potential: Some(60.0),
         wikelo_items: vec!["Kopion Horn".to_string()],
+        demand_score: None,
+        demand_contracts: vec![],
     };
 
     let json = serde_json::to_string(&hotspot).unwrap();
@@ -914,7 +922,7 @@ fn test_extract_system_with_missing_system() {
 fn test_location_aggregator_into_hotspot_with_no_routes() {
     // Test that an empty LocationAggregator produces valid hotspot
     let agg = LocationAggregator::new("Empty".to_string(), "Stanton".to_string());
-    let hotspot = agg.into_hotspot(None, vec![]);
+    let hotspot = agg.into_hotspot(None, vec![], None, vec![]);
 
     assert_eq!(hotspot.location, "Empty");
     assert_eq!(hotspot.route_count, 0);

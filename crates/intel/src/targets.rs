@@ -3,7 +3,7 @@
 use std::sync::Arc;
 
 use crate::ships::{CargoShip, ShipRegistry};
-use crate::wikelo::{SourceFlag, WikieloIntel};
+use crate::wikelo::{DemandFlag, SourceFlag, WikieloIntel};
 use api_client::{TradeRoute, UexClient};
 use ordered_float::OrderedFloat;
 use route_graph::{
@@ -77,6 +77,10 @@ impl TargetAnalyzer {
                 let (wikelo_score, wikelo_items) =
                     calculate_wikelo_score(&self.wikelo, &r.terminal_origin_name);
 
+                // Calculate demand score for destination
+                let (demand_score, demand_contracts) =
+                    calculate_demand_score(&self.wikelo, &r.terminal_destination_name);
+
                 HotRoute {
                     commodity: r.commodity_name.clone(),
                     commodity_code: r.commodity_code.clone(),
@@ -94,6 +98,8 @@ impl TargetAnalyzer {
                     fuel_required,
                     wikelo_score,
                     wikelo_items,
+                    demand_score,
+                    demand_contracts,
                 }
             })
             .collect();
@@ -146,6 +152,19 @@ impl TargetAnalyzer {
                     None
                 };
 
+                // Flag demand at turn-in locations:
+                // - Arriving targets: the analysis location IS the turn-in location
+                // - Departing targets: the destination may be a turn-in location
+                let demand_flag = if is_departing {
+                    self.wikelo
+                        .as_ref()
+                        .and_then(|w| w.flag_demand_at_location(&r.terminal_destination_name))
+                } else {
+                    self.wikelo
+                        .as_ref()
+                        .and_then(|w| w.flag_demand_at_location(location))
+                };
+
                 TargetPrediction {
                     direction: if is_departing {
                         TrafficDirection::Departing
@@ -161,6 +180,7 @@ impl TargetAnalyzer {
                         r.terminal_origin_name
                     },
                     wikelo_flag,
+                    demand_flag,
                 }
             })
             .collect();
@@ -383,6 +403,12 @@ pub struct HotRoute {
     pub wikelo_score: Option<f64>,
     /// Wikelo item names available at origin (empty if none or no `WikieloIntel`).
     pub wikelo_items: Vec<String>,
+    /// Demand score 0-100 for destination (None if no `WikieloIntel`).
+    ///
+    /// Indicates contract demand at the destination turn-in location.
+    pub demand_score: Option<f64>,
+    /// Contract names available at destination (empty if none or no `WikieloIntel`).
+    pub demand_contracts: Vec<String>,
 }
 
 /// A complete round-trip trade run (outbound + return with cargo).
@@ -439,6 +465,11 @@ pub struct TargetPrediction {
     /// Only populated for departing targets when `WikieloIntel` is configured.
     /// Indicates the target may be carrying Wikelo-related items.
     pub wikelo_flag: Option<SourceFlag>,
+    /// Demand flag if target is heading to/at a Wikelo contract turn-in location.
+    ///
+    /// For arriving targets: flags demand at the current analysis location.
+    /// For departing targets: flags demand at the destination.
+    pub demand_flag: Option<DemandFlag>,
 }
 
 /// Direction of traffic flow.
@@ -490,6 +521,12 @@ pub struct InterdictionHotspot {
     pub wikelo_potential: Option<f64>,
     /// Wikelo item names available at this location (empty if none or no `WikieloIntel`).
     pub wikelo_items: Vec<String>,
+    /// Demand score 0-100 for this location (None if no `WikieloIntel`).
+    ///
+    /// Higher scores indicate more contract demand at this turn-in location.
+    pub demand_score: Option<f64>,
+    /// Contract names available at this location (empty if none or no `WikieloIntel`).
+    pub demand_contracts: Vec<String>,
 }
 
 /// Commodity with estimated value passing through a location.
@@ -558,7 +595,15 @@ impl TargetAnalyzer {
                 // Calculate Wikelo potential for this location
                 let (wikelo_potential, wikelo_items) =
                     calculate_wikelo_score(&self.wikelo, &agg.location);
-                agg.into_hotspot(wikelo_potential, wikelo_items)
+                // Calculate demand score for this location
+                let (demand_score, demand_contracts) =
+                    calculate_demand_score(&self.wikelo, &agg.location);
+                agg.into_hotspot(
+                    wikelo_potential,
+                    wikelo_items,
+                    demand_score,
+                    demand_contracts,
+                )
             })
             .collect();
 
@@ -672,6 +717,8 @@ impl LocationAggregator {
         self,
         wikelo_potential: Option<f64>,
         wikelo_items: Vec<String>,
+        demand_score: Option<f64>,
+        demand_contracts: Vec<String>,
     ) -> InterdictionHotspot {
         // Calculate average threat
         let avg_threat = if self.threat_levels.is_empty() {
@@ -726,6 +773,8 @@ impl LocationAggregator {
             suggested_position,
             wikelo_potential,
             wikelo_items,
+            demand_score,
+            demand_contracts,
         }
     }
 }
@@ -819,6 +868,53 @@ fn calculate_wikelo_score(
         .collect();
 
     (Some(score), items)
+}
+
+/// Calculate demand score and contract names for a turn-in location.
+///
+/// Returns `(Option<f64>, Vec<String>)` where:
+/// - score is None if no `WikieloIntel`, `Some(0-100)` otherwise
+/// - contracts is empty if no `WikieloIntel` or no contracts at location
+///
+/// Scoring formula:
+/// - Base: 20 points if contracts exist at location
+/// - +15 per contract with reward value > 10,000
+/// - +5 per contract (capped at 50 bonus)
+/// - Cap at 100
+fn calculate_demand_score(
+    wikelo: &Option<Arc<WikieloIntel>>,
+    location: &str,
+) -> (Option<f64>, Vec<String>) {
+    let Some(wikelo) = wikelo.as_ref() else {
+        return (None, Vec::new());
+    };
+
+    let contracts = wikelo.contracts().contracts_at_location(location);
+    if contracts.is_empty() {
+        return (Some(0.0), Vec::new());
+    }
+
+    // Calculate score
+    let mut score: f64 = 20.0; // Base for having contracts
+
+    // +15 per high-value contract
+    let high_value_count = contracts
+        .iter()
+        .filter(|c| c.total_reward_value() > 10_000)
+        .count();
+    score += (high_value_count as f64) * 15.0;
+
+    // +5 per contract up to 50 bonus
+    let contract_bonus = (contracts.len() as f64 * 5.0).min(50.0);
+    score += contract_bonus;
+
+    // Cap at 100
+    score = score.min(100.0);
+
+    // Collect contract names
+    let names: Vec<String> = contracts.iter().map(|c| c.name.clone()).collect();
+
+    (Some(score), names)
 }
 
 #[cfg(test)]

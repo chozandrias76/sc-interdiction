@@ -75,6 +75,7 @@ mod tests {
                 direction: TrafficDirection::Departing,
                 estimated_cargo_value: 1_250_000.0,
                 wikelo_flag: None,
+                demand_flag: None,
             },
             TargetPrediction {
                 commodity: "Laranite".to_string(),
@@ -97,6 +98,7 @@ mod tests {
                 direction: TrafficDirection::Arriving,
                 estimated_cargo_value: 980_000.0,
                 wikelo_flag: None,
+                demand_flag: None,
             },
         ];
 
@@ -117,6 +119,8 @@ mod tests {
             fuel_required: 1000.0,
             wikelo_score: None,
             wikelo_items: Vec::new(),
+            demand_score: None,
+            demand_contracts: Vec::new(),
         }];
 
         App {

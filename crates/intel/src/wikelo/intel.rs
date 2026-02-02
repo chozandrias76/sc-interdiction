@@ -7,6 +7,8 @@ use std::sync::Arc;
 
 use serde::Serialize;
 
+use super::contract_registry::ContractRegistry;
+use super::contracts::ContractCategory;
 use super::registry::WikieloRegistry;
 use super::types::{ItemCategory, WikieloItem};
 
@@ -16,22 +18,27 @@ use super::types::{ItemCategory, WikieloItem};
 /// and systems based on the Wikelo items they contain.
 pub struct WikieloIntel {
     registry: Arc<WikieloRegistry>,
+    contract_registry: Arc<ContractRegistry>,
 }
 
 impl WikieloIntel {
-    /// Create a new `WikieloIntel` with the given registry.
+    /// Create a new `WikieloIntel` with the given registries.
     #[must_use]
-    pub fn new(registry: Arc<WikieloRegistry>) -> Self {
-        Self { registry }
+    pub fn new(registry: Arc<WikieloRegistry>, contract_registry: Arc<ContractRegistry>) -> Self {
+        Self {
+            registry,
+            contract_registry,
+        }
     }
 
     /// Create `WikieloIntel` from static data.
     ///
-    /// This creates a new `WikieloRegistry` from the built-in item data.
+    /// This creates a new `WikieloRegistry` and `ContractRegistry` from built-in data.
     #[must_use]
     pub fn from_static() -> Self {
         Self {
             registry: Arc::new(WikieloRegistry::new()),
+            contract_registry: Arc::new(ContractRegistry::new()),
         }
     }
 
@@ -130,6 +137,43 @@ impl WikieloIntel {
     pub fn registry(&self) -> &WikieloRegistry {
         &self.registry
     }
+
+    /// Get a reference to the contract registry.
+    #[must_use]
+    pub fn contracts(&self) -> &ContractRegistry {
+        &self.contract_registry
+    }
+
+    /// Flag a location with demand intelligence based on contract turn-in data.
+    ///
+    /// Returns None if the location has no contracts available for turn-in.
+    /// Returns a `DemandFlag` with contract summary information if contracts exist.
+    #[must_use]
+    pub fn flag_demand_at_location(&self, location: &str) -> Option<DemandFlag> {
+        let contracts = self.contract_registry.contracts_at_location(location);
+        if contracts.is_empty() {
+            return None;
+        }
+
+        let top_contracts: Vec<DemandContractSummary> = contracts
+            .iter()
+            .take(5)
+            .map(|c| DemandContractSummary {
+                name: c.name.clone(),
+                category: c.category,
+                reward_value: Some(c.total_reward_value()).filter(|&v| v > 0),
+            })
+            .collect();
+
+        let has_high_value = contracts.iter().any(|c| c.total_reward_value() > 10_000);
+
+        Some(DemandFlag {
+            location: location.to_string(),
+            contract_count: contracts.len(),
+            top_contracts,
+            has_high_value,
+        })
+    }
 }
 
 /// Source flag for a specific location.
@@ -169,6 +213,33 @@ pub struct WikieloItemSummary {
     pub category: ItemCategory,
     /// Estimated value in aUEC (if known).
     pub estimated_value: Option<u64>,
+}
+
+/// Demand flag for a specific turn-in location.
+///
+/// Indicates that this location accepts contract turn-ins,
+/// making ships heading here potential high-value targets.
+#[derive(Debug, Clone, Serialize)]
+pub struct DemandFlag {
+    /// Location name.
+    pub location: String,
+    /// Number of contracts available at this location.
+    pub contract_count: usize,
+    /// Top contracts at this location (up to 5).
+    pub top_contracts: Vec<DemandContractSummary>,
+    /// Whether any contract has reward value > 10,000.
+    pub has_high_value: bool,
+}
+
+/// Summary of a Wikelo contract for demand flagging.
+#[derive(Debug, Clone, Serialize)]
+pub struct DemandContractSummary {
+    /// Contract name.
+    pub name: String,
+    /// Contract category.
+    pub category: ContractCategory,
+    /// Total reward value in aUEC (if known).
+    pub reward_value: Option<u64>,
 }
 
 #[cfg(test)]

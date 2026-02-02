@@ -716,6 +716,7 @@ mod tests {
                 }],
                 has_high_value: true,
             }),
+            demand_flag: None,
         };
 
         // Target without wikelo_flag
@@ -726,6 +727,7 @@ mod tests {
             estimated_cargo_value: 500_000.0,
             destination: "Crusader".to_string(),
             wikelo_flag: None,
+            demand_flag: None,
         };
 
         app.targets = vec![target_with_wikelo, target_without_wikelo];
