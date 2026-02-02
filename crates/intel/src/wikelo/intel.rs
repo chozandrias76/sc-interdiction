@@ -301,6 +301,38 @@ mod tests {
     }
 
     #[test]
+    fn test_flag_demand_at_wikelo_station() {
+        let intel = WikieloIntel::from_static();
+
+        // Wikelo Emporium Dasi is a known turn-in location
+        let flag = intel.flag_demand_at_location("Wikelo Emporium Dasi");
+        assert!(
+            flag.is_some(),
+            "Wikelo Emporium Dasi should return a DemandFlag"
+        );
+
+        let flag = flag.unwrap();
+        assert!(
+            flag.contract_count > 0,
+            "Should have contracts at Wikelo station"
+        );
+        assert!(!flag.top_contracts.is_empty(), "Should have top contracts");
+        assert_eq!(flag.location, "Wikelo Emporium Dasi");
+    }
+
+    #[test]
+    fn test_flag_demand_at_non_wikelo_location() {
+        let intel = WikieloIntel::from_static();
+
+        // Random location should have no contracts
+        let flag = intel.flag_demand_at_location("Completely Unknown Location");
+        assert!(
+            flag.is_none(),
+            "Non-Wikelo location should return None for demand"
+        );
+    }
+
+    #[test]
     fn test_flag_system_aggregates() {
         let intel = WikieloIntel::from_static();
 

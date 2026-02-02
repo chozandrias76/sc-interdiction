@@ -963,3 +963,105 @@ fn test_negative_profit_route_risk_score() {
         "Negative profit routes should have very low risk scores"
     );
 }
+
+// ===== Demand Scoring Tests (Phase 11 Plan 1) =====
+
+#[test]
+fn test_demand_score_none_without_wikelo() {
+    // No WikieloIntel configured
+    let (score, contracts) = calculate_demand_score(&None, "Wikelo Emporium Dasi");
+
+    assert!(
+        score.is_none(),
+        "Score should be None when no WikieloIntel configured"
+    );
+    assert!(
+        contracts.is_empty(),
+        "Contracts should be empty when no WikieloIntel configured"
+    );
+}
+
+#[test]
+fn test_demand_score_zero_at_non_demand_location() {
+    use std::sync::Arc;
+
+    let wikelo = Arc::new(WikieloIntel::from_static());
+
+    // Random location with no contracts
+    let (score, contracts) = calculate_demand_score(&Some(wikelo), "Random Unknown Station");
+
+    assert!(
+        score.is_some(),
+        "Should have Some score even for non-demand location"
+    );
+    assert_eq!(
+        score.unwrap(),
+        0.0,
+        "Non-demand location should have zero score"
+    );
+    assert!(
+        contracts.is_empty(),
+        "Non-demand location should have no contracts"
+    );
+}
+
+#[test]
+fn test_demand_score_positive_at_wikelo_station() {
+    use std::sync::Arc;
+
+    let wikelo = Arc::new(WikieloIntel::from_static());
+
+    // Wikelo Emporium Dasi is a known turn-in location
+    let (score, contracts) = calculate_demand_score(&Some(wikelo), "Wikelo Emporium Dasi");
+
+    assert!(
+        score.is_some(),
+        "Should have Some score when WikieloIntel is present"
+    );
+    let score_val = score.unwrap();
+    assert!(
+        score_val > 0.0,
+        "Wikelo station should have positive demand score, got {}",
+        score_val
+    );
+    assert!(
+        score_val <= 100.0,
+        "Score should be capped at 100, got {}",
+        score_val
+    );
+    assert!(
+        !contracts.is_empty(),
+        "Wikelo station should have contract names populated"
+    );
+
+    // Score should include base 20 points for having contracts
+    assert!(
+        score_val >= 20.0,
+        "Score should include base 20 points for contracts, got {}",
+        score_val
+    );
+}
+
+#[test]
+fn test_demand_score_capped_at_100() {
+    use std::sync::Arc;
+
+    let wikelo = Arc::new(WikieloIntel::from_static());
+
+    // Test all known Wikelo turn-in locations to ensure cap
+    for location in &[
+        "Wikelo Emporium Dasi",
+        "Wikelo Emporium Kinga",
+        "Wikelo Emporium Selo",
+    ] {
+        let (score, _) = calculate_demand_score(&Some(wikelo.clone()), location);
+        if let Some(score_val) = score {
+            assert!(
+                score_val <= 100.0,
+                "Score at {} should be capped at 100, got {}",
+                location,
+                score_val
+            );
+        }
+    }
+}
