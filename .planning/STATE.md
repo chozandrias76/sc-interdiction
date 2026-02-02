@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-14)
 
 **Core value:** Identify where valuable targets are and what they're likely carrying
-**Current focus:** v1.1 Demand Modeling — Phase 9 (Contract Data Population)
+**Current focus:** v1.1 Demand Modeling — Phase 10 (Demand Registry)
 
 ## Current Position
 
-Phase: 9 of 12 (Contract Data Population)
+Phase: 10 of 12 (Demand Registry)
 Plan: 1 of 1 in current phase
-Status: Phase 9 complete
-Last activity: 2026-02-01 — Completed 09-01-PLAN.md
+Status: Phase 10 complete
+Last activity: 2026-02-02 — Completed 10-01-PLAN.md
 
-Progress: ███░░░░░░░ ~30% (3 of ~6+ plans in v1.1)
+Progress: ████░░░░░░ ~40% (4 of ~6+ plans in v1.1)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 30
+- Total plans completed: 31
 - Average duration: 10 min
-- Total execution time: 4.25 hours
+- Total execution time: 4.37 hours
 
 **By Phase:**
 
@@ -39,9 +39,10 @@ Progress: ███░░░░░░░ ~30% (3 of ~6+ plans in v1.1)
 | 7. Demand Research | 1 | — | — |
 | 8. Demand Data Model | 1 | 5 min | 5 min |
 | 9. Contract Data Population | 1 | 3 min | 3 min |
+| 10. Demand Registry | 1 | 7 min | 7 min |
 
 **Recent Trend:**
-- Last 5 plans: 5m, 6m, 4m, 5m, 3m
+- Last 5 plans: 6m, 4m, 5m, 3m, 7m
 - Trend: → (stable, fast)
 
 ## Accumulated Context
@@ -70,6 +71,7 @@ Recent decisions affecting current work:
 - ContractCategory defaults to Equipment; DataConfidence uses repr(u8) for ordering
 - CurrencyType::Other(String) for extensibility; all new WikieloContract fields use serde(default)
 - Unknown contract quantities use 1 as placeholder; ATLS contracts categorized as Equipment
+- ContractRegistry reuses normalize_location via pub(super); exported from crate root like WikieloRegistry
 
 ### Roadmap Evolution
 
@@ -87,14 +89,14 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-01
-Stopped at: Completed 09-01-PLAN.md (Phase 9 complete)
-Resume file: `.planning/phases/09-contract-data-population/09-01-SUMMARY.md`
+Last session: 2026-02-02
+Stopped at: Completed 10-01-PLAN.md (Phase 10 complete)
+Resume file: `.planning/phases/10-demand-registry/10-01-SUMMARY.md`
 
 ### Critical Context for Next Session
 
-**Phase 9 (Contract Data Population) complete.** 14 high-confidence contracts populated in contract_data.rs module.
+**Phase 10 (Demand Registry) complete.** ContractRegistry with 5 bidirectional HashMap indexes, 10 query methods, 10 unit tests. 194 total tests passing.
 
-Key additions: contract_data module with all_contracts() returning 14 WikieloContract instances (1 prerequisite, 5 favor exchange, 8 partial-data). 13 new unit tests, 188 total tests passing.
+Key additions: contract_registry.rs with ContractRegistry struct providing item→contract and location→contract lookups. contracts_requiring_item() is the key method for Phase 11 demand scoring.
 
-**Next:** Phase 10 (Demand Registry) — create ContractRegistry with bidirectional indexing (item→contracts, contract→items), following WikieloRegistry pattern.
+**Next:** Phase 11 (Demand Intel Integration) — add demand scoring to TargetAnalyzer, flag ships heading TO demand locations.
