@@ -144,7 +144,7 @@ Plans:
 - [x] **Phase 8: Demand Data Model** - Extend types for demand/contracts
 - [x] **Phase 9: Contract Data Population** - Populate Wikelo contract instances
 - [x] **Phase 10: Demand Registry** - Create contract registry with indexing
-- [ ] **Phase 11: Demand Intel Integration** - Add demand scoring to TargetAnalyzer
+- [x] **Phase 11: Demand Intel Integration** - Add demand scoring to TargetAnalyzer
 - [ ] **Phase 12: CLI/TUI Demand Views** - Add item lookup and demand display
 
 #### Phase 7: Demand Research
@@ -191,7 +191,7 @@ Plans:
 **Plans**: TBD
 
 Plans:
-- [ ] 11-01: TBD
+- [x] 11-01: Add demand scoring to TargetAnalyzer and output structs
 
 #### Phase 12: CLI/TUI Demand Views
 **Goal**: Add item reverse lookup CLI and demand display in TUI
@@ -222,5 +222,5 @@ Phases execute in numeric order: 1 → 2 → 2.1 → 3 → 4 → 5 → 5.1 → 5
 | 8. Demand Data Model | v1.1 | 1/1 | Complete | 2026-02-01 |
 | 9. Contract Data Population | v1.1 | 1/1 | Complete | 2026-02-01 |
 | 10. Demand Registry | v1.1 | 1/1 | Complete | 2026-02-02 |
-| 11. Demand Intel Integration | v1.1 | 0/? | Not started | - |
+| 11. Demand Intel Integration | v1.1 | 1/1 | Complete | 2026-02-02 |
 | 12. CLI/TUI Demand Views | v1.1 | 0/? | Not started | - |

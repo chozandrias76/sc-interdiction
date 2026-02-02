@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-14)
 
 **Core value:** Identify where valuable targets are and what they're likely carrying
-**Current focus:** v1.1 Demand Modeling — Phase 10 (Demand Registry)
+**Current focus:** v1.1 Demand Modeling — Phase 11 (Demand Intel Integration)
 
 ## Current Position
 
-Phase: 10 of 12 (Demand Registry)
+Phase: 11 of 12 (Demand Intel Integration)
 Plan: 1 of 1 in current phase
-Status: Phase 10 complete
-Last activity: 2026-02-02 — Completed 10-01-PLAN.md
+Status: Phase 11 complete
+Last activity: 2026-02-02 — Completed 11-01-PLAN.md
 
-Progress: ████░░░░░░ ~40% (4 of ~6+ plans in v1.1)
+Progress: █████░░░░░ ~50% (5 of ~6+ plans in v1.1)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 31
+- Total plans completed: 32
 - Average duration: 10 min
-- Total execution time: 4.37 hours
+- Total execution time: 4.50 hours
 
 **By Phase:**
 
@@ -40,9 +40,10 @@ Progress: ████░░░░░░ ~40% (4 of ~6+ plans in v1.1)
 | 8. Demand Data Model | 1 | 5 min | 5 min |
 | 9. Contract Data Population | 1 | 3 min | 3 min |
 | 10. Demand Registry | 1 | 7 min | 7 min |
+| 11. Demand Intel Integration | 1 | 8 min | 8 min |
 
 **Recent Trend:**
-- Last 5 plans: 6m, 4m, 5m, 3m, 7m
+- Last 5 plans: 4m, 5m, 3m, 7m, 8m
 - Trend: → (stable, fast)
 
 ## Accumulated Context
@@ -72,6 +73,8 @@ Recent decisions affecting current work:
 - CurrencyType::Other(String) for extensibility; all new WikieloContract fields use serde(default)
 - Unknown contract quantities use 1 as placeholder; ATLS contracts categorized as Equipment
 - ContractRegistry reuses normalize_location via pub(super); exported from crate root like WikieloRegistry
+- Demand scoring mirrors source scoring: 20 base + per-contract bonuses, capped at 100
+- Arriving targets flagged with demand at current location; departing flagged with demand at destination
 
 ### Roadmap Evolution
 
@@ -90,13 +93,13 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-02
-Stopped at: Completed 10-01-PLAN.md (Phase 10 complete)
-Resume file: `.planning/phases/10-demand-registry/10-01-SUMMARY.md`
+Stopped at: Completed 11-01-PLAN.md (Phase 11 complete)
+Resume file: `.planning/phases/11-demand-intel-integration/11-01-SUMMARY.md`
 
 ### Critical Context for Next Session
 
-**Phase 10 (Demand Registry) complete.** ContractRegistry with 5 bidirectional HashMap indexes, 10 query methods, 10 unit tests. 194 total tests passing.
+**Phase 11 (Demand Intel Integration) complete.** DemandFlag/DemandContractSummary structs, calculate_demand_score() helper, demand fields on all TargetAnalyzer output structs. 200 intel tests, 544 total workspace tests passing.
 
-Key additions: contract_registry.rs with ContractRegistry struct providing item→contract and location→contract lookups. contracts_requiring_item() is the key method for Phase 11 demand scoring.
+Key additions: WikieloIntel now holds ContractRegistry, flag_demand_at_location() returns DemandFlag for turn-in locations. TargetPrediction/HotRoute/InterdictionHotspot all carry demand_flag/demand_score/demand_contracts fields.
 
-**Next:** Phase 11 (Demand Intel Integration) — add demand scoring to TargetAnalyzer, flag ships heading TO demand locations.
+**Next:** Phase 12 (CLI/TUI Demand Views) — add item lookup CLI and demand display in TUI.
