@@ -5,6 +5,7 @@
 //! are likely carrying specific valuable items.
 
 mod contract_data;
+mod contract_registry;
 mod contracts;
 mod intel;
 pub mod items;
@@ -12,6 +13,7 @@ mod registry;
 mod types;
 
 pub use contract_data::all_contracts;
+pub use contract_registry::ContractRegistry;
 pub use contracts::*;
 pub use intel::{SourceFlag, SystemFlag, WikieloIntel, WikieloItemSummary};
 pub use items::all_items;

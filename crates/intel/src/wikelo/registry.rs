@@ -180,7 +180,7 @@ impl Default for WikieloRegistry {
 /// - "Lazarus Transport Centers" -> "lazarus transport centers"
 /// - "ARC-L1" -> "arc l1"
 /// - "Pyro  I" -> "pyro i"
-fn normalize_location(name: &str) -> String {
+pub(super) fn normalize_location(name: &str) -> String {
     name.to_lowercase()
         .replace(['-', '_'], " ")
         .split_whitespace()
