@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-01-14)
 
 ## Current Position
 
-Phase: 11 of 12 (Demand Intel Integration)
-Plan: 1 of 1 in current phase
-Status: Phase 11 complete
-Last activity: 2026-02-02 — Completed 11-01-PLAN.md
+Phase: 12 of 12 (CLI/TUI Demand Views)
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-02-03 — Completed 12-01-PLAN.md
 
-Progress: █████░░░░░ ~50% (5 of ~6+ plans in v1.1)
+Progress: ██████░░░░ ~55% (6 of ~7+ plans in v1.1)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 32
+- Total plans completed: 33
 - Average duration: 10 min
-- Total execution time: 4.50 hours
+- Total execution time: 4.57 hours
 
 **By Phase:**
 
@@ -41,9 +41,10 @@ Progress: █████░░░░░ ~50% (5 of ~6+ plans in v1.1)
 | 9. Contract Data Population | 1 | 3 min | 3 min |
 | 10. Demand Registry | 1 | 7 min | 7 min |
 | 11. Demand Intel Integration | 1 | 8 min | 8 min |
+| 12. CLI/TUI Demand Views | 1 | 4 min | 4 min |
 
 **Recent Trend:**
-- Last 5 plans: 4m, 5m, 3m, 7m, 8m
+- Last 5 plans: 5m, 3m, 7m, 8m, 4m
 - Trend: → (stable, fast)
 
 ## Accumulated Context
@@ -92,14 +93,14 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-02
-Stopped at: Completed 11-01-PLAN.md (Phase 11 complete)
-Resume file: `.planning/phases/11-demand-intel-integration/11-01-SUMMARY.md`
+Last session: 2026-02-03
+Stopped at: Completed 12-01-PLAN.md (Plan 1 of 2 in Phase 12)
+Resume file: `.planning/phases/12-cli-tui-demand-views/12-01-SUMMARY.md`
 
 ### Critical Context for Next Session
 
-**Phase 11 (Demand Intel Integration) complete.** DemandFlag/DemandContractSummary structs, calculate_demand_score() helper, demand fields on all TargetAnalyzer output structs. 200 intel tests, 544 total workspace tests passing.
+**12-01 complete.** Item CLI command added with source/contract lookup and --list flag. 31 Wikelo items searchable via `sc-interdiction item <query>`. Shows sources with locations/systems/methods, contracts requiring items with turn-in locations. Both text and JSON output modes.
 
-Key additions: WikieloIntel now holds ContractRegistry, flag_demand_at_location() returns DemandFlag for turn-in locations. TargetPrediction/HotRoute/InterdictionHotspot all carry demand_flag/demand_score/demand_contracts fields.
+Key additions: Item command in CLI with handle_item(), ItemSearchResult/SourceInfo/ContractInfo structs, case-insensitive substring search, multiple match handling, helpful "no matches" messaging.
 
-**Next:** Phase 12 (CLI/TUI Demand Views) — add item lookup CLI and demand display in TUI.
+**Next:** 12-02 (TUI Demand Views) — add demand columns to targets/routes TUI views.

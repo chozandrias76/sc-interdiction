@@ -200,7 +200,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 12-01: Add Item CLI command with source and contract lookup
+- [x] 12-01: Add Item CLI command with source and contract lookup
 - [ ] 12-02: Add Demand columns to targets and routes TUI views
 
 ## Progress
@@ -224,4 +224,4 @@ Phases execute in numeric order: 1 → 2 → 2.1 → 3 → 4 → 5 → 5.1 → 5
 | 9. Contract Data Population | v1.1 | 1/1 | Complete | 2026-02-01 |
 | 10. Demand Registry | v1.1 | 1/1 | Complete | 2026-02-02 |
 | 11. Demand Intel Integration | v1.1 | 1/1 | Complete | 2026-02-02 |
-| 12. CLI/TUI Demand Views | v1.1 | 0/2 | Not started | - |
+| 12. CLI/TUI Demand Views | v1.1 | 1/2 | In progress | - |
