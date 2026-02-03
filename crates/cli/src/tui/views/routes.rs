@@ -22,6 +22,7 @@ pub fn render_routes(frame: &mut Frame, app: &mut App, area: Rect) {
         Cell::from("Profit/SCU").style(Style::default().fg(Color::Yellow)),
         Cell::from("Haul Value").style(Style::default().fg(Color::Yellow)),
         Cell::from("Wikelo").style(Style::default().fg(Color::Yellow)),
+        Cell::from("Demand").style(Style::default().fg(Color::Yellow)),
         Cell::from("Ship").style(Style::default().fg(Color::Yellow)),
     ];
     let header = Row::new(header_cells).height(1).bottom_margin(1);
@@ -44,6 +45,14 @@ pub fn render_routes(frame: &mut Frame, app: &mut App, area: Rect) {
                 _ => ("-".to_string(), Color::DarkGray),
             };
 
+            // Demand score with color coding
+            let (demand_text, demand_color) = match route.demand_score {
+                Some(s) if s > 50.0 => (format!("★{:.0}", s), Color::Cyan),
+                Some(s) if s > 20.0 => (format!("{:.0}", s), Color::LightCyan),
+                Some(s) if s > 0.0 => (format!("{:.0}", s), Color::DarkGray),
+                _ => ("-".to_string(), Color::DarkGray),
+            };
+
             let cells = vec![
                 Cell::from(route.commodity.clone()),
                 Cell::from(origin),
@@ -52,6 +61,7 @@ pub fn render_routes(frame: &mut Frame, app: &mut App, area: Rect) {
                     .style(Style::default().fg(Color::Green)),
                 Cell::from(format_value(route.estimated_haul_value)),
                 Cell::from(wikelo_text).style(Style::default().fg(wikelo_color)),
+                Cell::from(demand_text).style(Style::default().fg(demand_color)),
                 Cell::from(route.likely_ship.name.clone()),
             ];
 
@@ -71,6 +81,7 @@ pub fn render_routes(frame: &mut Frame, app: &mut App, area: Rect) {
         Constraint::Min(14),
         Constraint::Length(10),
         Constraint::Length(12),
+        Constraint::Length(7),
         Constraint::Length(7),
         Constraint::Length(16),
     ];
