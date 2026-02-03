@@ -14,8 +14,34 @@ use std::sync::Arc;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use api_client::{FleetYardsClient, UexClient};
-use intel::{ShipRegistry, TargetAnalyzer};
+use intel::{ShipRegistry, TargetAnalyzer, WikieloIntel, WikieloItem};
+use serde::Serialize;
 use server::AppState;
+
+/// Item search result for JSON output.
+#[derive(Debug, Serialize)]
+struct ItemSearchResult {
+    name: String,
+    category: String,
+    estimated_value: Option<u64>,
+    sources: Vec<SourceInfo>,
+    contracts: Vec<ContractInfo>,
+}
+
+/// Source location info for JSON output.
+#[derive(Debug, Serialize)]
+struct SourceInfo {
+    location: String,
+    system: String,
+    method: String,
+}
+
+/// Contract info for JSON output.
+#[derive(Debug, Serialize)]
+struct ContractInfo {
+    name: String,
+    turn_in_locations: Vec<String>,
+}
 
 /// Load ship registry (with caching).
 async fn load_registry() -> Result<ShipRegistry> {
@@ -178,6 +204,21 @@ enum Commands {
         #[arg(short, long)]
         location: Option<String>,
     },
+
+    /// Look up Wikelo items by name (sources and contracts)
+    Item {
+        /// Item name or partial match (e.g., "valakkar", "fang")
+        #[arg(default_value = "")]
+        query: String,
+
+        /// List all known Wikelo items
+        #[arg(long)]
+        list: bool,
+
+        /// Output as JSON
+        #[arg(long)]
+        json: bool,
+    },
 }
 
 #[tokio::main]
@@ -226,6 +267,7 @@ async fn main() -> Result<()> {
         Commands::Distance { from, to } => handle_distance(&from, &to),
         Commands::Locations { system } => handle_locations(&system),
         Commands::Dashboard { location } => tui::run(location).await?,
+        Commands::Item { query, list, json } => handle_item(&query, list, json),
     }
 
     Ok(())
@@ -407,6 +449,89 @@ fn handle_distance(from: &str, to: &str) {
 fn handle_locations(system: &str) {
     let locs = route_graph::locations_in_system(system);
     print_locations_table(system, &locs);
+}
+
+fn handle_item(query: &str, list: bool, json: bool) {
+    let intel = WikieloIntel::from_static();
+
+    if list {
+        // List all known items
+        let items = intel.registry().all_items();
+        if json {
+            // WikieloItem derives Serialize, serialization will succeed
+            if let Ok(output) = serde_json::to_string_pretty(items) {
+                println!("{output}");
+            }
+        } else {
+            print_items_list(items);
+        }
+        return;
+    }
+
+    if query.is_empty() {
+        println!("Usage: sc-interdiction item <query>");
+        println!("       sc-interdiction item --list");
+        println!();
+        println!("Search for Wikelo items by name and show sources and contract demand.");
+        return;
+    }
+
+    // Search for matching items (case-insensitive substring match)
+    let query_lower = query.to_lowercase();
+    let matches: Vec<_> = intel
+        .registry()
+        .all_items()
+        .iter()
+        .filter(|item| item.name.to_lowercase().contains(&query_lower))
+        .collect();
+
+    if matches.is_empty() {
+        println!("No items found matching '{}'.", query);
+        println!();
+        println!("Tip: Use --list to see all known Wikelo items.");
+        return;
+    }
+
+    // Build output with contract info
+    let results: Vec<ItemSearchResult> = matches
+        .iter()
+        .map(|item| {
+            let contracts: Vec<ContractInfo> = intel
+                .contracts()
+                .contracts_requiring_item(&item.id)
+                .iter()
+                .map(|c| ContractInfo {
+                    name: c.name.clone(),
+                    turn_in_locations: c.turn_in_locations.clone(),
+                })
+                .collect();
+
+            ItemSearchResult {
+                name: item.name.clone(),
+                category: format!("{:?}", item.category),
+                estimated_value: item.estimated_value,
+                sources: item
+                    .sources
+                    .iter()
+                    .map(|s| SourceInfo {
+                        location: s.location.name.clone(),
+                        system: s.location.system.clone(),
+                        method: format!("{:?}", s.method),
+                    })
+                    .collect(),
+                contracts,
+            }
+        })
+        .collect();
+
+    if json {
+        // ItemSearchResult derives Serialize, serialization will succeed
+        if let Ok(output) = serde_json::to_string_pretty(&results) {
+            println!("{output}");
+        }
+    } else {
+        print_item_results(&results, matches.len());
+    }
 }
 
 async fn build_route_graph(uex: &UexClient) -> Result<route_graph::RouteGraph> {
@@ -741,4 +866,91 @@ fn print_locations_table(system: &str, locs: &[&route_graph::LocationPosition]) 
 fn estimate_location_position(location: &str) -> route_graph::Point3D {
     route_graph::estimate_position(location)
         .unwrap_or_else(|| route_graph::Point3D::new(0.0, 0.0, 0.0))
+}
+
+fn print_items_list(items: &[WikieloItem]) {
+    println!("\n{:=<80}", "");
+    println!(" WIKELO ITEMS ({} total)", items.len());
+    println!("{:=<80}\n", "");
+    println!("{:<40} {:>15} {:>15}", "Name", "Category", "Est. Value");
+    println!("{:-<75}", "");
+
+    for item in items {
+        let value_str = item
+            .estimated_value
+            .map(|v| format!("{} aUEC", format_number(v)))
+            .unwrap_or_else(|| "-".to_string());
+
+        println!(
+            "{:<40} {:>15} {:>15}",
+            truncate_str(&item.name, 38),
+            format!("{:?}", item.category),
+            value_str
+        );
+    }
+}
+
+fn print_item_results(results: &[ItemSearchResult], count: usize) {
+    let title = if count == 1 {
+        "ITEM FOUND".to_string()
+    } else {
+        format!("FOUND {} ITEMS", count)
+    };
+
+    println!("\n{:=<80}", "");
+    println!(" {}", title);
+    println!("{:=<80}", "");
+
+    for result in results {
+        println!();
+        println!("Item: {}", result.name);
+        let value_str = result
+            .estimated_value
+            .map(|v| format!("~{} aUEC", format_number(v)))
+            .unwrap_or_else(|| "unknown".to_string());
+        println!("Category: {}, Value: {}", result.category, value_str);
+
+        if !result.sources.is_empty() {
+            println!();
+            println!("Sources:");
+            for source in &result.sources {
+                println!(
+                    "  - {} ({}) [{}]",
+                    source.location, source.system, source.method
+                );
+            }
+        }
+
+        if !result.contracts.is_empty() {
+            println!();
+            println!("Used in Contracts:");
+            for contract in &result.contracts {
+                let locations = contract.turn_in_locations.join(", ");
+                println!("  - {} (turn-in: {})", contract.name, locations);
+            }
+        }
+
+        println!();
+        println!("{:-<80}", "");
+    }
+}
+
+fn format_number(n: u64) -> String {
+    let s = n.to_string();
+    let mut result = String::new();
+    for (i, c) in s.chars().rev().enumerate() {
+        if i > 0 && i % 3 == 0 {
+            result.push(',');
+        }
+        result.push(c);
+    }
+    result.chars().rev().collect()
+}
+
+fn truncate_str(s: &str, max_len: usize) -> String {
+    if s.len() <= max_len {
+        s.to_string()
+    } else {
+        format!("{}...", &s[..max_len - 3])
+    }
 }
