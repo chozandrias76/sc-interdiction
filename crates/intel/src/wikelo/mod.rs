@@ -15,7 +15,9 @@ mod types;
 pub use contract_data::all_contracts;
 pub use contract_registry::ContractRegistry;
 pub use contracts::*;
-pub use intel::{DemandFlag, SourceFlag, SystemFlag, WikieloIntel, WikieloItemSummary};
+pub use intel::{
+    DemandContractSummary, DemandFlag, SourceFlag, SystemFlag, WikieloIntel, WikieloItemSummary,
+};
 pub use items::all_items;
 pub use registry::WikieloRegistry;
 pub use types::*;

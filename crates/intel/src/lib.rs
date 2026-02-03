@@ -16,7 +16,7 @@ pub use targets::{
 };
 pub use wikelo::{
     all_contracts, all_items, AcquisitionMethod, ContractCategory, ContractRegistry,
-    ContractRequirement, ContractReward, CurrencyType, DataConfidence, ExchangeRate, ItemCategory,
-    ItemSource, RewardType, SourceFlag, SourceLocation, SystemFlag, WikieloContract, WikieloIntel,
-    WikieloItem, WikieloItemSummary, WikieloRegistry,
+    ContractRequirement, ContractReward, CurrencyType, DataConfidence, DemandContractSummary,
+    DemandFlag, ExchangeRate, ItemCategory, ItemSource, RewardType, SourceFlag, SourceLocation,
+    SystemFlag, WikieloContract, WikieloIntel, WikieloItem, WikieloItemSummary, WikieloRegistry,
 };
