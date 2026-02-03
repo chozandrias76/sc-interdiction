@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-14)
 ## Current Position
 
 Phase: 12 of 12 (CLI/TUI Demand Views)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-02-03 — Completed 12-01-PLAN.md
+Plan: 2 of 2 in current phase
+Status: Phase 12 complete — v1.1 Milestone complete
+Last activity: 2026-02-03 — Completed 12-02-PLAN.md
 
-Progress: ██████░░░░ ~55% (6 of ~7+ plans in v1.1)
+Progress: ██████████ 100% (v1.1 complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 33
-- Average duration: 10 min
-- Total execution time: 4.57 hours
+- Total plans completed: 34
+- Average duration: 9 min
+- Total execution time: 4.65 hours
 
 **By Phase:**
 
@@ -41,10 +41,10 @@ Progress: ██████░░░░ ~55% (6 of ~7+ plans in v1.1)
 | 9. Contract Data Population | 1 | 3 min | 3 min |
 | 10. Demand Registry | 1 | 7 min | 7 min |
 | 11. Demand Intel Integration | 1 | 8 min | 8 min |
-| 12. CLI/TUI Demand Views | 1 | 4 min | 4 min |
+| 12. CLI/TUI Demand Views | 2 | 9 min | 4.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 5m, 3m, 7m, 8m, 4m
+- Last 5 plans: 3m, 7m, 8m, 4m, 5m
 - Trend: → (stable, fast)
 
 ## Accumulated Context
@@ -94,13 +94,23 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed 12-01-PLAN.md (Plan 1 of 2 in Phase 12)
-Resume file: `.planning/phases/12-cli-tui-demand-views/12-01-SUMMARY.md`
+Stopped at: Completed 12-02-PLAN.md (Phase 12 complete, v1.1 Milestone complete)
+Resume file: `.planning/phases/12-cli-tui-demand-views/12-02-SUMMARY.md`
 
 ### Critical Context for Next Session
 
-**12-01 complete.** Item CLI command added with source/contract lookup and --list flag. 31 Wikelo items searchable via `sc-interdiction item <query>`. Shows sources with locations/systems/methods, contracts requiring items with turn-in locations. Both text and JSON output modes.
+**v1.1 Demand Modeling COMPLETE.** All 6 phases (7-12) executed:
+- Phase 7: Demand research (43 Wikelo contracts documented)
+- Phase 8: Demand data model (contract types, reward types)
+- Phase 9: Contract data population (14 high-confidence contracts)
+- Phase 10: Demand registry (ContractRegistry with bidirectional indexes)
+- Phase 11: Demand intel integration (demand scoring in TargetAnalyzer)
+- Phase 12: CLI/TUI demand views (item CLI + demand TUI columns)
 
-Key additions: Item command in CLI with handle_item(), ItemSearchResult/SourceInfo/ContractInfo structs, case-insensitive substring search, multiple match handling, helpful "no matches" messaging.
+Key features delivered:
+- `sc-interdiction item <query>` CLI command with source/contract lookup
+- Demand columns in targets TUI (contract count) and routes TUI (demand score)
+- Detail panel shows demand contracts when expanded
+- Color scheme: Cyan for demand, Yellow/Green for source
 
-**Next:** 12-02 (TUI Demand Views) — add demand columns to targets/routes TUI views.
+**Next:** Run `/gsd:complete-milestone` to archive v1.1 and prepare for next version.
