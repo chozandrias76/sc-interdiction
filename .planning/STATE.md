@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-14)
 
 **Core value:** Identify where valuable targets are and what they're likely carrying
-**Current focus:** v1.1 Demand Modeling — Phase 9 (Contract Data Population)
+**Current focus:** v1.1 Demand Modeling — Phase 10 (Demand Registry)
 
 ## Current Position
 
 Phase: 9 of 12 (Contract Data Population)
-Plan: 1 of 2 in current phase
-Status: Plan 09-01 complete
-Last activity: 2026-02-09 — Completed 09-01-PLAN.md
+Plan: 2 of 2 in current phase
+Status: Phase 9 complete
+Last activity: 2026-02-10 — Completed 09-02-PLAN.md
 
-Progress: ███░░░░░░░ ~30% (3 of ~6+ plans in v1.1)
+Progress: ████░░░░░░ ~40% (4 of ~6+ plans in v1.1)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 30
+- Total plans completed: 31
 - Average duration: 10 min
-- Total execution time: 4.4 hours
+- Total execution time: 4.7 hours
 
 **By Phase:**
 
@@ -38,10 +38,10 @@ Progress: ███░░░░░░░ ~30% (3 of ~6+ plans in v1.1)
 | 6. Testing & Polish | 2 | 10 min | 5 min |
 | 7. Demand Research | 1 | — | — |
 | 8. Demand Data Model | 1 | 5 min | 5 min |
-| 9. Contract Data Population | 1 | 12 min | 12 min |
+| 9. Contract Data Population | 2 | 35 min | 18 min |
 
 **Recent Trend:**
-- Last 5 plans: 5m, 6m, 4m, 5m, 12m
+- Last 5 plans: 6m, 4m, 5m, 12m, 23m
 - Trend: → (stable)
 
 ## Accumulated Context
@@ -86,14 +86,17 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-09
-Stopped at: Completed 09-01-PLAN.md (Plan 09-01 complete)
-Resume file: `.planning/phases/09-contract-data-population/09-01-SUMMARY.md`
+Last session: 2026-02-10
+Stopped at: Completed 09-02-PLAN.md (Phase 9 complete)
+Resume file: `.planning/phases/09-contract-data-population/09-02-SUMMARY.md`
 
 ### Critical Context for Next Session
 
-**Plan 09-01 (Contract Data Loader) complete.** contracts.toml has all 43 contracts with TOML loader.
+**Phase 9 (Contract Data Population) complete.** All 43 Wikelo contracts have complete item coverage.
 
-Key additions: contracts.toml (43 contracts), contracts.rs with all_contracts()/get_contract(), 6 tests. Added toml 0.8 and once_cell 1.20 deps. 29 wikelo-data tests passing.
+Key additions:
+- Plan 09-01: contracts.toml (43 contracts), contracts.rs with all_contracts()/get_contract()
+- Plan 09-02: 53 new items in registry (88 total), covering all 75 contract item_ids
+- 29 wikelo-data tests passing
 
-**Next:** Plan 09-02 — add ~40 missing items to registry for contract requirements. Many contracts reference items not yet in WikieloRegistry (weapons, armor sets, vehicles, etc.).
+**Next:** Phase 10 (Demand Registry) — Create ContractRegistry with bidirectional indexing (item→contracts, contract→items).
