@@ -473,11 +473,11 @@ mod tests {
         let registry = WikieloRegistry::new();
         let creature_parts = registry.items_by_category(ItemCategory::CreaturePart);
 
-        // Should have 10 creature parts
+        // Should have 12 creature parts (10 original + 2 added in Phase 9)
         assert_eq!(
             creature_parts.len(),
-            10,
-            "Expected 10 creature parts, got {}",
+            12,
+            "Expected 12 creature parts, got {}",
             creature_parts.len()
         );
 

@@ -11,11 +11,12 @@ use intel::{AcquisitionMethod, ItemCategory, ItemSource, SourceLocation, Wikielo
 /// Returns all Wikelo items.
 #[must_use]
 pub fn all_items() -> Vec<WikieloItem> {
-    let mut items = Vec::with_capacity(80);
+    let mut items = Vec::with_capacity(100);
     items.extend(creature_parts());
     items.extend(mined_materials());
     items.extend(mission_loot_items());
     items.extend(commodities());
+    items.extend(consumables());
     items
 }
 
@@ -202,6 +203,42 @@ fn creature_parts() -> Vec<WikieloItem> {
                 method: AcquisitionMethod::Hunting,
                 reliability: 3,
                 notes: Some("Used for cooking; different variants by biome".to_string()),
+            }],
+            estimated_value: None,
+            stackable: true,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "grassland_quasi_grazer_egg".to_string(),
+            name: "Grassland Quasi Grazer Egg".to_string(),
+            category: ItemCategory::CreaturePart,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Terra III (Quasi)".to_string(),
+                    system: "Terra".to_string(),
+                    description: Some("Grassland biome variant".to_string()),
+                },
+                method: AcquisitionMethod::Hunting,
+                reliability: 3,
+                notes: Some("Grassland variant of Quasi Grazer egg".to_string()),
+            }],
+            estimated_value: None,
+            stackable: true,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "irradiated_valakkar_pearl_aaa".to_string(),
+            name: "Irradiated Valakkar Pearl (Grade AAA)".to_string(),
+            category: ItemCategory::CreaturePart,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Pyro I".to_string(),
+                    system: "Pyro".to_string(),
+                    description: Some("Rare drop from Valakkar".to_string()),
+                },
+                method: AcquisitionMethod::Hunting,
+                reliability: 2,
+                notes: Some("Highest grade pearl; rare drop from apex Valakkar".to_string()),
             }],
             estimated_value: None,
             stackable: true,
@@ -498,6 +535,48 @@ fn commodities() -> Vec<WikieloItem> {
     }]
 }
 
+/// Returns consumable food and drink items.
+fn consumables() -> Vec<WikieloItem> {
+    vec![
+        WikieloItem {
+            id: "fried_seanut_with_sauce".to_string(),
+            name: "Fried Seanut with Sauce".to_string(),
+            category: ItemCategory::Commodity,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Food Vendors".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable food item".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Food item; various vendors".to_string()),
+            }],
+            estimated_value: None,
+            stackable: true,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "smoltz_bottle".to_string(),
+            name: "Smoltz (Bottle)".to_string(),
+            category: ItemCategory::Commodity,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Bars and Vendors".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable beverage".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Bottled beverage; bars and food vendors".to_string()),
+            }],
+            estimated_value: None,
+            stackable: true,
+            scu_per_unit: None,
+        },
+    ]
+}
+
 /// Returns the 11 mission/loot items.
 fn mission_loot_items() -> Vec<WikieloItem> {
     vec![
@@ -710,6 +789,42 @@ fn mission_loot_items() -> Vec<WikieloItem> {
             stackable: true,
             scu_per_unit: None,
         },
+        WikieloItem {
+            id: "une_unification_war_medal_damaged".to_string(),
+            name: "UNE Unification War Medal (Damaged)".to_string(),
+            category: ItemCategory::CombatLoot,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Various Bunkers".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Combat loot from bunker raids".to_string()),
+                },
+                method: AcquisitionMethod::Combat,
+                reliability: 2,
+                notes: Some("Historical medal; damaged variant".to_string()),
+            }],
+            estimated_value: None,
+            stackable: true,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "uee_6th_platoon_medal_pristine".to_string(),
+            name: "UEE 6th Platoon Medal (Pristine)".to_string(),
+            category: ItemCategory::CombatLoot,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Various Bunkers".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Rare combat loot".to_string()),
+                },
+                method: AcquisitionMethod::Combat,
+                reliability: 2,
+                notes: Some("Pristine condition variant; rare drop".to_string()),
+            }],
+            estimated_value: None,
+            stackable: true,
+            scu_per_unit: None,
+        },
     ]
 }
 
@@ -747,8 +862,8 @@ mod tests {
             .collect();
         assert_eq!(
             creature_parts.len(),
-            10,
-            "Expected 10 creature parts, got {}",
+            12,
+            "Expected 12 creature parts, got {}",
             creature_parts.len()
         );
     }
