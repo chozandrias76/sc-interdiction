@@ -514,11 +514,11 @@ mod tests {
         let registry = WikieloRegistry::new();
         let high_conf = registry.high_confidence_items();
 
-        // Based on DATA-READY.md: 12 high (4-5) + 10 medium (3) items have at least one high source
-        // High confidence items should be 12-22 (items with at least one source >= 4)
+        // After Phase 9 additions, most items are purchasable (reliability 4-5)
+        // Original 12-22 high confidence + ~46 new purchasable items = 58-68+
         assert!(
-            high_conf.len() >= 12 && high_conf.len() <= 22,
-            "Expected 12-22 high confidence items, got {}",
+            high_conf.len() >= 58,
+            "Expected at least 58 high confidence items, got {}",
             high_conf.len()
         );
     }

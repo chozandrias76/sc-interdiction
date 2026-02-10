@@ -17,6 +17,10 @@ pub fn all_items() -> Vec<WikieloItem> {
     items.extend(mission_loot_items());
     items.extend(commodities());
     items.extend(consumables());
+    items.extend(equipment_items());
+    items.extend(base_weapons());
+    items.extend(armor_sets());
+    items.extend(vehicles());
     items
 }
 
@@ -577,6 +581,865 @@ fn consumables() -> Vec<WikieloItem> {
     ]
 }
 
+/// Returns equipment items (tech components, badges).
+fn equipment_items() -> Vec<WikieloItem> {
+    vec![
+        WikieloItem {
+            id: "advocacy_badge_replica".to_string(),
+            name: "Advocacy Badge (Replica)".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Various Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable collectible".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Replica badge; available at various vendors".to_string()),
+            }],
+            estimated_value: None,
+            stackable: true,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "rcmbnt_xtl_1".to_string(),
+            name: "RCMBNT-XTL-1".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Tech Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Electronic component".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("XTL series board tier 1".to_string()),
+            }],
+            estimated_value: None,
+            stackable: true,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "rcmbnt_xtl_2".to_string(),
+            name: "RCMBNT-XTL-2".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Tech Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Electronic component".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("XTL series board tier 2".to_string()),
+            }],
+            estimated_value: None,
+            stackable: true,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "rcmbnt_xtl_3".to_string(),
+            name: "RCMBNT-XTL-3".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Tech Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Electronic component".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("XTL series board tier 3".to_string()),
+            }],
+            estimated_value: None,
+            stackable: true,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "rcmbnt_pwl_1".to_string(),
+            name: "RCMBNT-PWL-1".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Tech Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Electronic component".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("PWL series board tier 1".to_string()),
+            }],
+            estimated_value: None,
+            stackable: true,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "rcmbnt_pwl_2".to_string(),
+            name: "RCMBNT-PWL-2".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Tech Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Electronic component".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("PWL series board tier 2".to_string()),
+            }],
+            estimated_value: None,
+            stackable: true,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "rcmbnt_pwl_3".to_string(),
+            name: "RCMBNT-PWL-3".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Tech Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Electronic component".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("PWL series board tier 3".to_string()),
+            }],
+            estimated_value: None,
+            stackable: true,
+            scu_per_unit: None,
+        },
+    ]
+}
+
+/// Returns base weapon items.
+fn base_weapons() -> Vec<WikieloItem> {
+    vec![
+        WikieloItem {
+            id: "fresnel_energy_lmg".to_string(),
+            name: "Fresnel Energy LMG".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Weapon Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable weapon".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Base weapon for Yormandi gun contract".to_string()),
+            }],
+            estimated_value: None,
+            stackable: false,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "coda_pistol".to_string(),
+            name: "Coda Pistol".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Weapon Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable weapon".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Base weapon for fix up Coda gun contract".to_string()),
+            }],
+            estimated_value: None,
+            stackable: false,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "f55_lmg".to_string(),
+            name: "F55 LMG".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Weapon Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable weapon".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Base weapon for F55 look better contract".to_string()),
+            }],
+            estimated_value: None,
+            stackable: false,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "parallax_energy_assault_rifle".to_string(),
+            name: "Parallax Energy Assault Rifle".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Weapon Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable weapon".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Base energy assault rifle".to_string()),
+            }],
+            estimated_value: None,
+            stackable: false,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "quartz_energy_smg".to_string(),
+            name: "Quartz Energy SMG".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Weapon Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable weapon".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Base energy SMG for volt shotgun contract".to_string()),
+            }],
+            estimated_value: None,
+            stackable: false,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "prism_laser_shotgun".to_string(),
+            name: "Prism Laser Shotgun".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Weapon Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable weapon".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Base laser shotgun".to_string()),
+            }],
+            estimated_value: None,
+            stackable: false,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "karna_rifle".to_string(),
+            name: "Karna Rifle".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Weapon Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable weapon".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Base weapon for prettify Karna gun contract".to_string()),
+            }],
+            estimated_value: None,
+            stackable: false,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "zenith_laser_sniper_rifle".to_string(),
+            name: "Zenith Laser Sniper Rifle".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Weapon Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable weapon".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Base weapon for snow snipe contract".to_string()),
+            }],
+            estimated_value: None,
+            stackable: false,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "cf337_panther_repeater".to_string(),
+            name: "CF-337 Panther Repeater".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Ship Component Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Ship weapon component".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Ship weapon for ATLS contracts".to_string()),
+            }],
+            estimated_value: None,
+            stackable: false,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "nn13_cannon".to_string(),
+            name: "NN-13 Neutron Cannon".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Ship Component Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Ship weapon component".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Ship weapon for ATLS contracts".to_string()),
+            }],
+            estimated_value: None,
+            stackable: false,
+            scu_per_unit: None,
+        },
+    ]
+}
+
+/// Returns armor set items.
+fn armor_sets() -> Vec<WikieloItem> {
+    vec![
+        // Antium armor set
+        WikieloItem {
+            id: "antium_armor_core".to_string(),
+            name: "Antium Armor Core".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Armor Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable armor".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Antium armor core piece".to_string()),
+            }],
+            estimated_value: None,
+            stackable: false,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "antium_armor_helmet".to_string(),
+            name: "Antium Armor Helmet".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Armor Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable armor".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Antium armor helmet".to_string()),
+            }],
+            estimated_value: None,
+            stackable: false,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "antium_armor_legs".to_string(),
+            name: "Antium Armor Legs".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Armor Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable armor".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Antium armor leg pieces".to_string()),
+            }],
+            estimated_value: None,
+            stackable: false,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "antium_armor_arms".to_string(),
+            name: "Antium Armor Arms".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Armor Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable armor".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Antium armor arm pieces".to_string()),
+            }],
+            estimated_value: None,
+            stackable: false,
+            scu_per_unit: None,
+        },
+        // Geist ASD armor set
+        WikieloItem {
+            id: "geist_armor_asd_core".to_string(),
+            name: "Geist Armor ASD Core".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Armor Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable armor".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Geist ASD armor core".to_string()),
+            }],
+            estimated_value: None,
+            stackable: false,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "geist_armor_asd_helmet".to_string(),
+            name: "Geist Armor ASD Helmet".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Armor Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable armor".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Geist ASD armor helmet".to_string()),
+            }],
+            estimated_value: None,
+            stackable: false,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "geist_armor_asd_legs".to_string(),
+            name: "Geist Armor ASD Legs".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Armor Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable armor".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Geist ASD armor legs".to_string()),
+            }],
+            estimated_value: None,
+            stackable: false,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "geist_armor_asd_arms".to_string(),
+            name: "Geist Armor ASD Arms".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Armor Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable armor".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Geist ASD armor arms".to_string()),
+            }],
+            estimated_value: None,
+            stackable: false,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "geist_armor_asd_undersuit".to_string(),
+            name: "Geist Armor ASD Undersuit".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Armor Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable armor".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Geist ASD armor undersuit".to_string()),
+            }],
+            estimated_value: None,
+            stackable: false,
+            scu_per_unit: None,
+        },
+        // Ana Endro armor set
+        WikieloItem {
+            id: "ana_armor_endro_core".to_string(),
+            name: "Ana Armor Endro Core".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Armor Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable armor".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Ana Endro armor core".to_string()),
+            }],
+            estimated_value: None,
+            stackable: false,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "ana_armor_endro_helmet".to_string(),
+            name: "Ana Armor Endro Helmet".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Armor Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable armor".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Ana Endro armor helmet".to_string()),
+            }],
+            estimated_value: None,
+            stackable: false,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "ana_armor_endro_legs".to_string(),
+            name: "Ana Armor Endro Legs".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Armor Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable armor".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Ana Endro armor legs".to_string()),
+            }],
+            estimated_value: None,
+            stackable: false,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "ana_armor_endro_arms".to_string(),
+            name: "Ana Armor Endro Arms".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Armor Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable armor".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Ana Endro armor arms".to_string()),
+            }],
+            estimated_value: None,
+            stackable: false,
+            scu_per_unit: None,
+        },
+        // Palatino armor set
+        WikieloItem {
+            id: "palatino_core".to_string(),
+            name: "Palatino Core".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Armor Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable armor".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Palatino armor core".to_string()),
+            }],
+            estimated_value: None,
+            stackable: false,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "palatino_helmet".to_string(),
+            name: "Palatino Helmet".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Armor Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable armor".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Palatino armor helmet".to_string()),
+            }],
+            estimated_value: None,
+            stackable: false,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "palatino_legs".to_string(),
+            name: "Palatino Legs".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Armor Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable armor".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Palatino armor legs".to_string()),
+            }],
+            estimated_value: None,
+            stackable: false,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "palatino_arms".to_string(),
+            name: "Palatino Arms".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Armor Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable armor".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Palatino armor arms".to_string()),
+            }],
+            estimated_value: None,
+            stackable: false,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "palatino_undersuit".to_string(),
+            name: "Palatino Undersuit".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Armor Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable armor".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Palatino armor undersuit".to_string()),
+            }],
+            estimated_value: None,
+            stackable: false,
+            scu_per_unit: None,
+        },
+        // Novikov armor
+        WikieloItem {
+            id: "novikov_ascension_helmet".to_string(),
+            name: "Novikov Ascension Helmet".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Armor Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable armor".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Novikov exploration helmet".to_string()),
+            }],
+            estimated_value: None,
+            stackable: false,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "novikov_exploration_suit".to_string(),
+            name: "Novikov Exploration Suit".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Armor Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable armor".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Novikov exploration suit".to_string()),
+            }],
+            estimated_value: None,
+            stackable: false,
+            scu_per_unit: None,
+        },
+        // Xanthule armor
+        WikieloItem {
+            id: "xanthule_helmet".to_string(),
+            name: "Xanthule Helmet".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Armor Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable armor".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Xi'an Xanthule helmet".to_string()),
+            }],
+            estimated_value: None,
+            stackable: false,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "xanthule_suit".to_string(),
+            name: "Xanthule Suit".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Armor Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable armor".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Xi'an Xanthule suit".to_string()),
+            }],
+            estimated_value: None,
+            stackable: false,
+            scu_per_unit: None,
+        },
+        // Venture armor set
+        WikieloItem {
+            id: "venture_core".to_string(),
+            name: "Venture Core".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Armor Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable armor".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Venture armor core".to_string()),
+            }],
+            estimated_value: None,
+            stackable: false,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "venture_helmet".to_string(),
+            name: "Venture Helmet".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Armor Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable armor".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Venture armor helmet".to_string()),
+            }],
+            estimated_value: None,
+            stackable: false,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "venture_legs".to_string(),
+            name: "Venture Legs".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Armor Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable armor".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Venture armor legs".to_string()),
+            }],
+            estimated_value: None,
+            stackable: false,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "venture_arms".to_string(),
+            name: "Venture Arms".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Armor Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable armor".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Venture armor arms".to_string()),
+            }],
+            estimated_value: None,
+            stackable: false,
+            scu_per_unit: None,
+        },
+    ]
+}
+
+/// Returns vehicle items.
+fn vehicles() -> Vec<WikieloItem> {
+    vec![
+        WikieloItem {
+            id: "argo_atls".to_string(),
+            name: "Argo ATLS".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Vehicle Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable vehicle".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("Base ATLS mech".to_string()),
+            }],
+            estimated_value: None,
+            stackable: false,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "argo_atls_geo".to_string(),
+            name: "Argo ATLS GEO".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Vehicle Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable vehicle".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("ATLS GEO variant".to_string()),
+            }],
+            estimated_value: None,
+            stackable: false,
+            scu_per_unit: None,
+        },
+        WikieloItem {
+            id: "argo_atls_ikti".to_string(),
+            name: "Argo ATLS IKTI".to_string(),
+            category: ItemCategory::Equipment,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Vehicle Shops".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Purchasable vehicle".to_string()),
+                },
+                method: AcquisitionMethod::Purchase,
+                reliability: 4,
+                notes: Some("ATLS IKTI variant".to_string()),
+            }],
+            estimated_value: None,
+            stackable: false,
+            scu_per_unit: None,
+        },
+    ]
+}
+
 /// Returns the 11 mission/loot items.
 fn mission_loot_items() -> Vec<WikieloItem> {
     vec![
@@ -835,10 +1698,11 @@ mod tests {
     #[test]
     fn test_all_items_minimum_count() {
         let items = all_items();
-        // Registry should have at least 70 items after Phase 9 additions
+        // Registry should have at least 75 items after Phase 9 additions
+        // (35 original + 7 creature/loot/consumable + 46 equipment/weapon/armor/vehicle)
         assert!(
-            items.len() >= 35,
-            "Expected at least 35 items, got {}",
+            items.len() >= 75,
+            "Expected at least 75 items, got {}",
             items.len()
         );
     }
