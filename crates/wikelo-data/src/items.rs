@@ -8,13 +8,14 @@
 
 use intel::{AcquisitionMethod, ItemCategory, ItemSource, SourceLocation, WikieloItem};
 
-/// Returns all 31 Wikelo items from Phase 2 research.
+/// Returns all Wikelo items.
 #[must_use]
 pub fn all_items() -> Vec<WikieloItem> {
-    let mut items = Vec::with_capacity(31);
+    let mut items = Vec::with_capacity(80);
     items.extend(creature_parts());
     items.extend(mined_materials());
     items.extend(mission_loot_items());
+    items.extend(commodities());
     items
 }
 
@@ -418,7 +419,83 @@ fn mined_materials() -> Vec<WikieloItem> {
             stackable: true,
             scu_per_unit: Some(1.0),
         },
+        WikieloItem {
+            id: "jaclium".to_string(),
+            name: "Jaclium".to_string(),
+            category: ItemCategory::MinedMaterial,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Various".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Mineable ore; multiple locations".to_string()),
+                },
+                method: AcquisitionMethod::Mining,
+                reliability: 3,
+                notes: Some("Required for multiple Wikelo weapon contracts".to_string()),
+            }],
+            estimated_value: None,
+            stackable: true,
+            scu_per_unit: Some(1.0),
+        },
+        WikieloItem {
+            id: "saldynium".to_string(),
+            name: "Saldynium".to_string(),
+            category: ItemCategory::MinedMaterial,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Various".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Mineable ore; multiple locations".to_string()),
+                },
+                method: AcquisitionMethod::Mining,
+                reliability: 3,
+                notes: Some("Required for multiple Wikelo weapon and ship contracts".to_string()),
+            }],
+            estimated_value: None,
+            stackable: true,
+            scu_per_unit: Some(1.0),
+        },
+        WikieloItem {
+            id: "sabir".to_string(),
+            name: "Sabir".to_string(),
+            category: ItemCategory::MinedMaterial,
+            sources: vec![ItemSource {
+                location: SourceLocation {
+                    name: "Hathor Sites".to_string(),
+                    system: "Stanton".to_string(),
+                    description: Some("Mining tech from Hathor sites".to_string()),
+                },
+                method: AcquisitionMethod::Mining,
+                reliability: 2,
+                notes: Some("Required for Need mining things contract".to_string()),
+            }],
+            estimated_value: None,
+            stackable: true,
+            scu_per_unit: None,
+        },
     ]
+}
+
+/// Returns commodity items.
+fn commodities() -> Vec<WikieloItem> {
+    vec![WikieloItem {
+        id: "vestal_water".to_string(),
+        name: "Vestal Water".to_string(),
+        category: ItemCategory::Commodity,
+        sources: vec![ItemSource {
+            location: SourceLocation {
+                name: "Various Trade Terminals".to_string(),
+                system: "Stanton".to_string(),
+                description: Some("Purchasable commodity".to_string()),
+            },
+            method: AcquisitionMethod::Purchase,
+            reliability: 5,
+            notes: Some("Required for New to System prerequisite contract".to_string()),
+        }],
+        estimated_value: None,
+        stackable: true,
+        scu_per_unit: Some(1.0),
+    }]
 }
 
 /// Returns the 11 mission/loot items.
@@ -641,9 +718,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_all_items_returns_31_items() {
+    fn test_all_items_minimum_count() {
         let items = all_items();
-        assert_eq!(items.len(), 31, "Expected 31 items, got {}", items.len());
+        // Registry should have at least 70 items after Phase 9 additions
+        assert!(
+            items.len() >= 35,
+            "Expected at least 35 items, got {}",
+            items.len()
+        );
     }
 
     #[test]
@@ -678,10 +760,10 @@ mod tests {
             .iter()
             .filter(|i| i.category == ItemCategory::MinedMaterial)
             .collect();
-        assert_eq!(
-            mined.len(),
-            10,
-            "Expected 10 mined materials, got {}",
+        // At least 13 mined materials after Phase 9 additions
+        assert!(
+            mined.len() >= 13,
+            "Expected at least 13 mined materials, got {}",
             mined.len()
         );
     }

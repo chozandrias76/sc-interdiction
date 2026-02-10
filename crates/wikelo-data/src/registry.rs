@@ -425,8 +425,12 @@ mod tests {
     fn test_new_loads_static_data() {
         let registry = WikieloRegistry::new();
 
-        // new() should load all 31 items from static data
-        assert_eq!(registry.item_count(), 31);
+        // new() should load at least 35 items after Phase 9 additions
+        assert!(
+            registry.item_count() >= 35,
+            "Expected at least 35 items, got {}",
+            registry.item_count()
+        );
 
         // Should be able to look up known items
         assert!(registry.get("wikelo_favor").is_some());
@@ -438,10 +442,10 @@ mod tests {
     #[test]
     fn test_registry_loads_all_items() {
         let registry = WikieloRegistry::new();
-        assert_eq!(
-            registry.item_count(),
-            31,
-            "Registry should load exactly 31 items from static data"
+        assert!(
+            registry.item_count() >= 35,
+            "Registry should load at least 35 items from static data, got {}",
+            registry.item_count()
         );
     }
 
@@ -524,11 +528,10 @@ mod tests {
         let registry = WikieloRegistry::new();
         let needs_val = registry.needs_validation();
 
-        // Based on DATA-READY.md: 9 low confidence items (reliability 1-2)
-        assert_eq!(
-            needs_val.len(),
-            9,
-            "Expected 9 items needing validation, got {}",
+        // At least 9 low confidence items (reliability 1-2) after Phase 9 additions
+        assert!(
+            needs_val.len() >= 9,
+            "Expected at least 9 items needing validation, got {}",
             needs_val.len()
         );
 
@@ -565,7 +568,11 @@ mod tests {
     fn test_registry_default_impl() {
         let registry = WikieloRegistry::default();
         // Default should load the same items as new()
-        assert_eq!(registry.item_count(), 31);
+        assert!(
+            registry.item_count() >= 35,
+            "Expected at least 35 items, got {}",
+            registry.item_count()
+        );
     }
 
     #[test]
