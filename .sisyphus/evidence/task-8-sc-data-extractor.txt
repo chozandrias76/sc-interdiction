@@ -1,0 +1,5 @@
+Scenario: File created with test command
+Tool: Grep
+Command: pattern "cargo test -p sc-data-extractor" in crates/sc-data-extractor/AGENTS.md
+Result:
+- crates/sc-data-extractor/AGENTS.md:62: cargo test -p sc-data-extractor
