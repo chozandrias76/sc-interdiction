@@ -1,0 +1,7 @@
+Scenario: API guidance present
+Tool: Grep
+Command: pattern "UEX|FleetYards|Star Citizen" in crates/api-client/AGENTS.md
+Result:
+- crates/api-client/AGENTS.md:3: HTTP clients for Star Citizen external data sources.
+- crates/api-client/AGENTS.md:9: UEX Corp API
+- crates/api-client/AGENTS.md:11: FleetYards.net

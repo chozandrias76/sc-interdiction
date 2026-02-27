@@ -1,0 +1,5 @@
+Scenario: File created with test command
+Tool: Grep
+Command: pattern "cargo test -p api-client" in crates/api-client/AGENTS.md
+Result:
+- crates/api-client/AGENTS.md:62: cargo test -p api-client
