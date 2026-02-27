@@ -1,0 +1,5 @@
+Scenario: Commit created
+Tool: Bash
+Command: git log -1 --format=%s
+Result:
+- docs(agents): generate hierarchy
