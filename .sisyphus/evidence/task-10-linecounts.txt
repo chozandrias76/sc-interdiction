@@ -1,0 +1,11 @@
+Scenario: Check line counts
+Tool: Bash
+Command: wc -l AGENTS.md crates/**/AGENTS.md dbt/AGENTS.md
+Result:
+- AGENTS.md: 98
+- crates/api-client/AGENTS.md: 78
+- crates/cli/AGENTS.md: 79
+- crates/intel/AGENTS.md: 76
+- crates/route-graph/AGENTS.md: 72
+- crates/sc-data-extractor/AGENTS.md: 76
+- dbt/AGENTS.md: 79
