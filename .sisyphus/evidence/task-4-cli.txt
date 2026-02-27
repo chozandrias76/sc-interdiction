@@ -1,0 +1,7 @@
+Scenario: File created with commands
+Tool: Grep
+Command: pattern "sc-interdiction" in crates/cli/AGENTS.md
+Result:
+- crates/cli/AGENTS.md:1: # CLI Crate (sc-interdiction)
+- crates/cli/AGENTS.md:65: cargo test -p sc-interdiction
+- crates/cli/AGENTS.md:66: cargo run -p sc-interdiction -- --help

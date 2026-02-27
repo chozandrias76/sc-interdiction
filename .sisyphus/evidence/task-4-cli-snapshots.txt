@@ -1,0 +1,7 @@
+Scenario: Snapshot note present
+Tool: Grep
+Command: pattern "insta|snapshot" in crates/cli/AGENTS.md
+Result:
+- crates/cli/AGENTS.md:51: Uses `insta` for TUI snapshot testing.
+- crates/cli/AGENTS.md:52: `src/tui/snapshots/`
+- crates/cli/AGENTS.md:55: assert_snapshot!
