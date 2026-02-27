@@ -1,8 +1,59 @@
 # Agent Instructions
 
+## Overview
+
+Rust workspace -- Star Citizen interdiction planner. Analyzes UEX trade data,
+finds quantum chokepoints, predicts hauler routes across Stanton system.
+
+## Structure
+
+```
+crates/
+  api-client/            HTTP clients (UEX, SC API)
+  route-graph/           Graph structures + pathfinding
+  intel/                 Target analysis + prediction
+  server/                Axum REST API
+  cli/                   Clap CLI + Ratatui TUI dashboard
+  sc-data-extractor/     Diesel ORM, Postgres migrations
+  sc-logistics-importer/ SCLogistics data import
+  data-viewer/           TUI data browser
+  wikelo-data/           Wiki data models
+  dataforge-explorer/    DataForge file reader
+  scunpacked-explorer/   SCUnpacked data browser
+dbt/                     dbt transforms (silver/gold layers)
+scripts/                 Dev setup, hooks, quality checks
+docs/                    DATA_SOURCES, BUILD_CONFIG, RELEASE_PROCESS
+```
+
+## Where to Look
+
+| Domain                 | Path                                      |
+|------------------------|-------------------------------------------|
+| Trade route logic      | `crates/route-graph/`                     |
+| Interdiction analysis  | `crates/intel/`                           |
+| REST API endpoints     | `crates/server/`                          |
+| CLI commands + TUI     | `crates/cli/`                             |
+| DB schema / migrations | `crates/sc-data-extractor/`               |
+| Data import pipeline   | `crates/sc-logistics-importer/` + `dbt/`  |
+
+## Commands
+
+```bash
+make build        # Debug build (target: /tmp/cargo-target-sc-interdiction)
+make test         # All tests
+make clippy       # Linter
+make fmt          # Format
+make dev          # fmt + clippy + test
+make db-setup     # Docker Postgres + migrate + import + dbt
+make data-viewer  # TUI data browser
+cargo quality     # Pre-commit quality checks
+```
+
+## Issue Tracking (bd)
+
 This project uses **bd** (beads) for issue tracking. Run `bd onboard` to get started.
 
-## Quick Reference
+### Quick Reference
 
 ```bash
 bd ready              # Find available work
@@ -38,3 +89,10 @@ bd sync               # Sync with git
 - NEVER say "ready to push when you are" - YOU must push
 - If push fails, resolve and retry until it succeeds
 
+## Notes
+
+- Conventional Commits required (feat/fix/docs/refactor/test/chore)
+- Pre-commit hooks: clippy, tests, fmt, commit size <500 lines
+- Code limits: 500 lines/file, 100 lines/fn, complexity <=15
+- Build dir: `/tmp/cargo-target-sc-interdiction` (via direnv)
+- Branches: main (releases), develop (integration), feature/fix/chore/*
