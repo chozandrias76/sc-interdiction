@@ -1,0 +1,5 @@
+Scenario: File created with test commands
+Tool: Grep
+Command: pattern "cargo test -p intel" in crates/intel/AGENTS.md
+Result:
+- crates/intel/AGENTS.md:46: cargo test -p intel

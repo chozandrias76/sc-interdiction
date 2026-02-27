@@ -1,0 +1,6 @@
+Scenario: Mockito guidance present
+Tool: Grep
+Command: pattern "mockito" in crates/intel/AGENTS.md
+Result:
+- crates/intel/AGENTS.md:60: Uses **mockito** to mock UEX API endpoints
+- crates/intel/AGENTS.md:61: mockito::Server::new_async().await
