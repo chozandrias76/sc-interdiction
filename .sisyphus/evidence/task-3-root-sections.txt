@@ -1,0 +1,7 @@
+Scenario: Structure present
+Tool: Grep
+Command: pattern "## Overview|## Structure|## Commands" in AGENTS.md
+Result:
+- AGENTS.md:3: ## Overview
+- AGENTS.md:8: ## Structure
+- AGENTS.md:39: ## Commands

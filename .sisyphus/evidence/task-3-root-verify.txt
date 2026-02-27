@@ -1,0 +1,9 @@
+Scenario: Preserve workflow rules
+Tool: Grep
+Command: pattern "bd ready|Landing the Plane|git push" in AGENTS.md
+Result:
+- AGENTS.md:59: bd ready              # Find available work
+- AGENTS.md:66: ## Landing the Plane (Session Completion)
+- AGENTS.md:68: Work is NOT complete until `git push` succeeds
+- AGENTS.md:79: git push
+- AGENTS.md:87: Work is NOT complete until `git push` succeeds
