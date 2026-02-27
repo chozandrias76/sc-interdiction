@@ -1,0 +1,5 @@
+Scenario: File created with test command
+Tool: Grep
+Command: pattern "cargo test -p route-graph" in crates/route-graph/AGENTS.md
+Result:
+- crates/route-graph/AGENTS.md:57: cargo test -p route-graph
