@@ -1,0 +1,7 @@
+Scenario: Module notes present
+Tool: Grep
+Command: pattern "spatial|fuel|graph" in crates/route-graph/AGENTS.md
+Result:
+- crates/route-graph/AGENTS.md:7: ### graph.rs
+- crates/route-graph/AGENTS.md:20: ### spatial.rs
+- crates/route-graph/AGENTS.md:37: ### fuel.rs

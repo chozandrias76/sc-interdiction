@@ -1,0 +1,6 @@
+Scenario: Clean status
+Tool: Bash
+Command: git status -sb
+Result:
+- ## develop...origin/develop [ahead 1]
+- ?? .sisyphus/

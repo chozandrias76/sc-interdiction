@@ -1,0 +1,5 @@
+Scenario: No placeholders
+Tool: Grep
+Command: pattern "TODO|TBD|FIXME|PLACEHOLDER" in AGENTS.md, crates/**/AGENTS.md, dbt/AGENTS.md
+Result:
+- No matches found

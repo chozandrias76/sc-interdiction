@@ -1,0 +1,6 @@
+Scenario: File created with dbt commands
+Tool: Grep
+Command: pattern "dbt run|dbt test" in dbt/AGENTS.md
+Result:
+- dbt/AGENTS.md:49: docker compose --profile dbt run --rm dbt run
+- dbt/AGENTS.md:52: docker compose --profile dbt run --rm dbt test

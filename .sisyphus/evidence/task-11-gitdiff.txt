@@ -1,0 +1,6 @@
+Scenario: Only expected files changed
+Tool: Bash
+Command: git diff --name-only
+Result:
+- AGENTS.md
+Note: Additional untracked files under .sisyphus/evidence/ and allowlisted AGENTS.md files exist, not shown by git diff.

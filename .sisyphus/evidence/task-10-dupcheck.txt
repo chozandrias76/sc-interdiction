@@ -1,0 +1,6 @@
+Scenario: Spot duplication
+Tool: Grep
+Command: pattern "Landing the Plane" in crates/**/AGENTS.md and dbt/AGENTS.md
+Result:
+- No matches in crates/**/AGENTS.md
+- No matches in dbt/AGENTS.md

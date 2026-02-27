@@ -1,0 +1,24 @@
+# Task 1: Denylist Excludes Verification
+# Date: 2026-02-26
+#
+# Command: grep for "node_modules|/target/|dbt_packages|dbt/target" in AGENTS.md
+# Tool: mcp_grep (rg unavailable in environment)
+#
+# Result: No matches found
+#
+# The existing AGENTS.md (root) contains ZERO references to:
+#   - node_modules
+#   - /target/
+#   - dbt_packages
+#   - dbt/target
+#
+# .gitignore confirms these are excluded:
+#   Line 2:  /target/
+#   Line 34: dbt/target/
+#
+# No denylist directories exist on disk:
+#   find . -type d -name node_modules  → (none)
+#   find . -type d -name target        → (none, gitignored)
+#   find . -type d -name dbt_packages  → (none)
+#
+# VERDICT: PASS — excludes enforced, no denylist references in existing AGENTS.md

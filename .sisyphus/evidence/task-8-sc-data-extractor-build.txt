@@ -1,0 +1,7 @@
+Scenario: build.rs note present
+Tool: Grep
+Command: pattern "build.rs|schema" in crates/sc-data-extractor/AGENTS.md
+Result:
+- crates/sc-data-extractor/AGENTS.md:12: build.rs Compile-time schema inference
+- crates/sc-data-extractor/AGENTS.md:30: ## Build Script (build.rs)
+- crates/sc-data-extractor/AGENTS.md:38: Generates generated_schema.rs/.sql

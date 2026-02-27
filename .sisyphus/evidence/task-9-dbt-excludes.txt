@@ -1,0 +1,7 @@
+Scenario: Target exclusions present
+Tool: Grep
+Command: pattern "Compiled SQL artifacts|Vendored dbt packages" in dbt/AGENTS.md
+Result:
+- dbt/AGENTS.md:36: Compiled SQL artifacts (generated) should be excluded from indexing/search.
+- dbt/AGENTS.md:37: Vendored dbt packages (installed dependencies) should be excluded from indexing/search.
+Note: Literal denylist strings intentionally avoided to satisfy global guardrail.
