@@ -120,6 +120,26 @@ git push origin release/1.2.3
 gh pr create --base main --title "release: version 1.2.3"
 ```
 
+## Windows Harness
+
+### Runner labels
+- `self-hosted, Windows, X64`
+
+### Required tools
+- Rust toolchain
+- git
+- PowerShell
+- LLVM
+- cargo-llvm-cov
+
+### Manual dispatch
+```bash
+gh workflow run windows-harness.yml -f mode=full
+```
+
+### Log monitoring (Linux hosts)
+- Use `scripts/watch-runner.sh` to monitor runner logs
+
 ## Troubleshooting
 
 ### CI Fails
