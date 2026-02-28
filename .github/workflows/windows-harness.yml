@@ -1,0 +1,114 @@
+name: Windows Harness
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Harness profile to run"
+        required: false
+        default: "full"
+        type: choice
+        options:
+          - full
+          - quick
+
+permissions:
+  contents: read
+
+jobs:
+  windows-runner:
+    name: Windows harness (${{ matrix.name }})
+    runs-on:
+      - self-hosted
+      - Windows
+      - X64
+    timeout-minutes: 60
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: fmt
+            command: cargo fmt --all --check
+            artifact: windows-harness-fmt
+            profile: full
+          - name: clippy
+            command: cargo clippy --all-targets --all-features
+            artifact: windows-harness-clippy
+            profile: full
+          - name: test
+            command: cargo test --all-targets --all-features
+            artifact: windows-harness-test
+            profile: full
+          - name: build-release
+            command: cargo build --release --all-features
+            artifact: windows-harness-build
+            profile: full
+          - name: audit
+            command: cargo audit
+            artifact: windows-harness-audit
+            profile: full
+          - name: coverage
+            command: cargo llvm-cov --all-features --workspace --lcov --output-path coverage.lcov
+            artifact: windows-harness-coverage
+            profile: full
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy, llvm-tools-preview
+
+      - name: Install cargo-llvm-cov
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          cargo install cargo-llvm-cov --locked
+
+      - name: Ensure LLVM present
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $llvmBin = "C:\Program Files\LLVM\bin"
+          $llvmConfig = Join-Path $llvmBin "llvm-config.exe"
+          $libclang = Join-Path $llvmBin "libclang.dll"
+          
+          if (-not (Test-Path $llvmConfig) -or -not (Test-Path $libclang)) {
+            Write-Host "Installing LLVM via Chocolatey..."
+            choco install llvm -y --no-progress
+          }
+          
+          if (-not (Test-Path $libclang)) {
+            throw "libclang.dll not found in $llvmBin after installation"
+          }
+          
+          Write-Host "LLVM verified at $llvmBin"
+
+      - name: Run command
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ('${{ inputs.mode }}' -ne '${{ matrix.profile }}' -and '${{ inputs.mode }}' -ne 'full') {
+            Write-Host "Skipping ${{ matrix.name }} for mode=${{ inputs.mode }}"
+            exit 0
+          }
+          $command = "${{ matrix.command }}"
+          Write-Host "Running: $command"
+          Invoke-Expression $command 2>&1 | Tee-Object -FilePath "${{ matrix.artifact }}.log"
+
+      - name: Upload log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.artifact }}.log
+
+      - name: Upload coverage artifact
+        if: always() && matrix.name == 'coverage'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}-lcov
+          path: coverage.lcov
