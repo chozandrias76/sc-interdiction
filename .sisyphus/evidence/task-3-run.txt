@@ -2,3 +2,6 @@ gh workflow run windows-harness.yml -f mode=full
 HTTP 404: Not Found (https://api.github.com/repos/chozandrias76/sc-interdiction/actions/workflows/windows-harness.yml)
 
 Note: workflow file is not yet in the remote repo; run will succeed after committing and pushing.
+
+gh workflow run windows-harness.yml -f mode=full --ref feature/windows-runner-harness
+HTTP 404: Not Found (https://api.github.com/repos/chozandrias76/sc-interdiction/actions/workflows/windows-harness.yml)
