@@ -1,0 +1,2 @@
+## Windows Harness
+gh workflow run windows-harness.yml -f mode=full
