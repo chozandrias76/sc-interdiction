@@ -217,11 +217,12 @@ jobs:
           }
           $logPath = "${{ matrix.artifact }}.log"
           New-Item -Path $logPath -ItemType File -Force | Out-Null
-          cmd /c $command 2>&1 | Tee-Object -FilePath $logPath
-          if ($LASTEXITCODE -ne 0) {
-            Write-Host "Command failed with exit code $LASTEXITCODE"
+          $process = Start-Process -FilePath "cmd.exe" -ArgumentList "/c", $command -NoNewWindow -PassThru -RedirectStandardOutput $logPath -RedirectStandardError $logPath
+          $process.WaitForExit()
+          if ($process.ExitCode -ne 0) {
+            Write-Host "Command failed with exit code $($process.ExitCode)"
             Get-Content $logPath -ErrorAction SilentlyContinue | Select-Object -Last 200
-            exit $LASTEXITCODE
+            exit $process.ExitCode
           }
 
       - name: Upload log
