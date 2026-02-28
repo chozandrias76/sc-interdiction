@@ -8,3 +8,4 @@
 - Windows Harness run failed with exit code 1 during cargo commands; suspected cargo not on PATH in pwsh, so added explicit Cargo bin path.
 - Branch Protection check on Windows still failed due to bash temp path; added Git Bash PATH step in branch-protection workflow.
 - Windows Harness logs did not upload; added log file pre-creation and tail output on failure.
+- Windows Harness audit failed with exit 101 and empty log; likely missing cargo-audit install.
