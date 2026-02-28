@@ -9,3 +9,4 @@
 - Branch Protection check on Windows still failed due to bash temp path; added Git Bash PATH step in branch-protection workflow.
 - Windows Harness logs did not upload; added log file pre-creation and tail output on failure.
 - Windows Harness audit failed with exit 101 and empty log; likely missing cargo-audit install.
+- Windows Harness coverage failed with exit 1 and empty log; switching command execution to cmd for reliable log capture.

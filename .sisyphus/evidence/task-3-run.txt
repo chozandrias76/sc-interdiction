@@ -26,3 +26,8 @@ gh workflow run windows-harness.yml -f mode=full
 Run: 22513826646
 Result: cancelled (after audit failure)
 Failure: cargo audit exit code 101; no output captured in log artifact
+
+gh workflow run windows-harness.yml -f mode=full
+Run: 22513888692
+Result: cancelled (after coverage failure)
+Failure: cargo llvm-cov exit code 1; coverage log empty
