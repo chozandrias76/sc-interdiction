@@ -3,3 +3,4 @@
 - Workflow dispatch requires committing and pushing the new workflow and docs to GitHub.
 - gh workflow run still returns 404 after pushing to feature branch; likely Actions API access issue or workflow not registered yet.
 - PR opened for merge to develop: https://github.com/chozandrias76/sc-interdiction/pull/73
+- Cannot approve or merge own PR; merge blocked by branch policy requiring external approval.
