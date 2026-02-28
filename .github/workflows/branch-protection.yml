@@ -16,8 +16,21 @@ jobs:
     runs-on: self-hosted
     defaults:
       run:
-        shell: '"C:\\Program Files\\Git\\bin\\bash.exe" --noprofile --norc -e -o pipefail {0}'
+        shell: bash
     steps:
+      - name: Ensure Git Bash in PATH (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $gitBin = "C:\Program Files\Git\bin"
+          $gitUsrBin = "C:\Program Files\Git\usr\bin"
+          if (Test-Path $gitBin) {
+            Add-Content $env:GITHUB_PATH $gitBin
+          }
+          if (Test-Path $gitUsrBin) {
+            Add-Content $env:GITHUB_PATH $gitUsrBin
+          }
       - name: Validate branch naming for PR to main
         if: github.base_ref == 'main'
         run: |
