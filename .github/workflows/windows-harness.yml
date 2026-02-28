@@ -91,6 +91,12 @@ jobs:
           $ErrorActionPreference = 'Stop'
           cargo install cargo-llvm-cov --locked
 
+      - name: Install cargo-audit
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          cargo install cargo-audit --locked
+
       - name: Ensure LLVM present
         shell: pwsh
         run: |
