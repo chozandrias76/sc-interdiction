@@ -14,11 +14,9 @@ jobs:
   validate-source-branch:
     name: Validate PR Source Branch
     runs-on: self-hosted
-    env:
-      PATH: C:\\Program Files\\Git\\bin;C:\\Program Files\\Git\\usr\\bin;${{ env.PATH }}
     defaults:
       run:
-        shell: bash
+        shell: '"C:\\Program Files\\Git\\bin\\bash.exe" --noprofile --norc -e -o pipefail {0}'
     steps:
       - name: Validate branch naming for PR to main
         if: github.base_ref == 'main'
