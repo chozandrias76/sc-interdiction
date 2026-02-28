@@ -19,7 +19,7 @@ jobs:
         shell: bash
     steps:
       - name: Ensure Git Bash in PATH
-        shell: pwsh
+        shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
           $gitBin = "C:\Program Files\Git\bin"
