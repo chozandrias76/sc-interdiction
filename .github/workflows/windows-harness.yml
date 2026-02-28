@@ -121,6 +121,33 @@ jobs:
           Write-Host "LLVM verified at $llvmBin"
           Add-Content $env:GITHUB_PATH $llvmBin
 
+      - name: Ensure PostgreSQL client libs
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $pgRootPath = "C:\Program Files\PostgreSQL"
+          if (-not (Test-Path $pgRootPath)) {
+            Write-Host "Installing PostgreSQL via Chocolatey..."
+            choco install postgresql -y --no-progress --params "'/Password:ci'"
+          }
+          $pgRoot = Get-ChildItem $pgRootPath -Directory | Sort-Object Name -Descending | Select-Object -First 1
+          if (-not $pgRoot) {
+            throw "PostgreSQL install directory not found in $pgRootPath"
+          }
+          $pgBin = Join-Path $pgRoot.FullName "bin"
+          $pgLib = Join-Path $pgRoot.FullName "lib"
+          $pgInclude = Join-Path $pgRoot.FullName "include"
+          $libpq = Join-Path $pgLib "libpq.lib"
+          if (-not (Test-Path $libpq)) {
+            throw "libpq.lib not found in $pgLib"
+          }
+          Add-Content $env:GITHUB_PATH $pgBin
+          Add-Content $env:GITHUB_ENV "LIB=$pgLib;$env:LIB"
+          Add-Content $env:GITHUB_ENV "PQ_LIB_DIR=$pgLib"
+          if (Test-Path $pgInclude) {
+            Add-Content $env:GITHUB_ENV "PQ_INCLUDE_DIR=$pgInclude"
+          }
+
       - name: Run command
         shell: pwsh
         run: |
