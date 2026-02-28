@@ -131,10 +131,10 @@ jobs:
           }
           $logPath = "${{ matrix.artifact }}.log"
           New-Item -Path $logPath -ItemType File -Force | Out-Null
-          Invoke-Expression $command 2>&1 | Tee-Object -FilePath $logPath
+          cmd /c "$command 1>> $logPath 2>&1"
           if ($LASTEXITCODE -ne 0) {
             Write-Host "Command failed with exit code $LASTEXITCODE"
-            Get-Content $logPath -ErrorAction SilentlyContinue
+            Get-Content $logPath -ErrorAction SilentlyContinue | Select-Object -Last 200
             exit $LASTEXITCODE
           }
 
