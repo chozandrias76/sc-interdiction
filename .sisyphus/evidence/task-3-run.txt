@@ -5,3 +5,9 @@ Note: workflow file is not yet in the remote repo; run will succeed after commit
 
 gh workflow run windows-harness.yml -f mode=full --ref feature/windows-runner-harness
 HTTP 404: Not Found (https://api.github.com/repos/chozandrias76/sc-interdiction/actions/workflows/windows-harness.yml)
+
+gh workflow run windows-harness.yml -f mode=full
+Run: 22513354090
+Result: failed
+Failure: Install Rust toolchain (dtolnay/rust-toolchain@stable)
+Error: /bin/bash: C:Userschozaactions-runner-sc-interdiction_work_temp*.sh: No such file or directory
