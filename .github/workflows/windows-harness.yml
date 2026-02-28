@@ -125,23 +125,77 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $pgRootPath = "C:\Program Files\PostgreSQL"
-          if (-not (Test-Path $pgRootPath)) {
-            Write-Host "Installing PostgreSQL via Chocolatey..."
-            choco install postgresql -y --no-progress --params "'/Password:ci'"
+          function Find-LibPqPath {
+            $candidates = @(
+              "C:\Program Files\PostgreSQL",
+              "C:\Program Files (x86)\PostgreSQL"
+            )
+            $pgConfig = Get-Command pg_config -ErrorAction SilentlyContinue
+            if ($pgConfig) {
+              $pgLibDir = & $pgConfig.Source --libdir 2>$null
+              if ($pgLibDir -and (Test-Path (Join-Path $pgLibDir "libpq.lib"))) {
+                return $pgLibDir
+              }
+            }
+            foreach ($root in $candidates) {
+              if (-not (Test-Path $root)) {
+                continue
+              }
+              $libCandidate = Get-ChildItem -Path $root -Directory -ErrorAction SilentlyContinue |
+                Sort-Object Name -Descending |
+                ForEach-Object { Join-Path $_.FullName "lib" } |
+                Where-Object { Test-Path (Join-Path $_ "libpq.lib") } |
+                Select-Object -First 1
+              if ($libCandidate) {
+                return $libCandidate
+              }
+            }
+            $vcpkgRoot = Join-Path $env:USERPROFILE "vcpkg"
+            $vcpkgLib = Join-Path $vcpkgRoot "installed\x64-windows\lib"
+            if (Test-Path (Join-Path $vcpkgLib "libpq.lib")) {
+              return $vcpkgLib
+            }
+            return $null
           }
-          $pgRoot = Get-ChildItem $pgRootPath -Directory | Sort-Object Name -Descending | Select-Object -First 1
-          if (-not $pgRoot) {
-            throw "PostgreSQL install directory not found in $pgRootPath"
+          function Ensure-VcpkgLibPq {
+            $vcpkgRoot = Join-Path $env:USERPROFILE "vcpkg"
+            if (-not (Test-Path $vcpkgRoot)) {
+              git clone https://github.com/microsoft/vcpkg $vcpkgRoot
+            }
+            $bootstrap = Join-Path $vcpkgRoot "bootstrap-vcpkg.bat"
+            if (-not (Test-Path $bootstrap)) {
+              throw "vcpkg bootstrap script not found at $bootstrap"
+            }
+            & $bootstrap
+            $vcpkgExe = Join-Path $vcpkgRoot "vcpkg.exe"
+            if (-not (Test-Path $vcpkgExe)) {
+              throw "vcpkg executable not found at $vcpkgExe"
+            }
+            & $vcpkgExe install libpq:x64-windows
+            return $vcpkgRoot
           }
-          $pgBin = Join-Path $pgRoot.FullName "bin"
-          $pgLib = Join-Path $pgRoot.FullName "lib"
-          $pgInclude = Join-Path $pgRoot.FullName "include"
-          $libpq = Join-Path $pgLib "libpq.lib"
-          if (-not (Test-Path $libpq)) {
-            throw "libpq.lib not found in $pgLib"
+
+          $pgLib = Find-LibPqPath
+          if (-not $pgLib) {
+            Write-Host "libpq.lib not found locally; installing via vcpkg..."
+            $vcpkgRoot = Ensure-VcpkgLibPq
+            $pgLib = Find-LibPqPath
+            if ($pgLib) {
+              Add-Content $env:GITHUB_ENV "VCPKG_ROOT=$vcpkgRoot"
+              Add-Content $env:GITHUB_ENV "VCPKG_DEFAULT_TRIPLET=x64-windows"
+            }
           }
-          Add-Content $env:GITHUB_PATH $pgBin
+
+          if (-not $pgLib) {
+            throw "libpq.lib not found after vcpkg installation. Checked Program Files and vcpkg paths."
+          }
+
+          $pgRoot = Split-Path -Parent $pgLib
+          $pgBin = Join-Path $pgRoot "bin"
+          $pgInclude = Join-Path $pgRoot "include"
+          if (Test-Path $pgBin) {
+            Add-Content $env:GITHUB_PATH $pgBin
+          }
           Add-Content $env:GITHUB_ENV "LIB=$pgLib;$env:LIB"
           Add-Content $env:GITHUB_ENV "PQ_LIB_DIR=$pgLib"
           if (Test-Path $pgInclude) {
