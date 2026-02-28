@@ -92,3 +92,7 @@
 {"id":"int-7b38a867","kind":"tool_call","created_at":"2026-02-28T22:33:09.595512149Z","actor":"GSD Templates","tool_name":"git commit chore(beads): log audit entries","exit_code":0}
 {"id":"int-e4260023","kind":"tool_call","created_at":"2026-02-28T22:33:25.585536609Z","actor":"GSD Templates","error":"unstaged changes","tool_name":"git pull --rebase","exit_code":1}
 {"id":"int-4941fd05","kind":"tool_call","created_at":"2026-02-28T22:33:25.716944558Z","actor":"GSD Templates","tool_name":"git status -sb","exit_code":0}
+{"id":"int-28a1566b","kind":"tool_call","created_at":"2026-02-28T22:37:39.672182484Z","actor":"GSD Templates","tool_name":"git pull --rebase","exit_code":0}
+{"id":"int-f97abc9e","kind":"tool_call","created_at":"2026-02-28T22:37:39.795694475Z","actor":"GSD Templates","error":"deprecated; use bd dolt push/pull","tool_name":"bd sync","exit_code":0}
+{"id":"int-3de1c81f","kind":"tool_call","created_at":"2026-02-28T22:37:39.912492945Z","actor":"GSD Templates","tool_name":"git push","exit_code":0}
+{"id":"int-cded8347","kind":"tool_call","created_at":"2026-02-28T22:37:40.031520179Z","actor":"GSD Templates","tool_name":"git status -sb","exit_code":0}
