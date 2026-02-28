@@ -1,0 +1,4 @@
+            command: cargo llvm-cov --all-features --workspace --lcov --output-path coverage.lcov
+      - name: Install cargo-llvm-cov
+          cargo install cargo-llvm-cov --locked
+          path: coverage.lcov

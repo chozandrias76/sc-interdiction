@@ -1,9 +1,10 @@
 {
-  "active_plan": "/home/choza/projects/sc-interdiction/.sisyphus/plans/init-deep.md",
-  "started_at": "2026-02-27T02:08:48.403Z",
+  "active_plan": "/home/choza/projects/sc-interdiction/.sisyphus/plans/windows-runner-harness.md",
+  "started_at": "2026-02-27T20:34:48.293Z",
   "session_ids": [
-    "ses_36368eea0ffesOYrHC7L50xfXt"
+    "ses_36368eea0ffesOYrHC7L50xfXt",
+    "ses_35f305d78ffeJBvp1GwC7nOOF5"
   ],
-  "plan_name": "init-deep",
+  "plan_name": "windows-runner-harness",
   "agent": "atlas"
 }
