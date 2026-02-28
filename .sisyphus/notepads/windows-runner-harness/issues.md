@@ -5,3 +5,5 @@
 - PR opened for merge to develop: https://github.com/chozandrias76/sc-interdiction/pull/73
 - Cannot approve or merge own PR; merge blocked by branch policy requiring external approval.
 - Windows Harness run failed after merge: dtolnay/rust-toolchain step uses bash and cannot access Windows temp script path (C:Users...); add Git Bash to PATH before toolchain step.
+- Windows Harness run failed with exit code 1 during cargo commands; suspected cargo not on PATH in pwsh, so added explicit Cargo bin path.
+- Branch Protection check on Windows still failed due to bash temp path; added Git Bash PATH step in branch-protection workflow.

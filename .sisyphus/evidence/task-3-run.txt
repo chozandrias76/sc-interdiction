@@ -11,3 +11,8 @@ Run: 22513354090
 Result: failed
 Failure: Install Rust toolchain (dtolnay/rust-toolchain@stable)
 Error: /bin/bash: C:Userschozaactions-runner-sc-interdiction_work_temp*.sh: No such file or directory
+
+gh workflow run windows-harness.yml -f mode=full
+Run: 22513428884
+Result: failed
+Failure: cargo commands (test/build/coverage/audit) exit code 1; no log file created for test

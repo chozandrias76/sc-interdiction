@@ -75,6 +75,16 @@ jobs:
         with:
           components: rustfmt, clippy, llvm-tools-preview
 
+      - name: Ensure Cargo in PATH
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $cargoBin = Join-Path $env:USERPROFILE ".cargo\bin"
+          if (-not (Test-Path $cargoBin)) {
+            throw "Cargo bin directory not found at $cargoBin"
+          }
+          Add-Content $env:GITHUB_PATH $cargoBin
+
       - name: Install cargo-llvm-cov
         shell: pwsh
         run: |
@@ -110,6 +120,9 @@ jobs:
           }
           $command = "${{ matrix.command }}"
           Write-Host "Running: $command"
+          if (-not (Get-Command cargo -ErrorAction SilentlyContinue)) {
+            throw "cargo not found in PATH"
+          }
           Invoke-Expression $command 2>&1 | Tee-Object -FilePath "${{ matrix.artifact }}.log"
 
       - name: Upload log
