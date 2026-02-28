@@ -63,6 +63,10 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $gitBin = "C:\Program Files\Git\bin"
           $gitUsrBin = "C:\Program Files\Git\usr\bin"
+          if (-not (Test-Path $gitBin)) {
+            Write-Host "Git not found; installing via Chocolatey..."
+            choco install git -y --no-progress
+          }
           if (Test-Path $gitBin) {
             Add-Content $env:GITHUB_PATH $gitBin
           }
@@ -113,8 +117,9 @@ jobs:
           if (-not (Test-Path $libclang)) {
             throw "libclang.dll not found in $llvmBin after installation"
           }
-          
+
           Write-Host "LLVM verified at $llvmBin"
+          Add-Content $env:GITHUB_PATH $llvmBin
 
       - name: Run command
         shell: pwsh
@@ -131,7 +136,7 @@ jobs:
           }
           $logPath = "${{ matrix.artifact }}.log"
           New-Item -Path $logPath -ItemType File -Force | Out-Null
-          cmd /c "$command 1>> $logPath 2>&1"
+          cmd /c $command 2>&1 | Tee-Object -FilePath $logPath
           if ($LASTEXITCODE -ne 0) {
             Write-Host "Command failed with exit code $LASTEXITCODE"
             Get-Content $logPath -ErrorAction SilentlyContinue | Select-Object -Last 200
