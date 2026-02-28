@@ -123,7 +123,14 @@ jobs:
           if (-not (Get-Command cargo -ErrorAction SilentlyContinue)) {
             throw "cargo not found in PATH"
           }
-          Invoke-Expression $command 2>&1 | Tee-Object -FilePath "${{ matrix.artifact }}.log"
+          $logPath = "${{ matrix.artifact }}.log"
+          New-Item -Path $logPath -ItemType File -Force | Out-Null
+          Invoke-Expression $command 2>&1 | Tee-Object -FilePath $logPath
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "Command failed with exit code $LASTEXITCODE"
+            Get-Content $logPath -ErrorAction SilentlyContinue
+            exit $LASTEXITCODE
+          }
 
       - name: Upload log
         if: always()
