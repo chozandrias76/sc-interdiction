@@ -19,17 +19,10 @@ jobs:
         shell: bash
     steps:
       - name: Ensure Git Bash in PATH
-        shell: powershell
+        shell: cmd
         run: |
-          $ErrorActionPreference = 'Stop'
-          $gitBin = "C:\Program Files\Git\bin"
-          $gitUsrBin = "C:\Program Files\Git\usr\bin"
-          if (Test-Path $gitBin) {
-            Add-Content $env:GITHUB_PATH $gitBin
-          }
-          if (Test-Path $gitUsrBin) {
-            Add-Content $env:GITHUB_PATH $gitUsrBin
-          }
+          if exist "C:\Program Files\Git\bin" echo C:\Program Files\Git\bin>>"%GITHUB_PATH%"
+          if exist "C:\Program Files\Git\usr\bin" echo C:\Program Files\Git\usr\bin>>"%GITHUB_PATH%"
       - name: Validate branch naming for PR to main
         if: github.base_ref == 'main'
         run: |
