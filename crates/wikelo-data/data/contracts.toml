@@ -1,0 +1,1326 @@
+# Wikelo Contracts Data
+# Source: 09-RESEARCH.md (Phase 9 Contract Data Population)
+# Total: 43 contracts
+#
+# Categories: 1 Prerequisite, 5 FavorExchange, 15 Weapon, 9 Armor, 9 Ship, 4 Equipment
+
+# =============================================================================
+# PREREQUISITE (1)
+# =============================================================================
+
+[[contracts]]
+id = "new_to_system"
+name = "New to System"
+category = "Prerequisite"
+confidence = "Confirmed"
+repeatable = false
+available = true
+limited_time = false
+prerequisites = []
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "vestal_water"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "tundra_kopion_horn"
+quantity = 3
+
+[[contracts.rewards]]
+name = "Access to Wikelo Contracts"
+reward_type = "Access"
+
+# =============================================================================
+# FAVOR EXCHANGE (5)
+# =============================================================================
+
+[[contracts]]
+id = "turn_things_to_favor"
+name = "Turn Things to Favor"
+category = "FavorExchange"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "carinite"
+quantity = 50
+
+[[contracts.rewards]]
+name = "Wikelo Favor"
+reward_type = "Favor"
+
+[[contracts]]
+id = "trade_council_scrip"
+name = "Trade Council Scrip for Favors?"
+category = "FavorExchange"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "council_scrip"
+quantity = 50
+
+[[contracts.rewards]]
+name = "Wikelo Favor"
+reward_type = "Favor"
+
+[[contracts]]
+id = "need_mining_things"
+name = "Need mining things. Clever things to trade."
+category = "FavorExchange"
+confidence = "Partial"
+repeatable = true
+available = false
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "sabir"
+quantity = 5
+
+[[contracts.rewards]]
+name = "TBA"
+reward_type = "Other"
+
+[[contracts]]
+id = "trade_worm_parts"
+name = "Trade Worm Parts for Favors?"
+category = "FavorExchange"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "irradiated_valakkar_pearl"
+quantity = 15
+
+[[contracts.rewards]]
+name = "Wikelo Favor"
+reward_type = "Favor"
+
+[[contracts]]
+id = "very_hungry"
+name = "Very Hungry"
+category = "FavorExchange"
+confidence = "Partial"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "fried_seanut_with_sauce"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "smoltz_bottle"
+quantity = 1
+
+[[contracts.rewards]]
+name = "aUEC (TBA)"
+reward_type = "Currency"
+
+# =============================================================================
+# WEAPON (15)
+# =============================================================================
+
+[[contracts]]
+id = "yormandi_gun"
+name = "Yormandi Gun"
+category = "Weapon"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "fresnel_energy_lmg"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "yormandi_eye"
+quantity = 6
+
+[[contracts.requirements]]
+item_id = "yormandi_tongue"
+quantity = 3
+
+[[contracts.rewards]]
+name = "Fresnel 'Yormandi' LMG"
+reward_type = "Weapon"
+
+[[contracts]]
+id = "fix_up_coda_gun"
+name = "Fix up Coda gun"
+category = "Weapon"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "coda_pistol"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "ace_interceptor_helmet"
+quantity = 5
+
+[[contracts.requirements]]
+item_id = "tevarin_war_marker"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "mg_scrip"
+quantity = 30
+
+[[contracts.rewards]]
+name = "Coda 'Ascension' Pistol"
+reward_type = "Weapon"
+
+[[contracts]]
+id = "f55_look_better"
+name = "F55 Look Better"
+category = "Weapon"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "f55_lmg"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "yormandi_eye"
+quantity = 4
+
+[[contracts.requirements]]
+item_id = "yormandi_tongue"
+quantity = 2
+
+[[contracts.requirements]]
+item_id = "carinite"
+quantity = 20
+
+[[contracts.rewards]]
+name = "F55 'Mark I' LMG"
+reward_type = "Weapon"
+
+[[contracts]]
+id = "fun_kopion_skull_gun"
+name = "Fun Kopion Skull Gun"
+category = "Weapon"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "jaclium"
+quantity = 40
+
+[[contracts.requirements]]
+item_id = "carinite"
+quantity = 20
+
+[[contracts.requirements]]
+item_id = "saldynium"
+quantity = 30
+
+[[contracts.requirements]]
+item_id = "parallax_energy_assault_rifle"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "tundra_kopion_horn"
+quantity = 35
+
+[[contracts.rewards]]
+name = "Parallax 'Fun Kopion Skull' Energy Assault Rifle"
+reward_type = "Weapon"
+
+[[contracts]]
+id = "fun_kopion_tooth_gun"
+name = "Fun Kopion Tooth Gun"
+category = "Weapon"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "jaclium"
+quantity = 40
+
+[[contracts.requirements]]
+item_id = "carinite"
+quantity = 20
+
+[[contracts.requirements]]
+item_id = "saldynium"
+quantity = 30
+
+[[contracts.requirements]]
+item_id = "parallax_energy_assault_rifle"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "tundra_kopion_horn"
+quantity = 35
+
+[[contracts.rewards]]
+name = "Parallax 'Fun Kopion Tooth' Energy Assault Rifle"
+reward_type = "Weapon"
+
+[[contracts]]
+id = "fun_military_skull_gun"
+name = "Fun Military Skull Gun"
+category = "Weapon"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "jaclium"
+quantity = 40
+
+[[contracts.requirements]]
+item_id = "carinite"
+quantity = 20
+
+[[contracts.requirements]]
+item_id = "saldynium"
+quantity = 30
+
+[[contracts.requirements]]
+item_id = "parallax_energy_assault_rifle"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "irradiated_valakkar_fang_juvenile"
+quantity = 35
+
+[[contracts.rewards]]
+name = "Parallax 'Fun Military Skull' Energy Assault Rifle"
+reward_type = "Weapon"
+
+[[contracts]]
+id = "fun_military_tooth_gun"
+name = "Fun Military Tooth Gun"
+category = "Weapon"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "jaclium"
+quantity = 40
+
+[[contracts.requirements]]
+item_id = "carinite"
+quantity = 20
+
+[[contracts.requirements]]
+item_id = "saldynium"
+quantity = 30
+
+[[contracts.requirements]]
+item_id = "parallax_energy_assault_rifle"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "irradiated_valakkar_fang_juvenile"
+quantity = 35
+
+[[contracts.rewards]]
+name = "Parallax 'Fun Military Tooth' Energy Assault Rifle"
+reward_type = "Weapon"
+
+[[contracts]]
+id = "heavy_volt_zapper"
+name = "Heavy Volt Zapper"
+category = "Weapon"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "fresnel_energy_lmg"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "asd_secure_drive"
+quantity = 5
+
+[[contracts.requirements]]
+item_id = "rcmbnt_xtl_1"
+quantity = 5
+
+[[contracts.requirements]]
+item_id = "rcmbnt_xtl_2"
+quantity = 5
+
+[[contracts.requirements]]
+item_id = "rcmbnt_xtl_3"
+quantity = 5
+
+[[contracts.rewards]]
+name = "Fresnel 'Deepwater' Energy LMG"
+reward_type = "Weapon"
+
+[[contracts]]
+id = "make_gun_sandy"
+name = "Make gun sandy"
+category = "Weapon"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "quartz_energy_smg"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "council_scrip"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "ace_interceptor_helmet"
+quantity = 5
+
+[[contracts.requirements]]
+item_id = "advocacy_badge_replica"
+quantity = 10
+
+[[contracts.rewards]]
+name = "Quartz 'Hunter Camo' Energy SMG"
+reward_type = "Weapon"
+
+[[contracts]]
+id = "make_volt_shotgun_angrier"
+name = "Make VOLT shotgun angrier"
+category = "Weapon"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "irradiated_valakkar_fang_adult"
+quantity = 3
+
+[[contracts.requirements]]
+item_id = "irradiated_valakkar_fang_juvenile"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "wikelo_favor"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "prism_laser_shotgun"
+quantity = 1
+
+[[contracts.rewards]]
+name = "Prism 'Irradiated' Laser Shotgun"
+reward_type = "Weapon"
+
+[[contracts]]
+id = "prettify_karna_gun"
+name = "Prettify Karna Gun"
+category = "Weapon"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "karna_rifle"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "irradiated_valakkar_fang_adult"
+quantity = 10
+
+[[contracts.requirements]]
+item_id = "irradiated_valakkar_fang_juvenile"
+quantity = 10
+
+[[contracts.requirements]]
+item_id = "irradiated_kopion_horn"
+quantity = 10
+
+[[contracts.requirements]]
+item_id = "irradiated_valakkar_pearl_aaa"
+quantity = 1
+
+[[contracts.rewards]]
+name = "Karna 'Ascension' Rifle"
+reward_type = "Weapon"
+
+[[contracts]]
+id = "snow_snipe"
+name = "Snow Snipe"
+category = "Weapon"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "zenith_laser_sniper_rifle"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "asd_secure_drive"
+quantity = 10
+
+[[contracts.rewards]]
+name = "Zenith 'Snow Camo' Laser Sniper Rifle"
+reward_type = "Weapon"
+
+[[contracts]]
+id = "volt_gun_more_navy"
+name = "Volt gun more Navy-like"
+category = "Weapon"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "quartz_energy_smg"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "mg_scrip"
+quantity = 30
+
+[[contracts.requirements]]
+item_id = "ace_interceptor_helmet"
+quantity = 5
+
+[[contracts.requirements]]
+item_id = "grassland_quasi_grazer_egg"
+quantity = 50
+
+[[contracts.rewards]]
+name = "Quartz 'Cobalt Camo' Energy SMG"
+reward_type = "Weapon"
+
+[[contracts]]
+id = "zappy_gun_more_woodlike"
+name = "Zappy gun more woodlike"
+category = "Weapon"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "quartz_energy_smg"
+quantity = 3
+
+[[contracts.requirements]]
+item_id = "mg_scrip"
+quantity = 30
+
+[[contracts.requirements]]
+item_id = "ace_interceptor_helmet"
+quantity = 5
+
+[[contracts.rewards]]
+name = "Quartz 'Jungle Camo' Energy SMG"
+reward_type = "Weapon"
+
+[[contracts]]
+id = "need_ore_will_give_guns"
+name = "Need Ore. Will give Guns."
+category = "Weapon"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "carinite"
+quantity = 10
+
+[[contracts.requirements]]
+item_id = "jaclium"
+quantity = 20
+
+[[contracts.rewards]]
+name = "Random: Scourge/Animus/GP-33 MOD 'Quite Useful'"
+reward_type = "Weapon"
+
+# =============================================================================
+# ARMOR (9)
+# =============================================================================
+
+[[contracts]]
+id = "armor_with_horn_and_string"
+name = "Armor with horn and string"
+category = "Armor"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "carinite_pure"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "antium_armor_core"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "antium_armor_helmet"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "antium_armor_legs"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "antium_armor_arms"
+quantity = 1
+
+[[contracts.rewards]]
+name = "Random: Ana Armor Endro piece"
+reward_type = "Armor"
+
+[[contracts]]
+id = "hide_snow_suit"
+name = "Hide Snow Suit"
+category = "Armor"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "geist_armor_asd_core"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "geist_armor_asd_helmet"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "geist_armor_asd_legs"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "geist_armor_asd_arms"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "geist_armor_asd_undersuit"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "asd_secure_drive"
+quantity = 10
+
+[[contracts.rewards]]
+name = "Full Geist Armor Snow Camo set"
+reward_type = "Armor"
+
+[[contracts]]
+id = "look_at_desert"
+name = "Look at desert but don't see you"
+category = "Armor"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "wikelo_favor"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "ace_interceptor_helmet"
+quantity = 3
+
+[[contracts.requirements]]
+item_id = "irradiated_valakkar_fang_juvenile"
+quantity = 15
+
+[[contracts.rewards]]
+name = "Random: DCP Armor Hunter Camo piece"
+reward_type = "Armor"
+
+[[contracts]]
+id = "make_glowy_armor"
+name = "Make glowy armor"
+category = "Armor"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "irradiated_valakkar_pearl"
+quantity = 3
+
+[[contracts.requirements]]
+item_id = "irradiated_valakkar_fang_apex"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "ana_armor_endro_arms"
+quantity = 3
+
+[[contracts.requirements]]
+item_id = "ana_armor_endro_legs"
+quantity = 3
+
+[[contracts.requirements]]
+item_id = "ana_armor_endro_core"
+quantity = 3
+
+[[contracts.requirements]]
+item_id = "ana_armor_endro_helmet"
+quantity = 3
+
+[[contracts.rewards]]
+name = "Full Bokto Armor set"
+reward_type = "Armor"
+
+[[contracts]]
+id = "make_space_navy_armor"
+name = "Make space navy armor"
+category = "Armor"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "wikelo_favor"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "ace_interceptor_helmet"
+quantity = 3
+
+[[contracts.requirements]]
+item_id = "une_unification_war_medal_damaged"
+quantity = 3
+
+[[contracts.rewards]]
+name = "Random: DCP Armor Cobalt Camo piece"
+reward_type = "Armor"
+
+[[contracts]]
+id = "test_armor"
+name = "Test Armor"
+category = "Armor"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "palatino_core"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "palatino_helmet"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "palatino_legs"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "palatino_arms"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "palatino_undersuit"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "yormandi_eye"
+quantity = 20
+
+[[contracts.requirements]]
+item_id = "yormandi_tongue"
+quantity = 10
+
+[[contracts.rewards]]
+name = "Full Palatino Mark 1 set"
+reward_type = "Armor"
+
+[[contracts]]
+id = "walk_in_danger_look_good"
+name = "Walk in danger. Look good"
+category = "Armor"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "novikov_ascension_helmet"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "novikov_exploration_suit"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "mg_scrip"
+quantity = 30
+
+[[contracts.requirements]]
+item_id = "irradiated_valakkar_fang_adult"
+quantity = 10
+
+[[contracts.requirements]]
+item_id = "irradiated_valakkar_fang_juvenile"
+quantity = 20
+
+[[contracts.requirements]]
+item_id = "irradiated_valakkar_pearl_aaa"
+quantity = 1
+
+[[contracts.rewards]]
+name = "Novikov 'Ascension' set"
+reward_type = "Armor"
+
+[[contracts]]
+id = "want_armor_look_like_tree"
+name = "Want armor look like tree?"
+category = "Armor"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "wikelo_favor"
+quantity = 3
+
+[[contracts.requirements]]
+item_id = "ace_interceptor_helmet"
+quantity = 3
+
+[[contracts.requirements]]
+item_id = "grassland_quasi_grazer_egg"
+quantity = 1
+
+[[contracts.rewards]]
+name = "Random: DCP Armor Jungle Camo piece"
+reward_type = "Armor"
+
+[[contracts]]
+id = "xian_xanthule_suit_better"
+name = "Xi'an Xanthule Suit made better"
+category = "Armor"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "xanthule_helmet"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "xanthule_suit"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "ace_interceptor_helmet"
+quantity = 15
+
+[[contracts.requirements]]
+item_id = "tevarin_war_marker"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "mg_scrip"
+quantity = 20
+
+[[contracts.rewards]]
+name = "Xanthule Ascension set"
+reward_type = "Armor"
+
+# =============================================================================
+# SHIP (9)
+# =============================================================================
+
+[[contracts]]
+id = "adventure_a_aventure"
+name = "Adventure a A-Venture"
+category = "Ship"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "venture_core"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "venture_helmet"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "venture_legs"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "venture_arms"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "mg_scrip"
+quantity = 30
+
+[[contracts.requirements]]
+item_id = "saldynium"
+quantity = 10
+
+[[contracts.requirements]]
+item_id = "jaclium"
+quantity = 10
+
+[[contracts.requirements]]
+item_id = "carinite_pure"
+quantity = 1
+
+[[contracts.rewards]]
+name = "Full Venture Ascension set"
+reward_type = "Armor"
+
+[[contracts]]
+id = "have_good_ships_for_trade"
+name = "Have Good Ships for trade"
+category = "Ship"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "wikelo_favor"
+quantity = 10
+
+[[contracts.rewards]]
+name = "Random: Intrepid/Scorpius/C1 Spirit/Fortune/Pulse"
+reward_type = "Ship"
+
+[[contracts]]
+id = "make_atls_shoot"
+name = "Make ATLS shoot"
+category = "Ship"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "argo_atls"
+quantity = 3
+
+[[contracts.requirements]]
+item_id = "nn13_cannon"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "irradiated_valakkar_pearl"
+quantity = 3
+
+[[contracts.requirements]]
+item_id = "irradiated_valakkar_fang_apex"
+quantity = 1
+
+[[contracts.rewards]]
+name = "ATLS IKTI"
+reward_type = "Vehicle"
+
+[[contracts]]
+id = "make_jumpy_atls_shoot"
+name = "Make jumpy ATLS shoot"
+category = "Ship"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "argo_atls_geo"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "argo_atls_ikti"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "nn13_cannon"
+quantity = 2
+
+[[contracts.requirements]]
+item_id = "wikelo_favor"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "dchs_05_comp_board"
+quantity = 1
+
+[[contracts.rewards]]
+name = "ATLS GEO IKTI"
+reward_type = "Vehicle"
+
+[[contracts]]
+id = "now_make_polaris"
+name = "Now make Polaris. Short Time Deal."
+category = "Ship"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = true
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "wikelo_favor"
+quantity = 50
+
+[[contracts.requirements]]
+item_id = "polaris_bit"
+quantity = 15
+
+[[contracts.requirements]]
+item_id = "dchs_05_comp_board"
+quantity = 10
+
+[[contracts.requirements]]
+item_id = "carinite"
+quantity = 20
+
+[[contracts.requirements]]
+item_id = "irradiated_valakkar_fang_apex"
+quantity = 20
+
+[[contracts.requirements]]
+item_id = "ace_interceptor_helmet"
+quantity = 15
+
+[[contracts.requirements]]
+item_id = "irradiated_valakkar_pearl_aaa"
+quantity = 25
+
+[[contracts.requirements]]
+item_id = "uee_6th_platoon_medal_pristine"
+quantity = 15
+
+[[contracts.requirements]]
+item_id = "carinite_pure"
+quantity = 15
+
+[[contracts.requirements]]
+item_id = "asd_secure_drive"
+quantity = 15
+
+[[contracts.requirements]]
+item_id = "rcmbnt_pwl_1"
+quantity = 3
+
+[[contracts.requirements]]
+item_id = "rcmbnt_pwl_2"
+quantity = 3
+
+[[contracts.requirements]]
+item_id = "rcmbnt_pwl_3"
+quantity = 3
+
+[[contracts.rewards]]
+name = "Polaris Wikelo Special"
+reward_type = "Ship"
+
+[[contracts]]
+id = "turn_atls_suit_pretty"
+name = "Turn ATLS suit pretty"
+category = "Ship"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "wikelo_favor"
+quantity = 3
+
+[[contracts.requirements]]
+item_id = "argo_atls_geo"
+quantity = 1
+
+[[contracts.rewards]]
+name = "ATLS GEO 'Orange Line'"
+reward_type = "Vehicle"
+
+[[contracts]]
+id = "very_very_nice_ship"
+name = "Very very nice ship for trade"
+category = "Ship"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "wikelo_favor"
+quantity = 30
+
+[[contracts.requirements]]
+item_id = "carinite"
+quantity = 10
+
+[[contracts.requirements]]
+item_id = "jaclium"
+quantity = 15
+
+[[contracts.requirements]]
+item_id = "saldynium"
+quantity = 20
+
+[[contracts.requirements]]
+item_id = "ace_interceptor_helmet"
+quantity = 30
+
+[[contracts.rewards]]
+name = "Random: F8C Lightning/Constellation Taurus"
+reward_type = "Ship"
+
+[[contracts]]
+id = "want_big_ship"
+name = "Want big ship? But not too big?"
+category = "Ship"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "wikelo_favor"
+quantity = 16
+
+[[contracts.requirements]]
+item_id = "ace_interceptor_helmet"
+quantity = 15
+
+[[contracts.rewards]]
+name = "Random: F7C Hornet Mk II/Guardian/Sabre/Zeus Mk II"
+reward_type = "Ship"
+
+[[contracts]]
+id = "want_polaris"
+name = "Want Polaris? Need something special."
+category = "Ship"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "quantanium"
+quantity = 24
+
+[[contracts.rewards]]
+name = "Polaris Bit"
+reward_type = "PolarisBit"
+
+# =============================================================================
+# EQUIPMENT (4)
+# =============================================================================
+
+[[contracts]]
+id = "trade_for_useful_ship_parts"
+name = "Trade for useful ship parts"
+category = "Equipment"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "cf337_panther_repeater"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "ace_interceptor_helmet"
+quantity = 3
+
+[[contracts.rewards]]
+name = "Random: FR-66/JS-300/VK-00/Glacier"
+reward_type = "ShipComponent"
+
+[[contracts]]
+id = "trade_for_very_useful_ship_parts"
+name = "Trade for very useful ship parts"
+category = "Equipment"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "ace_interceptor_helmet"
+quantity = 5
+
+[[contracts.requirements]]
+item_id = "cf337_panther_repeater"
+quantity = 2
+
+[[contracts.rewards]]
+name = "Random: FR-76/JS-400/XL-1/Avalanche"
+reward_type = "ShipComponent"
+
+[[contracts]]
+id = "want_super_useful_ship_parts"
+name = "Want super useful ship parts?"
+category = "Equipment"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "ace_interceptor_helmet"
+quantity = 10
+
+[[contracts.requirements]]
+item_id = "wikelo_favor"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "cf337_panther_repeater"
+quantity = 3
+
+[[contracts.rewards]]
+name = "Random: FR-86/JS-500/TS-2/Blizzard"
+reward_type = "ShipComponent"
+
+[[contracts]]
+id = "want_better_eyes"
+name = "Want Better Eyes"
+category = "Equipment"
+confidence = "Confirmed"
+repeatable = true
+available = true
+limited_time = false
+prerequisites = ["new_to_system"]
+turn_in_locations = ["Wikelo Emporium Kinga", "Wikelo Emporium Dasi", "Wikelo Emporium Selo"]
+
+[[contracts.requirements]]
+item_id = "wikelo_favor"
+quantity = 1
+
+[[contracts.requirements]]
+item_id = "yormandi_eye"
+quantity = 2
+
+[[contracts.requirements]]
+item_id = "yormandi_tongue"
+quantity = 1
+
+[[contracts.rewards]]
+name = "XDL 'Mark I' Monocular Rangefinder"
+reward_type = "Other"

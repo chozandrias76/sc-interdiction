@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-14)
 
 **Core value:** Identify where valuable targets are and what they're likely carrying
-**Current focus:** v1.1 Demand Modeling — Phase 8 (Demand Data Model)
+**Current focus:** v1.1 Demand Modeling — Phase 10 (Demand Registry)
 
 ## Current Position
 
-Phase: 8 of 12 (Demand Data Model)
-Plan: 1 of 1 in current phase
-Status: Phase 8 complete
-Last activity: 2026-02-01 — Completed 08-01-PLAN.md
+Phase: 9 of 12 (Contract Data Population)
+Plan: 2 of 2 in current phase
+Status: Phase 9 complete
+Last activity: 2026-02-10 — Completed 09-02-PLAN.md
 
-Progress: ██░░░░░░░░ ~20% (2 of ~6+ plans in v1.1)
+Progress: ████░░░░░░ ~40% (4 of ~6+ plans in v1.1)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 29
+- Total plans completed: 31
 - Average duration: 10 min
-- Total execution time: 4.2 hours
+- Total execution time: 4.7 hours
 
 **By Phase:**
 
@@ -38,10 +38,11 @@ Progress: ██░░░░░░░░ ~20% (2 of ~6+ plans in v1.1)
 | 6. Testing & Polish | 2 | 10 min | 5 min |
 | 7. Demand Research | 1 | — | — |
 | 8. Demand Data Model | 1 | 5 min | 5 min |
+| 9. Contract Data Population | 2 | 35 min | 18 min |
 
 **Recent Trend:**
-- Last 5 plans: 5m, 5m, 6m, 4m, 5m
-- Trend: → (stable, fast)
+- Last 5 plans: 6m, 4m, 5m, 12m, 23m
+- Trend: → (stable)
 
 ## Accumulated Context
 
@@ -85,14 +86,17 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-01
-Stopped at: Completed 08-01-PLAN.md (Phase 8 complete)
-Resume file: `.planning/phases/08-demand-data-model/08-01-SUMMARY.md`
+Last session: 2026-02-10
+Stopped at: Completed 09-02-PLAN.md (Phase 9 complete)
+Resume file: `.planning/phases/09-contract-data-population/09-02-SUMMARY.md`
 
 ### Critical Context for Next Session
 
-**Phase 8 (Demand Data Model) complete.** All demand-side types defined in intel crate.
+**Phase 9 (Contract Data Population) complete.** All 43 Wikelo contracts have complete item coverage.
 
-Key types added: ContractCategory, DataConfidence, CurrencyType, ExchangeRate. WikieloContract extended with 7 fields. RewardType extended with 5 variants. 171 tests passing.
+Key additions:
+- Plan 09-01: contracts.toml (43 contracts), contracts.rs with all_contracts()/get_contract()
+- Plan 09-02: 53 new items in registry (88 total), covering all 75 contract item_ids
+- 29 wikelo-data tests passing
 
-**Next:** Phase 9 (Contract Data Population) — populate WikieloContract instances with data from 07-RESEARCH.md. Note: 29/43 contracts have incomplete requirement data; Phase 9 may need wiki scraping to fill gaps.
+**Next:** Phase 10 (Demand Registry) — Create ContractRegistry with bidirectional indexing (item→contracts, contract→items).
