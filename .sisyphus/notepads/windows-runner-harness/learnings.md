@@ -3,3 +3,4 @@
 - Documented Windows Harness prerequisites and dispatch command in docs/RELEASE_WORKFLOW.md.
 - Windows runners need Git Bash available for dtolnay/rust-toolchain; prepend Git Bash to PATH before toolchain install.
 - Ensure Cargo bin ($USERPROFILE\.cargo\bin) is added to PATH before running cargo commands in pwsh.
+- Documented bd sync deprecation with bd dolt pull/push in AGENTS.md.
