@@ -35,7 +35,7 @@ env:
 jobs:
   changes:
     name: Detect Changes
-    runs-on: self-hosted
+    runs-on: [self-hosted, Linux, X64]
     outputs:
       rust: ${{ steps.filter.outputs.rust }}
       ci: ${{ steps.filter.outputs.ci }}
@@ -57,7 +57,7 @@ jobs:
     name: Pre-commit Checks
     needs: changes
     if: needs.changes.outputs.rust == 'true' || needs.changes.outputs.ci == 'true'
-    runs-on: self-hosted
+    runs-on: [self-hosted, Linux, X64]
     steps:
       - uses: actions/checkout@v4
 
@@ -89,7 +89,7 @@ jobs:
     name: Test Suite
     needs: changes
     if: needs.changes.outputs.rust == 'true'
-    runs-on: self-hosted
+    runs-on: [self-hosted, Linux, X64]
     steps:
       - uses: actions/checkout@v4
 
@@ -112,7 +112,7 @@ jobs:
     name: Code Coverage
     needs: changes
     if: needs.changes.outputs.rust == 'true'
-    runs-on: self-hosted
+    runs-on: [self-hosted, Linux, X64]
     steps:
       - uses: actions/checkout@v4
 
@@ -135,7 +135,7 @@ jobs:
     name: Build
     needs: changes
     if: needs.changes.outputs.rust == 'true'
-    runs-on: self-hosted
+    runs-on: [self-hosted, Linux, X64]
     steps:
       - uses: actions/checkout@v4
 
