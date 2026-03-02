@@ -108,12 +108,10 @@ jobs:
           $llvmBin = "C:\Program Files\LLVM\bin"
           $llvmConfig = Join-Path $llvmBin "llvm-config.exe"
           $libclang = Join-Path $llvmBin "libclang.dll"
-          
           if (-not (Test-Path $llvmConfig) -or -not (Test-Path $libclang)) {
             Write-Host "Installing LLVM via Chocolatey..."
             choco install llvm -y --no-progress
           }
-          
           if (-not (Test-Path $libclang)) {
             throw "libclang.dll not found in $llvmBin after installation"
           }
