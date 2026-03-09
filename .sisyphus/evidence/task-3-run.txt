@@ -1,28 +1,9 @@
-gh workflow run windows-harness.yml -f mode=full
-HTTP 404: Not Found (https://api.github.com/repos/chozandrias76/sc-interdiction/actions/workflows/windows-harness.yml)
-
-Note: workflow file is not yet in the remote repo; run will succeed after committing and pushing.
-
-gh workflow run windows-harness.yml -f mode=full --ref feature/windows-runner-harness
-HTTP 404: Not Found (https://api.github.com/repos/chozandrias76/sc-interdiction/actions/workflows/windows-harness.yml)
-
-gh workflow run windows-harness.yml -f mode=full
-Run: 22513354090
-Result: failed
-Failure: Install Rust toolchain (dtolnay/rust-toolchain@stable)
-Error: /bin/bash: C:Userschozaactions-runner-sc-interdiction_work_temp*.sh: No such file or directory
-
-gh workflow run windows-harness.yml -f mode=full
-Run: 22513428884
-Result: failed
-Failure: cargo commands (test/build/coverage/audit) exit code 1; no log file created for test
-
-gh workflow run windows-harness.yml -f mode=full
-Run: 22513682076
-Result: cancelled (after failures)
-Failure: build-release and coverage exit code 1 without log artifacts
-
-gh workflow run windows-harness.yml -f mode=full
-Run: 22513826646
-Result: cancelled (after audit failure)
-Failure: cargo audit exit code 101; no output captured in log artifact
+Scenario: Windows harness run
+Tool: GH CLI
+Steps: gh workflow run windows-harness.yml -f mode=full --ref fix/windows-harness-cmd-logs
+Expected: run completes with success
+Result:
+run_id=22526394056
+status=completed
+conclusion=success
+url=https://github.com/chozandrias76/sc-interdiction/actions/runs/22526394056

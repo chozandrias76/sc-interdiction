@@ -1,2 +1,7 @@
+Scenario: Windows harness docs
+Tool: Grep
+Steps: pattern "Windows Harness|windows-harness" on docs/RELEASE_WORKFLOW.md
+Expected: section describes labels, prerequisites, and dispatch command
+Result:
 ## Windows Harness
 gh workflow run windows-harness.yml -f mode=full

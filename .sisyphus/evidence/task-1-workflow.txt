@@ -1,7 +1,8 @@
+Scenario: Workflow file present and valid
+Tool: Grep
+Steps: pattern "workflow_dispatch|matrix" on .github/workflows/windows-harness.yml
+Expected: file exists and contains workflow_dispatch + matrix commands
+Result:
 workflow_dispatch:
-            artifact: windows-harness-fmt
-            artifact: windows-harness-clippy
-            artifact: windows-harness-test
-            artifact: windows-harness-build
-            artifact: windows-harness-audit
-            artifact: windows-harness-coverage
+name: Windows harness (${{ matrix.name }})
+matrix:

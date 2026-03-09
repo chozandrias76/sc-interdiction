@@ -1,4 +1,7 @@
-            command: cargo llvm-cov --all-features --workspace --lcov --output-path coverage.lcov
-      - name: Install cargo-llvm-cov
-          cargo install cargo-llvm-cov --locked
-          path: coverage.lcov
+Scenario: Coverage command configured
+Tool: Grep
+Steps: pattern "llvm-cov|coverage.lcov" on .github/workflows/windows-harness.yml
+Expected: cargo llvm-cov command and artifact path present
+Result:
+command: cargo llvm-cov --all-features --workspace --lcov --output-path coverage.lcov
+path: coverage.lcov

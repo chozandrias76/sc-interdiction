@@ -3,7 +3,9 @@
   "started_at": "2026-02-27T20:34:48.293Z",
   "session_ids": [
     "ses_36368eea0ffesOYrHC7L50xfXt",
-    "ses_35f305d78ffeJBvp1GwC7nOOF5"
+    "ses_35f305d78ffeJBvp1GwC7nOOF5",
+    "ses_358c49860ffe46WZh1ZzxZE5zZ",
+    "ses_35828f999ffeJvTUci5PRMsRiM"
   ],
   "plan_name": "windows-runner-harness",
   "agent": "atlas"

@@ -60,8 +60,21 @@ bd ready              # Find available work
 bd show <id>          # View issue details
 bd update <id> --status in_progress  # Claim work
 bd close <id>         # Complete work
-bd sync               # Sync with git
+bd dolt pull          # Sync beads from remote (bd sync deprecated)
+bd dolt push          # Sync beads to remote (bd sync deprecated)
 ```
+
+## Repo Safety (Hard Block)
+
+- **Hard block**: Do not proceed with any task unless you are inside an initialized git repository and inside a git worktree.
+- **Hard block check**: `git rev-parse --is-inside-work-tree` must return `true` before doing any work.
+- If the check fails, stop immediately and set up/select a valid git repo/worktree before continuing.
+
+### bd/dolt Artifacts
+
+- Running `bd` and `bd dolt` commands can create local tooling artifacts such as `.dolt/` and `.beads/`.
+- Treat `.dolt/` and `.beads/` as local state by default: keep them untracked and do not commit them unless the user explicitly asks.
+- If these artifacts are created unintentionally during agent work, clean them before finishing (for example with targeted `git clean`), while preserving intentional project changes.
 
 ## Landing the Plane (Session Completion)
 
@@ -75,7 +88,8 @@ bd sync               # Sync with git
 4. **PUSH TO REMOTE** - This is MANDATORY:
    ```bash
    git pull --rebase
-   bd sync
+   bd dolt pull  # bd sync deprecated
+   bd dolt push  # bd sync deprecated
    git push
    git status  # MUST show "up to date with origin"
    ```

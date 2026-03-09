@@ -129,8 +129,10 @@ gh pr create --base main --title "release: version 1.2.3"
 - Rust toolchain
 - git
 - PowerShell
-- LLVM
+- LLVM (with `libclang.dll`)
 - cargo-llvm-cov
+- cargo-audit
+- PostgreSQL client libraries (libpq)
 
 ### Manual dispatch
 ```bash
